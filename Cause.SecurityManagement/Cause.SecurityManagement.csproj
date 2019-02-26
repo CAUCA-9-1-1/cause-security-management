@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <ApplicationIcon />
+    <OutputType>Library</OutputType>
+    <StartupObject />
+    <Authors>Fred Catellier-Poulin</Authors>
+    <Company>CAUSE 9-1-1</Company>
+    <RepositoryUrl>https://github.com/CAUCA-9-1-1/cause-security-management</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/CAUCA-9-1-1/cause-security-management</PackageProjectUrl>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Description>Security Management for Asp.Net Core projects.</Description>
+    <Copyright>CAUSE 9-1-1</Copyright>
+    <PackageTags>Cause Security Management AspNetCore</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Data\**" />
+    <EmbeddedResource Remove="Data\**" />
+    <None Remove="Data\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Cause.Core.DataLayerExtensions" Version="1.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.1.4" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\Cause.SecurityManagement.Models\Cause.SecurityManagement.Models.csproj" />
+  </ItemGroup>
+    
+</Project>
