@@ -90,4 +90,7 @@ services.AddMvc(options => AskForAuthorizationByDefault(options));
 > Note: you can use the `AllowAnonymous` attribute on any controller's function if you want to allow anonymous usage.
 
 # Limitation
+### Context
 The AuthenticationService is being injected with an `ISecurityContext`.  Theorically, it could be any `DbContext` that inmplements that interface, but as of now the current version will use its own context.
+### UserGroups and permissions
+This is has not been tested, so use at your own risk.
