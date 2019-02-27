@@ -13,6 +13,6 @@ namespace Cause.SecurityManagement
 			services.AddTransient<UserManagementService>();
 			services.AddDbContext<ISecurityContext, SecurityContext>(options);
 			return services;
-		}		
-	}
+		}        
+    }
 }

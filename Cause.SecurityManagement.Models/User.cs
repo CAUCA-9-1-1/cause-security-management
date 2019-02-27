@@ -10,7 +10,7 @@ namespace Cause.SecurityManagement.Models
 		public string Password { get; set; }
 		public string Email { get; set; }
 
-		public bool IsActive { get; set; }
+        public bool IsActive { get; set; } = true;
 
 		public ICollection<UserGroup> Groups { get; set; }
 		public ICollection<UserPermission> Permissions { get; set; }
