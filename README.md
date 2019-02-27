@@ -50,6 +50,11 @@ services.InjectSecurityServices(options => options.UseMySql(connectionString));
 ```
 > Note: in this example, the SecurityContext will be using a MySql server with the specificied connection string.
 
+Still in `ConfigureServices`, you need to configure your API to use Token Authentication:
+```cs
+services.AddTokenAuthentification(Configuration);
+```
+
 Then, you need to inject the security controller to you services in `ConfigureServices`:
 ```cs
 services.AddMvc(...)
