@@ -46,10 +46,9 @@ You can add whatever features you need to this file to the basic one that comes 
 You first need to inject security services  in `ConfigureServices`.  In this example, the authentification will be done using the same database as the main context:
 
 ```cs
-services.AddDbContext<Context>(options => options.UseMySql(connectionString));
 services.InjectSecurityServices(options => options.UseMySql(connectionString));
 ```
-> Note: in this example, the same database is use for the Context in the security services.
+> Note: in this example, the SecurityContext will be using a MySql server with the specificied connection string.
 
 Then, you need to inject the security controller to you services in `ConfigureServices`:
 ```cs
