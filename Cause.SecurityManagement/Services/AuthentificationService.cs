@@ -132,6 +132,7 @@ namespace Cause.SecurityManagement.Services
 					FirstName = "Admin",
 					LastName = "Cauca",
 					UserName = "admin",
+                    IsActive = true,
 					Password = new PasswordGenerator().EncodePassword("admincauca", applicationName)
 				};
 				context.Add(user);

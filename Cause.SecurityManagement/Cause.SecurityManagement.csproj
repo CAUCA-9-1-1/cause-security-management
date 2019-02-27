@@ -14,6 +14,8 @@
     <Description>Security Management for Asp.Net Core projects.</Description>
     <Copyright>CAUSE 9-1-1</Copyright>
     <PackageTags>Cause Security Management AspNetCore</PackageTags>
+    <Version>1.0.1</Version>
+    <PackageReleaseNotes>Add missing TokenIdentificationExtensions.</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
