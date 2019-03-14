@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Cause.SecurityManagement.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Cause.SecurityManagement.Services
@@ -13,10 +14,18 @@ namespace Cause.SecurityManagement.Services
 	public class AuthentificationService
 	{
 		private readonly ISecurityContext context;
+        private readonly int refreshLifetime = 9 * 60;
+        private readonly int tokenLifetime = 60;
 
-		public AuthentificationService(ISecurityContext context)
+        public AuthentificationService(ISecurityContext context, IConfiguration configuration)
 		{
 			this.context = context;
+
+            var lifetime = configuration.GetSection("APIConfig:TokenMinutesLifetime").Value;
+            if (!string.IsNullOrEmpty(lifetime))
+            {
+                tokenLifetime = Int32.Parse(lifetime);
+            }
 		}
 
 		public (UserToken token, User user) Login(string userName, string password, string applicationName, string issuer, string secretKey)
@@ -28,7 +37,7 @@ namespace Cause.SecurityManagement.Services
 			{
 				var accessToken = GenerateAccessToken(userFound, applicationName, issuer, secretKey);
 				var refreshToken = GenerateRefreshToken();
-				var token = new UserToken {AccessToken = accessToken, RefreshToken = refreshToken, ExpiresOn = DateTime.Now.AddHours(9), IdUser = userFound.Id};
+				var token = new UserToken {AccessToken = accessToken, RefreshToken = refreshToken, ExpiresOn = DateTime.Now.AddMinutes(refreshLifetime), IdUser = userFound.Id};
 				context.Add(token);
 				context.SaveChanges();
 				return (token, userFound);
@@ -107,7 +116,7 @@ namespace Cause.SecurityManagement.Services
 				applicationName,
 				claims,
 				notBefore: DateTime.Now,
-				expires: DateTime.Now.AddMinutes(60),
+				expires: DateTime.Now.AddMinutes(tokenLifetime),
 				signingCredentials: creds);
 			return new JwtSecurityTokenHandler().WriteToken(token);
 		}
