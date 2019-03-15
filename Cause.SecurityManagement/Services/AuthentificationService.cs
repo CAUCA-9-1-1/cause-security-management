@@ -24,7 +24,7 @@ namespace Cause.SecurityManagement.Services
             var lifetime = configuration.GetSection("APIConfig:TokenMinutesLifetime").Value;
             if (!string.IsNullOrEmpty(lifetime))
             {
-                tokenLifetime = Int32.Parse(lifetime);
+                tokenLifetime = int.Parse(lifetime);
             }
 		}
 
