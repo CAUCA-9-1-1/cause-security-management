@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard1.2</TargetFramework>
+    <Configurations>Debug;Release;NuGet</Configurations>
   </PropertyGroup>
 
 </Project>

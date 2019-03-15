@@ -10,15 +10,20 @@ EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		NuGet|Any CPU = NuGet|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{61B910FF-38E3-4A56-937E-76ADD3D5ABF4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{61B910FF-38E3-4A56-937E-76ADD3D5ABF4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{61B910FF-38E3-4A56-937E-76ADD3D5ABF4}.NuGet|Any CPU.ActiveCfg = NuGet|Any CPU
+		{61B910FF-38E3-4A56-937E-76ADD3D5ABF4}.NuGet|Any CPU.Build.0 = NuGet|Any CPU
 		{61B910FF-38E3-4A56-937E-76ADD3D5ABF4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{61B910FF-38E3-4A56-937E-76ADD3D5ABF4}.Release|Any CPU.Build.0 = Release|Any CPU
 		{73A465C1-FEF8-4317-975C-91168D04CEC1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{73A465C1-FEF8-4317-975C-91168D04CEC1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{73A465C1-FEF8-4317-975C-91168D04CEC1}.NuGet|Any CPU.ActiveCfg = NuGet|Any CPU
+		{73A465C1-FEF8-4317-975C-91168D04CEC1}.NuGet|Any CPU.Build.0 = NuGet|Any CPU
 		{73A465C1-FEF8-4317-975C-91168D04CEC1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{73A465C1-FEF8-4317-975C-91168D04CEC1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
