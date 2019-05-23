@@ -17,8 +17,9 @@ namespace Cause.SecurityManagement
 
 		public DbSet<UserGroup> UserGroups { get; set; }
 		public DbSet<UserPermission> UserPermissions { get; set; }
+        public DbSet<DataProtectionElement> DataProtectionXMLElements { get; set; }
 
-		protected BaseSecurityContext(DbContextOptions options) : base(options)
+        protected BaseSecurityContext(DbContextOptions options) : base(options)
 		{}
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)

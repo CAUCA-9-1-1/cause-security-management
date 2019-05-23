@@ -3,6 +3,8 @@
   <PropertyGroup>
     <TargetFramework>netstandard1.2</TargetFramework>
     <Configurations>Debug;Release;NuGet</Configurations>
+    <Version>1.1.0</Version>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
 </Project>
