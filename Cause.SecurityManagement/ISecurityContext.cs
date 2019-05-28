@@ -14,8 +14,9 @@ namespace Cause.SecurityManagement
 	    DbSet<GroupPermission> GroupPermissions { get; set; }
 	    DbSet<Module> Modules { get; set; }
 	    DbSet<ModulePermission> ModulePermissions { get; set; }
+        DbSet<DataProtectionElement> DataProtectionXMLElements { get; set; }
 
-	    EntityEntry<TEntity> Add<TEntity>(TEntity entity) where TEntity : class;
+        EntityEntry<TEntity> Add<TEntity>(TEntity entity) where TEntity : class;
 		int SaveChanges();
     }
 }
