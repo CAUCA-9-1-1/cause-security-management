@@ -9,7 +9,7 @@ namespace Cause.SecurityManagement
 		public static IServiceCollection InjectSecurityServices<TUserManagementService, TUser>(this IServiceCollection services) 
 		    where TUserManagementService : UserManagementService<TUser>
             where TUser : User, new()
-		{
+		{            
 			services.AddTransient<IAuthentificationService, AuthentificationService<TUser>>();
 			services.AddTransient<TUserManagementService>();
 			return services;

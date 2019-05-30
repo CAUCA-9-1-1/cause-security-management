@@ -137,7 +137,7 @@ namespace Cause.SecurityManagement.Services
 		{
 			if (!context.Users.Any(user => user.UserName == "admin"))
 			{
-				var user = new User
+				var user = new TUser
 				{
 					Email = "dev@cauca.ca",
 					FirstName = "Admin",
