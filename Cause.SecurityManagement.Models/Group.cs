@@ -7,5 +7,6 @@ namespace Cause.SecurityManagement.Models
 		public string Name { get; set; }
 
 		public ICollection<GroupPermission> Permissions { get; set; }
+        public ICollection<UserGroup> Users { get; set; }
 	}
 }

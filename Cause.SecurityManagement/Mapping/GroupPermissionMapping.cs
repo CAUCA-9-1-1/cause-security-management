@@ -9,7 +9,7 @@ namespace Cause.SecurityManagement.Mapping
 		{
 			model.HasOne(m => m.Permission)
 				.WithMany()
-				.HasForeignKey(m => m.IdSystemPermission);
+				.HasForeignKey(m => m.IdModulePermission);
 		}
 	}
 }

@@ -12,7 +12,9 @@ namespace Cause.SecurityManagement
 		{            
 			services.AddTransient<IAuthentificationService, AuthentificationService<TUser>>();
 			services.AddTransient<TUserManagementService>();
-			return services;
+            services.AddTransient<IGroupManagementService, BaseGroupManagementService<TUser>>();
+            services.AddTransient<IPermissionManagementService, BasePermissionManagementService<TUser>>();
+            return services;
 		}        
     }
 }

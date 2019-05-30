@@ -24,13 +24,13 @@ namespace Cause.SecurityManagement.Controllers
 		}
 
 		[HttpGet]
-		public ActionResult<List<UserForEdition>> GetUsers()
+		public ActionResult<List<TUser>> GetUsers()
 		{
 			return UserService.GetActiveUsers();
 		}
 
 		[HttpGet, Route("{userId:guid}")]
-		public ActionResult<UserForEdition> GetUser(Guid userId)
+		public ActionResult<TUser> GetUser(Guid userId)
 		{
 			var user = UserService.GetUser(userId);
 			if (user == null)
@@ -39,7 +39,7 @@ namespace Cause.SecurityManagement.Controllers
 		}
 
 		[HttpPost]
-		public ActionResult SaveUser(UserForEdition user)
+		public ActionResult SaveUser(TUser user)
 		{
 			UserService.UpdateUser(user, applicationName);
 			return NoContent();
@@ -81,7 +81,7 @@ namespace Cause.SecurityManagement.Controllers
 			return NoContent();
 		}
 
-		[HttpDelete, Route("/permissions/{userPermissionId:guid}")]
+		[HttpDelete, Route("permissions/{userPermissionId:guid}")]
 		public ActionResult RemovePermission(Guid userPermissionId)
 		{
 			if (UserService.RemovePermission(userPermissionId))
@@ -89,7 +89,7 @@ namespace Cause.SecurityManagement.Controllers
 			return NotFound();
 		}
 
-		[HttpPost, Route("/password")]
+		[HttpPost, Route("password")]
 		public ActionResult ChangePassword([FromBody]UserPassword userPassword)
 		{
 			if (userPassword.PasswordConfirmation != userPassword.Password)

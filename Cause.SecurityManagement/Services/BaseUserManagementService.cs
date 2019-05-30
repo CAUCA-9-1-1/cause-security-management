@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Models.DataTransferObjects;
+using Microsoft.EntityFrameworkCore;
 
 namespace Cause.SecurityManagement.Services
 {
@@ -15,88 +16,45 @@ namespace Cause.SecurityManagement.Services
 			SecurityContext = securityContext;
 		}
 
-		public List<UserForEdition> GetActiveUsers()
+		public List<TUser> GetActiveUsers()
 		{
 			return SecurityContext.Users
 				.Where(user => user.IsActive)
-				.Select(user => new UserForEdition
-				{
-					Email = user.Email,
-					FirstName = user.FirstName,
-					LastName = user.LastName,
-					UserName = user.UserName,
-					Id = user.Id
-				})
-				.ToList();
+                .ToList();
 		}
 
-		public UserForEdition GetUser(Guid userId)
+		public TUser GetUser(Guid userId)
 		{
-		    var user = SecurityContext.Users.Find(userId);
-			if (user != null)
-				return new UserForEdition
-				{
-					Email = user.Email,
-					FirstName = user.FirstName,
-					LastName = user.LastName,
-					UserName = user.UserName,
-					Id = user.Id
-				};
-			return null;
+		    return SecurityContext.Users.Find(userId);
 		}
 
-		public bool UpdateUser(UserForEdition user, string applicationName)
+		public bool UpdateUser(TUser user, string applicationName)
 		{
-		    var realUser = SecurityContext.Users.Find(user.Id);
-            if (realUser == null)
-				realUser = GenerateNewUser(user);
-			else
-				PushToRealUser(user, realUser);
+            if (!string.IsNullOrWhiteSpace(user.Password))
+                user.Password = new PasswordGenerator().EncodePassword(user.Password, applicationName);
 
-			if (!string.IsNullOrWhiteSpace(user.Password))
-				realUser.Password = new PasswordGenerator().EncodePassword(user.Password, applicationName);
+            if (SecurityContext.Users.Any(u => u.Id == user.Id))
+                SecurityContext.Users.Update(user);
+            else
+                SecurityContext.Users.Add(user);
 
-			SecurityContext.SaveChanges();
+            SecurityContext.SaveChanges();
 			return true;
 		}
 
-		private void PushToRealUser(UserForEdition user, TUser realUser)
-		{
-			realUser.UserName = user.UserName;
-			realUser.FirstName = user.FirstName;
-			realUser.LastName = user.LastName;
-			realUser.Email = user.Email;
-			SecurityContext.Users.Update(realUser);
-		}
+        public bool ChangePassword(Guid userId, string newPassword, string applicationName)
+        {
+            var user = SecurityContext.Users.Find(userId);
+            if (user != null)
+            {
+                user.Password = new PasswordGenerator().EncodePassword(newPassword, applicationName);
+                SecurityContext.SaveChanges();
+                return true;
+            }
+            return false;
+        }
 
-		private TUser GenerateNewUser(UserForEdition user)
-		{
-		    var realUser = new TUser()
-			{
-				Id = user.Id,
-				Email = user.Email,
-				IsActive = true,
-				FirstName = user.FirstName,
-				LastName = user.LastName,
-				UserName = user.UserName
-			};
-			SecurityContext.Users.Add(realUser);
-			return realUser;
-		}
-
-		public bool ChangePassword(Guid userId, string newPassword, string applicationName)
-		{
-			var user = SecurityContext.Users.Find(userId);
-			if (user != null)
-			{
-				user.Password = new PasswordGenerator().EncodePassword(newPassword, applicationName);
-				SecurityContext.SaveChanges();
-				return true;
-			}
-			return false;
-		}
-
-		public bool DeactivateUser(Guid userId)
+        public bool DeactivateUser(Guid userId)
 		{
 			var user = SecurityContext.Users.Find(userId);
 			if (user != null)

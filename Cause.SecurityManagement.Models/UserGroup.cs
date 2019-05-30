@@ -6,7 +6,6 @@ namespace Cause.SecurityManagement.Models
 	{
 		public Guid IdUser { get; set; }
 		public Guid IdGroup { get; set; }
-
 		public Group Group { get; set; }
-	}
+    }
 }
