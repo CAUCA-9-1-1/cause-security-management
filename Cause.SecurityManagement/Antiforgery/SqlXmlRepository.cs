@@ -7,30 +7,31 @@ using System.Xml.Linq;
 
 namespace Cause.SecurityManagement.Antiforgery
 {
-    public class SqlXmlRepository : IXmlRepository
+    public class SqlXmlRepository<TUser> : IXmlRepository
+        where TUser: User, new()
     {
-        private readonly ISecurityContext Context;
+        private readonly ISecurityContext<TUser> context;
 
-        public SqlXmlRepository(ISecurityContext context)
+        public SqlXmlRepository(ISecurityContext<TUser> context)
         {
-            Context = context;
+            this.context = context;
         }
 
         public IReadOnlyCollection<XElement> GetAllElements()
         {
-            return new ReadOnlyCollection<XElement>(Context.DataProtectionXMLElements.Select(x => XElement.Parse(x.Xml)).ToList());
+            return new ReadOnlyCollection<XElement>(context.DataProtectionXmlElements.Select(x => XElement.Parse(x.Xml)).ToList());
         }
 
         public void StoreElement(XElement element, string friendlyName)
         {
-            Context.DataProtectionXMLElements.Add(
+            context.DataProtectionXmlElements.Add(
                 new DataProtectionElement
                 {
                     Xml = element.ToString(SaveOptions.DisableFormatting)
                 }
             );
 
-            Context.SaveChanges();
+            context.SaveChanges();
         }
     }
 }

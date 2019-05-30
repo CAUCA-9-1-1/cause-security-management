@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Cause.SecurityManagement.Models\Cause.SecurityManagement.Models.csproj" />
+    <ProjectReference Include="..\Cause.SecurityManagement\Cause.SecurityManagement.csproj" />
+  </ItemGroup>
+
+</Project>

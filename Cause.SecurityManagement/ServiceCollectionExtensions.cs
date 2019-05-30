@@ -1,17 +1,17 @@
-﻿using System;
+﻿using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Services;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Cause.SecurityManagement
 {
 	public static class ServiceCollectionExtensions
 	{
-		public static IServiceCollection InjectSecurityServices(this IServiceCollection services, Action<DbContextOptionsBuilder> options)
+		public static IServiceCollection InjectSecurityServices<TUserManagementService, TUser>(this IServiceCollection services) 
+		    where TUserManagementService : UserManagementService<TUser>
+            where TUser : User, new()
 		{
-			services.AddTransient<AuthentificationService>();
-			services.AddTransient<UserManagementService>();
-			services.AddDbContext<ISecurityContext, SecurityContext>(options);
+			services.AddTransient<IAuthentificationService, AuthentificationService<TUser>>();
+			services.AddTransient<TUserManagementService>();
 			return services;
 		}        
     }

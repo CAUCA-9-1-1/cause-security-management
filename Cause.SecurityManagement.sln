@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cause.SecurityManagement", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cause.SecurityManagement.Models", "Cause.SecurityManagement.Models\Cause.SecurityManagement.Models.csproj", "{73A465C1-FEF8-4317-975C-91168D04CEC1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cause.SecurityManagement.Example", "Cause.SecurityManagement.Example\Cause.SecurityManagement.Example.csproj", "{660127F6-741F-452E-BAAD-F637BBAEE15D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,6 +28,12 @@ Global
 		{73A465C1-FEF8-4317-975C-91168D04CEC1}.NuGet|Any CPU.Build.0 = NuGet|Any CPU
 		{73A465C1-FEF8-4317-975C-91168D04CEC1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{73A465C1-FEF8-4317-975C-91168D04CEC1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{660127F6-741F-452E-BAAD-F637BBAEE15D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{660127F6-741F-452E-BAAD-F637BBAEE15D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{660127F6-741F-452E-BAAD-F637BBAEE15D}.NuGet|Any CPU.ActiveCfg = Debug|Any CPU
+		{660127F6-741F-452E-BAAD-F637BBAEE15D}.NuGet|Any CPU.Build.0 = Debug|Any CPU
+		{660127F6-741F-452E-BAAD-F637BBAEE15D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{660127F6-741F-452E-BAAD-F637BBAEE15D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

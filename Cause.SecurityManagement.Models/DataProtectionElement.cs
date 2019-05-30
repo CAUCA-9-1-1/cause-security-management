@@ -1,16 +1,7 @@
-﻿using System;
-
-namespace Cause.SecurityManagement.Models
+﻿namespace Cause.SecurityManagement.Models
 {
-    public class DataProtectionElement
+    public class DataProtectionElement : BaseModel
     {
-        public DataProtectionElement()
-        {
-            Id = Guid.NewGuid();
-        }
-
-        public Guid Id { get; set; }
-
         public string Xml { get; set; }
     }
 }

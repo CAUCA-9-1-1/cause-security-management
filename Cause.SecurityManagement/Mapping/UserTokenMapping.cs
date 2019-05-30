@@ -9,10 +9,6 @@ namespace Cause.SecurityManagement.Mapping
 		{
 			model.Property(m => m.AccessToken).HasMaxLength(500).IsRequired();
 			model.Property(m => m.RefreshToken).HasMaxLength(100).IsRequired();
-
-			model.HasOne(m => m.User)
-				.WithMany()
-				.HasForeignKey(m => m.IdUser);
 		}
 	}
 }

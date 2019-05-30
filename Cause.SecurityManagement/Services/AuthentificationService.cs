@@ -11,13 +11,14 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Cause.SecurityManagement.Services
 {
-	public class AuthentificationService
-	{
-		private readonly ISecurityContext context;
+	public class AuthentificationService<TUser> : IAuthentificationService
+        where TUser : User, new()
+    {
+		private readonly ISecurityContext<TUser> context;
         private readonly int refreshLifetime = 9 * 60;
         private readonly int tokenLifetime = 60;
 
-        public AuthentificationService(ISecurityContext context, IConfiguration configuration)
+        public AuthentificationService(ISecurityContext<TUser> context, IConfiguration configuration)
 		{
 			this.context = context;
 
@@ -49,8 +50,9 @@ namespace Cause.SecurityManagement.Services
 		public string Refresh(string token, string refreshToken, string applicationName, string issuer, string secretKey)
 		{
 			var userId = GetUserIdFromExpiredToken(token, issuer, applicationName, secretKey);
-			var userToken = context.UserTokens.Include(t => t.User).AsNoTracking()
+			var userToken = context.UserTokens.AsNoTracking()
                 .FirstOrDefault(t => t.IdUser == userId && t.RefreshToken == refreshToken);
+		    var user = context.Users.Find(userId);
 
 			if (userToken == null)
 				throw new SecurityTokenException("Invalid token.");
@@ -61,7 +63,7 @@ namespace Cause.SecurityManagement.Services
 			if (userToken.ExpiresOn < DateTime.Now)
 				throw new SecurityTokenExpiredException("Token expired.");
 
-			var newAccessToken = GenerateAccessToken(userToken.User, applicationName, issuer, secretKey);
+			var newAccessToken = GenerateAccessToken(user, applicationName, issuer, secretKey);
 			userToken.AccessToken = newAccessToken;
 			context.SaveChanges();
 

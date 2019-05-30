@@ -6,11 +6,11 @@ using Cause.SecurityManagement.Models.DataTransferObjects;
 
 namespace Cause.SecurityManagement.Services
 {
-	public class UserManagementService
+	public class UserManagementService<TUser> where TUser : User, new()
 	{
-		protected ISecurityContext SecurityContext;
+		protected ISecurityContext<TUser> SecurityContext;
 
-		public UserManagementService(ISecurityContext securityContext)
+		public UserManagementService(ISecurityContext<TUser> securityContext)
 		{
 			SecurityContext = securityContext;
 		}
@@ -32,7 +32,7 @@ namespace Cause.SecurityManagement.Services
 
 		public UserForEdition GetUser(Guid userId)
 		{
-			var user = SecurityContext.Users.Find(userId);
+		    var user = SecurityContext.Users.Find(userId);
 			if (user != null)
 				return new UserForEdition
 				{
@@ -47,8 +47,8 @@ namespace Cause.SecurityManagement.Services
 
 		public bool UpdateUser(UserForEdition user, string applicationName)
 		{
-			var realUser = SecurityContext.Users.Find(user.Id);
-			if (realUser == null)
+		    var realUser = SecurityContext.Users.Find(user.Id);
+            if (realUser == null)
 				realUser = GenerateNewUser(user);
 			else
 				PushToRealUser(user, realUser);
@@ -60,7 +60,7 @@ namespace Cause.SecurityManagement.Services
 			return true;
 		}
 
-		private void PushToRealUser(UserForEdition user, User realUser)
+		private void PushToRealUser(UserForEdition user, TUser realUser)
 		{
 			realUser.UserName = user.UserName;
 			realUser.FirstName = user.FirstName;
@@ -69,9 +69,9 @@ namespace Cause.SecurityManagement.Services
 			SecurityContext.Users.Update(realUser);
 		}
 
-		private User GenerateNewUser(UserForEdition user)
+		private TUser GenerateNewUser(UserForEdition user)
 		{
-			var realUser = new User
+		    var realUser = new TUser()
 			{
 				Id = user.Id,
 				Email = user.Email,
