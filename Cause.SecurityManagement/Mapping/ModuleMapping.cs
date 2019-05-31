@@ -3,14 +3,14 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Cause.SecurityManagement.Mapping
 {
-	public class GroupMapping : BaseModelMapping<Group>
+	public class ModuleMapping : BaseModelMapping<Module>
 	{
-		protected override void MapProperties(EntityTypeBuilder<Group> model)
+		protected override void MapProperties(EntityTypeBuilder<Module> model)
 		{
 			model.Property(m => m.Name).HasMaxLength(100).IsRequired();
 			model.HasMany(m => m.Permissions)
-				.WithOne(m => m.Group)
-				.HasForeignKey(m => m.IdGroup);
+				.WithOne(m => m.System)
+				.HasForeignKey(m => m.IdSystem);
 		}
 	}
 }

@@ -14,5 +14,6 @@ namespace Cause.SecurityManagement.Models
 
 		public ICollection<UserGroup> Groups { get; set; }
 		public ICollection<UserPermission> Permissions { get; set; }
+        public ICollection<UserToken> Tokens { get; set; }
 	}
 }

@@ -4,7 +4,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Cause.SecurityManagement
 {
-	public abstract class BaseSecurityContext : DbContext, ISecurityContext
+	public abstract class BaseSecurityContext<TUser> : DbContext, ISecurityContext<TUser>
+        where TUser : User, new()
 	{
 		public DbSet<Module> Modules { get; set; }
 		public DbSet<ModulePermission> ModulePermissions { get; set; }
@@ -13,20 +14,20 @@ namespace Cause.SecurityManagement
 		public DbSet<Group> Groups { get; set; }
 		public DbSet<GroupPermission> GroupPermissions { get; set; }
 
-		public DbSet<User> Users { get; set; }
+		public DbSet<TUser> Users { get; set; }
 
 		public DbSet<UserGroup> UserGroups { get; set; }
 		public DbSet<UserPermission> UserPermissions { get; set; }
-        public DbSet<DataProtectionElement> DataProtectionXMLElements { get; set; }
+        public DbSet<DataProtectionElement> DataProtectionXmlElements { get; set; }
 
         protected BaseSecurityContext(DbContextOptions options) : base(options)
 		{}
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
-			modelBuilder.AddTableNameToPrimaryKey();
+			/*modelBuilder.AddTableNameToPrimaryKey();
 			modelBuilder.UseAutoSnakeCaseMapping();
-			modelBuilder.UseTablePrefix("tbl_");
+			modelBuilder.UseTablePrefix("tbl_");*/
 			this.UseAutoDetectedMappings(modelBuilder);
 		}
 	}

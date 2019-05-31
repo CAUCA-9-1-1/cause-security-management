@@ -9,7 +9,5 @@ namespace Cause.SecurityManagement.Models
 		public DateTime ExpiresOn { get; set; }
 
 		public Guid IdUser { get; set; }
-
-		public User User { get; set; }
 	}
 }

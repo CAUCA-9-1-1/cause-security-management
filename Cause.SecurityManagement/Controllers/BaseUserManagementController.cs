@@ -9,14 +9,15 @@ using Microsoft.Extensions.Configuration;
 namespace Cause.SecurityManagement.Controllers
 {
 	[Route("api/users")]
-	public abstract class BaseUserManagementController<T> : Controller
-		where T : UserManagementService
+	public abstract class BaseUserManagementController<TService, TUser> : Controller
+		where TService : UserManagementService<TUser>
+        where TUser: User, new()
 	{
 		private readonly string applicationName;
 
-		protected T UserService;
+		protected TService UserService;
 
-		protected BaseUserManagementController(T userService, IConfiguration configuration)
+		protected BaseUserManagementController(TService userService, IConfiguration configuration)
 		{
 			UserService = userService;
 			applicationName = configuration.GetSection("APIConfig:PackageName").Value;

@@ -10,6 +10,5 @@ namespace Cause.SecurityManagement.Models
 		public Guid IdUser { get; set; }
 
 		public ModulePermission Permission { get; set; }
-		public User User { get; set; }
 	}
 }
