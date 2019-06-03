@@ -16,7 +16,7 @@ namespace Cause.SecurityManagement.Controllers
 		}
 
 		[HttpGet]
-		public ActionResult<List<ModulePermission>> GetPermission()
+		public ActionResult<List<ModulePermission>> GetPermissions()
 		{
 			return PermissionService.GetPermissions();
 		}

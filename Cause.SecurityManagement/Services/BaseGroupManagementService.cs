@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Cause.SecurityManagement.Models;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 
 namespace Cause.SecurityManagement.Services
@@ -19,7 +18,10 @@ namespace Cause.SecurityManagement.Services
 
 		public List<Group> GetActiveGroups()
 		{
-			return SecurityContext.Groups.ToList();
+			return SecurityContext.Groups
+                .Include(g => g.Users)
+                .Include(g => g.Permissions)
+                .ToList();
 		}
 
 		public Group GetGroup(Guid groupId)
@@ -29,7 +31,10 @@ namespace Cause.SecurityManagement.Services
 
 		public bool UpdateGroup(Group group)
         {
-            if (SecurityContext.Groups.Any(g => g.Id == group.Id))
+            UpdateGroupUser(group);
+            UpdateGroupPermission(group);
+
+            if (SecurityContext.Groups.AsNoTracking().Any(g => g.Id == group.Id))
                 SecurityContext.Groups.Update(group);
             else
                 SecurityContext.Groups.Add(group);
@@ -38,7 +43,65 @@ namespace Cause.SecurityManagement.Services
 			return true;
 		}
 
-		public bool DeactivateGroup(Guid groupId)
+        private void UpdateGroupUser(Group group)
+        {
+            if (group.Users is null)
+            {
+                return;
+            }
+
+            var groupUsers = group.Users.ToList();
+            var dbGroupUsers = SecurityContext.UserGroups.AsNoTracking().Where(uc => uc.IdGroup == group.Id).ToList();
+
+            dbGroupUsers.ForEach(groupUser =>
+            {
+                if (groupUsers.Any(g => g.Id == groupUser.Id) == false)
+                {
+                    SecurityContext.UserGroups.Remove(groupUser);
+                }
+            });
+
+            groupUsers.ForEach(groupUser =>
+            {
+                var isExistRecord = SecurityContext.UserGroups.AsNoTracking().Any(g => g.Id == groupUser.Id);
+
+                if (!isExistRecord)
+                {
+                    SecurityContext.UserGroups.Add(groupUser);
+                }
+            });
+        }
+
+        private void UpdateGroupPermission(Group group)
+        {
+            if (group.Permissions is null)
+            {
+                return;
+            }
+
+            var groupPermissions = group.Permissions.ToList();
+            var dbGroupPermissions = SecurityContext.GroupPermissions.AsNoTracking().Where(uc => uc.IdGroup == group.Id).ToList();
+
+            dbGroupPermissions.ForEach(groupPermission =>
+            {
+                if (groupPermissions.Any(g => g.Id == groupPermission.Id) == false)
+                {
+                    SecurityContext.GroupPermissions.Remove(groupPermission);
+                }
+            });
+
+            groupPermissions.ForEach(groupPermission =>
+            {
+                var isExistRecord = SecurityContext.GroupPermissions.AsNoTracking().Any(g => g.Id == groupPermission.Id);
+
+                if (!isExistRecord)
+                {
+                    SecurityContext.GroupPermissions.Add(groupPermission);
+                }
+            });
+        }
+
+        public bool DeactivateGroup(Guid groupId)
 		{
 			var group = SecurityContext.Groups.Find(groupId);
 			if (group != null)

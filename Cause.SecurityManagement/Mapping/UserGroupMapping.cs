@@ -8,7 +8,7 @@ namespace Cause.SecurityManagement.Mapping
 		protected override void MapProperties(EntityTypeBuilder<UserGroup> model)
 		{
 			model.HasOne(m => m.Group)
-				.WithMany()
+				.WithMany(m => m.Users)
 				.HasForeignKey(m => m.IdGroup);
 		}
 	}

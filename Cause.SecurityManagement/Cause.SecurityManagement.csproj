@@ -14,7 +14,7 @@
     <Description>Security Management for Asp.Net Core projects.</Description>
     <Copyright>CAUSE 9-1-1</Copyright>
     <PackageTags>Cause Security Management AspNetCore</PackageTags>
-    <Version>1.2.0-beta16</Version>
+    <Version>1.2.0-beta28</Version>
     <PackageReleaseNotes>Add SqlXmlRepository for AntiForgery and 2 attributes to use antiforgery</PackageReleaseNotes>
     <Configurations>Debug;Release;NuGet</Configurations>
     <AssemblyVersion>1.1.0.0</AssemblyVersion>

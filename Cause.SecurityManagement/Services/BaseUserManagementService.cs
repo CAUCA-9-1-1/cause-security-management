@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Cause.SecurityManagement.Models;
-using Cause.SecurityManagement.Models.DataTransferObjects;
 using Microsoft.EntityFrameworkCore;
 
 namespace Cause.SecurityManagement.Services
@@ -19,7 +18,9 @@ namespace Cause.SecurityManagement.Services
 		public List<TUser> GetActiveUsers()
 		{
 			return SecurityContext.Users
-				.Where(user => user.IsActive)
+				.Where(u => u.IsActive)
+                .Include(u => u.Groups)
+                .Include(u => u.Permissions)
                 .ToList();
 		}
 
@@ -29,18 +30,85 @@ namespace Cause.SecurityManagement.Services
 		}
 
 		public bool UpdateUser(TUser user, string applicationName)
-		{
+        {
+            UpdateUserGroup(user);
+            UpdateUserPermission(user);
+
             if (!string.IsNullOrWhiteSpace(user.Password))
                 user.Password = new PasswordGenerator().EncodePassword(user.Password, applicationName);
 
-            if (SecurityContext.Users.Any(u => u.Id == user.Id))
+            if (SecurityContext.Users.AsNoTracking().Any(u => u.Id == user.Id))
+            {
+                if (string.IsNullOrWhiteSpace(user.Password))
+                    user.Password = SecurityContext.Users.AsNoTracking()
+                        .Where(u => u.Id == user.Id)
+                        .Select(u => u.Password).First();
                 SecurityContext.Users.Update(user);
+            }
             else
                 SecurityContext.Users.Add(user);
 
             SecurityContext.SaveChanges();
 			return true;
 		}
+
+        private void UpdateUserGroup(User user)
+        {
+            if (user.Permissions is null)
+            {
+                return;
+            }
+
+            var userGroups = user.Groups.ToList();
+            var dbUserGroups = SecurityContext.UserGroups.AsNoTracking().Where(ug => ug.IdUser == user.Id).ToList();
+
+            dbUserGroups.ForEach(userGroup =>
+            {
+                if (userGroups.Any(g => g.Id == userGroup.Id) == false)
+                {
+                    SecurityContext.UserGroups.Remove(userGroup);
+                }
+            });
+
+            userGroups.ForEach(userGroup =>
+            {
+                var isExistRecord = SecurityContext.UserGroups.AsNoTracking().Any(g => g.Id == userGroup.Id);
+
+                if (!isExistRecord)
+                {
+                    SecurityContext.UserGroups.Add(userGroup);
+                }
+            });
+        }
+
+        private void UpdateUserPermission(User user)
+        {
+            if (user.Permissions is null)
+            {
+                return;
+            }
+
+            var userPermissions = user.Permissions.ToList();
+            var dbUserPermissions = SecurityContext.UserPermissions.AsNoTracking().Where(up => up.IdUser == user.Id).ToList();
+
+            dbUserPermissions.ForEach(userPermission =>
+            {
+                if (userPermissions.Any(p => p.Id == userPermission.Id) == false)
+                {
+                    SecurityContext.UserPermissions.Remove(userPermission);
+                }
+            });
+
+            userPermissions.ForEach(userPermission =>
+            {
+                var isExistRecord = SecurityContext.UserPermissions.AsNoTracking().Any(p => p.Id == userPermission.Id);
+
+                if (!isExistRecord)
+                {
+                    SecurityContext.UserPermissions.Add(userPermission);
+                }
+            });
+        }
 
         public bool ChangePassword(Guid userId, string newPassword, string applicationName)
         {

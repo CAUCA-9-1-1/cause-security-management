@@ -10,6 +10,9 @@ namespace Cause.SecurityManagement.Mapping
 			model.HasOne(m => m.Permission)
 				.WithMany()
 				.HasForeignKey(m => m.IdModulePermission);
-		}
+            model.HasOne(m => m.Group)
+                .WithMany(m => m.Permissions)
+                .HasForeignKey(m => m.IdGroup);
+        }
 	}
 }
