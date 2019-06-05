@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Cause.SecurityManagement.Models;
-using Cause.SecurityManagement.Models.DataTransferObjects;
+using Microsoft.EntityFrameworkCore;
 
 namespace Cause.SecurityManagement.Services
 {
@@ -15,88 +15,114 @@ namespace Cause.SecurityManagement.Services
 			SecurityContext = securityContext;
 		}
 
-		public List<UserForEdition> GetActiveUsers()
+		public List<TUser> GetActiveUsers()
 		{
 			return SecurityContext.Users
-				.Where(user => user.IsActive)
-				.Select(user => new UserForEdition
-				{
-					Email = user.Email,
-					FirstName = user.FirstName,
-					LastName = user.LastName,
-					UserName = user.UserName,
-					Id = user.Id
-				})
-				.ToList();
+				.Where(u => u.IsActive)
+                .Include(u => u.Groups)
+                .Include(u => u.Permissions)
+                .ToList();
 		}
 
-		public UserForEdition GetUser(Guid userId)
+		public TUser GetUser(Guid userId)
 		{
-		    var user = SecurityContext.Users.Find(userId);
-			if (user != null)
-				return new UserForEdition
-				{
-					Email = user.Email,
-					FirstName = user.FirstName,
-					LastName = user.LastName,
-					UserName = user.UserName,
-					Id = user.Id
-				};
-			return null;
+		    return SecurityContext.Users.Find(userId);
 		}
 
-		public bool UpdateUser(UserForEdition user, string applicationName)
-		{
-		    var realUser = SecurityContext.Users.Find(user.Id);
-            if (realUser == null)
-				realUser = GenerateNewUser(user);
-			else
-				PushToRealUser(user, realUser);
+		public bool UpdateUser(TUser user, string applicationName)
+        {
+            UpdateUserGroup(user);
+            UpdateUserPermission(user);
 
-			if (!string.IsNullOrWhiteSpace(user.Password))
-				realUser.Password = new PasswordGenerator().EncodePassword(user.Password, applicationName);
+            if (!string.IsNullOrWhiteSpace(user.Password))
+                user.Password = new PasswordGenerator().EncodePassword(user.Password, applicationName);
 
-			SecurityContext.SaveChanges();
+            if (SecurityContext.Users.AsNoTracking().Any(u => u.Id == user.Id))
+            {
+                if (string.IsNullOrWhiteSpace(user.Password))
+                    user.Password = SecurityContext.Users.AsNoTracking()
+                        .Where(u => u.Id == user.Id)
+                        .Select(u => u.Password).First();
+                SecurityContext.Users.Update(user);
+            }
+            else
+                SecurityContext.Users.Add(user);
+
+            SecurityContext.SaveChanges();
 			return true;
 		}
 
-		private void PushToRealUser(UserForEdition user, TUser realUser)
-		{
-			realUser.UserName = user.UserName;
-			realUser.FirstName = user.FirstName;
-			realUser.LastName = user.LastName;
-			realUser.Email = user.Email;
-			SecurityContext.Users.Update(realUser);
-		}
+        private void UpdateUserGroup(User user)
+        {
+            if (user.Permissions is null)
+            {
+                return;
+            }
 
-		private TUser GenerateNewUser(UserForEdition user)
-		{
-		    var realUser = new TUser()
-			{
-				Id = user.Id,
-				Email = user.Email,
-				IsActive = true,
-				FirstName = user.FirstName,
-				LastName = user.LastName,
-				UserName = user.UserName
-			};
-			SecurityContext.Users.Add(realUser);
-			return realUser;
-		}
+            var userGroups = user.Groups.ToList();
+            var dbUserGroups = SecurityContext.UserGroups.AsNoTracking().Where(ug => ug.IdUser == user.Id).ToList();
 
-		public bool ChangePassword(Guid userId, string newPassword, string applicationName)
-		{
-			var user = SecurityContext.Users.Find(userId);
-			if (user != null)
-			{
-				user.Password = new PasswordGenerator().EncodePassword(newPassword, applicationName);
-				SecurityContext.SaveChanges();
-				return true;
-			}
-			return false;
-		}
+            dbUserGroups.ForEach(userGroup =>
+            {
+                if (userGroups.Any(g => g.Id == userGroup.Id) == false)
+                {
+                    SecurityContext.UserGroups.Remove(userGroup);
+                }
+            });
 
-		public bool DeactivateUser(Guid userId)
+            userGroups.ForEach(userGroup =>
+            {
+                var isExistRecord = SecurityContext.UserGroups.AsNoTracking().Any(g => g.Id == userGroup.Id);
+
+                if (!isExistRecord)
+                {
+                    SecurityContext.UserGroups.Add(userGroup);
+                }
+            });
+        }
+
+        private void UpdateUserPermission(User user)
+        {
+            if (user.Permissions is null)
+            {
+                return;
+            }
+
+            var userPermissions = user.Permissions.ToList();
+            var dbUserPermissions = SecurityContext.UserPermissions.AsNoTracking().Where(up => up.IdUser == user.Id).ToList();
+
+            dbUserPermissions.ForEach(userPermission =>
+            {
+                if (userPermissions.Any(p => p.Id == userPermission.Id) == false)
+                {
+                    SecurityContext.UserPermissions.Remove(userPermission);
+                }
+            });
+
+            userPermissions.ForEach(userPermission =>
+            {
+                var isExistRecord = SecurityContext.UserPermissions.AsNoTracking().Any(p => p.Id == userPermission.Id);
+
+                if (!isExistRecord)
+                {
+                    SecurityContext.UserPermissions.Add(userPermission);
+                }
+            });
+        }
+
+        public bool ChangePassword(Guid userId, string newPassword, string applicationName)
+        {
+            var user = SecurityContext.Users.Find(userId);
+            if (user != null)
+            {
+                user.Password = new PasswordGenerator().EncodePassword(newPassword, applicationName);
+                SecurityContext.SaveChanges();
+                return true;
+            }
+            return false;
+        }
+
+        public bool DeactivateUser(Guid userId)
 		{
 			var user = SecurityContext.Users.Find(userId);
 			if (user != null)

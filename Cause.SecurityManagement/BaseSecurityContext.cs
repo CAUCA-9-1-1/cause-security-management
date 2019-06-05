@@ -1,4 +1,5 @@
 ﻿using Cause.Core.DataLayerExtensions;
+using Cause.SecurityManagement.Mapping;
 using Cause.SecurityManagement.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -30,5 +31,18 @@ namespace Cause.SecurityManagement
 			modelBuilder.UseTablePrefix("tbl_");*/
 			this.UseAutoDetectedMappings(modelBuilder);
 		}
+
+        protected void AddSecurityManagementMappings(ModelBuilder modelBuilder)
+        {
+            new DataProtectionElementMapping().Map(modelBuilder);
+            new GroupMapping().Map(modelBuilder);
+            new GroupPermissionMapping().Map(modelBuilder);
+            new ModuleMapping().Map(modelBuilder);
+            new ModulePermissionMapping().Map(modelBuilder);
+            new UserGroupMapping().Map(modelBuilder);
+            new UserMapping<TUser>().Map(modelBuilder);
+            new UserPermissionMapping().Map(modelBuilder);
+            new UserTokenMapping().Map(modelBuilder);
+        }
 	}
 }

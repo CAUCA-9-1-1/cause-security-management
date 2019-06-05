@@ -9,8 +9,8 @@ namespace Cause.SecurityManagement.Mapping
 		{
 			model.Property(m => m.Name).HasMaxLength(100).IsRequired();
 			model.HasMany(m => m.Permissions)
-				.WithOne(m => m.System)
-				.HasForeignKey(m => m.IdSystem);
+				.WithOne(m => m.Module)
+				.HasForeignKey(m => m.IdModule);
 		}
 	}
 }
