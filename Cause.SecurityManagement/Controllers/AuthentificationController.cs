@@ -11,7 +11,7 @@ using Microsoft.IdentityModel.Tokens;
 namespace Cause.SecurityManagement.Controllers
 {
     [Route("api/[controller]")]
-    public class AuthentificationController : Controller
+    public class AuthentificationController : AuthentifiedController
     {
         private readonly IAuthentificationService service;
         private readonly string issuer;
@@ -79,10 +79,7 @@ namespace Cause.SecurityManagement.Controllers
         [ProducesResponseType(401)]
         public ActionResult GetPermissions()
         {
-            var id = User.Claims.FirstOrDefault(claim => claim.Type == JwtRegisteredClaimNames.Sid)?.Value;
-            Guid.TryParse(id, out Guid userId);
-
-            return Ok(service.GetActiveUserPermissions(userId));
+            return Ok(service.GetActiveUserPermissions(GetUserId()));
         }
     }
 }
