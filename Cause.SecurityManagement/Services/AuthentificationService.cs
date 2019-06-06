@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Cause.SecurityManagement.Models;
+using Cause.SecurityManagement.Models.DataTransferObjects;
+using Microsoft.AspNetCore.Hosting.Internal;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -160,5 +163,34 @@ namespace Cause.SecurityManagement.Services
 				return false;
 			return true;
 		}
-	}
+
+        public List<AuthentificationUserPermission> GetActiveUserPermissions(Guid userId)
+        {
+            var idGroups = context.UserGroups
+                .Where(ug => ug.IdUser == userId)
+                .Select(ug => ug.IdGroup);
+            var restrictedPermissions = context.GroupPermissions
+                .Where(g => idGroups.Contains(g.IdGroup) && g.IsAllowed == false)
+                .Include(g => g.Permission)
+                .Select(p => new AuthentificationUserPermission
+                {
+                    IdModulePermission = p.IdModulePermission,
+                    Tag = p.Permission.Tag,
+                    IsAllowed = p.IsAllowed,
+                });
+            var allowedPermissions = context.GroupPermissions
+                .Where(g => idGroups.Contains(g.IdGroup) && g.IsAllowed == true && !restrictedPermissions
+                                .Select(p => p.IdModulePermission).Contains(g.IdModulePermission))
+                .Include(g => g.Permission)
+                .Select(p => new AuthentificationUserPermission
+                {
+                    IdModulePermission = p.IdModulePermission,
+                    Tag = p.Permission.Tag,
+                    IsAllowed = p.IsAllowed,
+                })
+                .Distinct();
+
+            return restrictedPermissions.Concat(allowedPermissions).ToList();
+        }
+    }
 }
