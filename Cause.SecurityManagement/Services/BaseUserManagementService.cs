@@ -54,7 +54,7 @@ namespace Cause.SecurityManagement.Services
 
         private void UpdateUserGroup(User user)
         {
-            if (user.Permissions is null)
+            if (user.Groups is null)
             {
                 return;
             }
