@@ -15,11 +15,31 @@ Some configuration needs to be added:
 ```
 You can change any of of these values to anything you want.
 
+### Models
+You need to have a `User` model that inherits from `SecurityManagement.Models.User`.  You can add whatever you need to your model.
+
+Your 'User' mapping needs to inherit from `UserMapping<T>`.  You can override `Map(EntityTypeBuilder<T> model)` to do your mapping. 
+
+### DbContext
+Your DbContext needs to inherits from `BaseSecurityContext<T>`
+
+In OnModelCreating, you need to add the Security Management's mapping like this: 
+```
+protected override void OnModelCreating(ModelBuilder modelBuilder)
+{
+    AddSecurityManagementMappings(modelBuilder);
+    (...)
+}
+```
+
+### Data Service
+Your UserService should inherit from `UserManagementService<T>`
+
 ### Users management controller
 You may want to add users management feature to you application, so you will need to create a controller that inherits from the BaseUserManagementController.  This is one example :
 ```cs
 	[Route("api/[Controller]"), ApiController]
-	public class UserManagementController : BaseUserManagementController<UserManagementService>
+	public class UserManagementController : BaseUserManagementController<UserManagementService<User>, User>
 	{
 		public UserManagementController(UserManagementService managementService, IConfiguration configuration)
 			: base(managementService, configuration)
@@ -46,9 +66,8 @@ You can add whatever features you need to this file to the basic one that comes 
 You first need to inject security services  in `ConfigureServices`.  In this example, the authentification will be done using the same database as the main context:
 
 ```cs
-services.InjectSecurityServices(options => options.UseMySql(connectionString));
+services.InjectSecurityServices<UserManagementService<User>, User>;
 ```
-> Note: in this example, the SecurityContext will be using a MySql server with the specificied connection string.
 
 Still in `ConfigureServices`, you need to configure your API to use Token Authentication:
 ```cs
@@ -94,7 +113,5 @@ services.AddMvc(options => AskForAuthorizationByDefault(options));
 > Note: you can use the `AllowAnonymous` attribute on any controller's function if you want to allow anonymous usage.
 
 # Limitation
-### Context
-The AuthenticationService is being injected with an `ISecurityContext`.  Theorically, it could be any `DbContext` that inmplements that interface, but as of now the current version will use its own context (SecurityContext).
 ### UserGroups and permissions
 This is has not been tested, so use at your own risk.
