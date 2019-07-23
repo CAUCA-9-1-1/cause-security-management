@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Cause.SecurityManagement.Models;
+using Cause.SecurityManagement.Models.DataTransferObjects;
 using Microsoft.EntityFrameworkCore;
 
 namespace Cause.SecurityManagement.Services
@@ -183,6 +184,32 @@ namespace Cause.SecurityManagement.Services
 			}
 
 			return false;
+		}
+
+		public List<UserMergedPermission> GetPermissionsForUser(Guid userId)
+		{
+			var userPermissions = GetUserPermissions(userId);
+			var groupPermissions = GetUserGroupsPermission(userId);
+			return new PermissionMergeTool().MergeUserAndGroupPermissions(groupPermissions, userPermissions);
+		}
+
+		private List<UserMergedPermission> GetUserGroupsPermission(Guid userId)
+		{
+			var userGroups = (
+					from userGroup in SecurityContext.UserGroups
+					where userGroup.IdUser == userId
+					from groupPermission in userGroup.Group.Permissions
+					select groupPermission)
+				.Select(g => new UserMergedPermission { Access = g.IsAllowed, FeatureName = g.Permission.Tag }).ToList();
+			return userGroups;
+		}
+
+		private List<UserMergedPermission> GetUserPermissions(Guid userId)
+		{
+			var userPermissions = SecurityContext.UserPermissions.Where(c => c.IdUser == userId)
+				.Select(g => new UserMergedPermission { Access = g.IsAllowed, FeatureName = g.Permission.Tag })
+				.ToList();
+			return userPermissions;
 		}
 	}
 }
