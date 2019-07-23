@@ -98,5 +98,11 @@ namespace Cause.SecurityManagement.Controllers
 				return NoContent();
 			return NotFound();
 		}
+
+		[HttpGet, Route("{userId:guid}/permissions")]
+		public ActionResult<List<UserMergedPermission>> GetPermissionsForUser(Guid userId)
+		{
+			return Ok(UserService.GetPermissionsForUser(userId));
+		}
 	}
 }
