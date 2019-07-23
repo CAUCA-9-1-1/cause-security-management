@@ -16,5 +16,10 @@ namespace Cause.SecurityManagement.Controllers
                 return userId;
             return Guid.Empty;
         }
+
+        protected string GetUserIpAddress()
+        {
+	        return HttpContext?.Connection?.RemoteIpAddress?.MapToIPv4().ToString();
+        }
     }
 }
