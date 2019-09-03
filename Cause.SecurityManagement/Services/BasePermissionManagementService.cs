@@ -22,7 +22,7 @@ namespace Cause.SecurityManagement.Services
             var modulePermission = new ModulePermission()
             {
                 Id = Guid.NewGuid(),
-                IdModule = Guid.Parse("1c365d12-a809-11e9-9916-525400cc3eb9"),
+                IdModule = permission.IdModule,
                 Tag = permission.Tag,
                 Name = permission.Name
             };
