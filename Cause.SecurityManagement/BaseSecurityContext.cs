@@ -20,15 +20,13 @@ namespace Cause.SecurityManagement
 		public DbSet<UserGroup> UserGroups { get; set; }
 		public DbSet<UserPermission> UserPermissions { get; set; }
         public DbSet<DataProtectionElement> DataProtectionXmlElements { get; set; }
-
+        public DbSet<ExternalSystem> ExternalSystems { get; set; }
+        public DbSet<ExternalSystemToken> ExternalSystemTokens { get; set; }
         protected BaseSecurityContext(DbContextOptions options) : base(options)
 		{}
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
-			/*modelBuilder.AddTableNameToPrimaryKey();
-			modelBuilder.UseAutoSnakeCaseMapping();
-			modelBuilder.UseTablePrefix("tbl_");*/
 			this.UseAutoDetectedMappings(modelBuilder);
 		}
 
@@ -43,6 +41,8 @@ namespace Cause.SecurityManagement
             new UserMapping<TUser>().Map(modelBuilder);
             new UserPermissionMapping().Map(modelBuilder);
             new UserTokenMapping().Map(modelBuilder);
+            new ExternalSystemMapping().Map(modelBuilder);
+            new ExternalSystemTokenMapping().Map(modelBuilder);
         }
 	}
 }

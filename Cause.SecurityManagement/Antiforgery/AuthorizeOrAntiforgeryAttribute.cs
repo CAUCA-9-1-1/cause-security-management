@@ -12,10 +12,6 @@ namespace Cause.SecurityManagement.Antiforgery
 {
     public class AuthorizeOrAntiforgeryAttribute : ActionFilterAttribute
     {
-        public AuthorizeOrAntiforgeryAttribute()
-        {
-        }
-
         public override async void OnActionExecuting(ActionExecutingContext filterContext)
         {
             Console.WriteLine("Validation authorization");
@@ -57,7 +53,7 @@ namespace Cause.SecurityManagement.Antiforgery
             var controller = filterContext.Controller as Controller;
             var userClaim = controller.User.Claims.FirstOrDefault(claim => claim.Type == JwtRegisteredClaimNames.Sid);
 
-            return (userClaim is null ? false : true);
+            return (!(userClaim is null));
         }
 
         private bool IsDev(ActionExecutingContext filterContext)

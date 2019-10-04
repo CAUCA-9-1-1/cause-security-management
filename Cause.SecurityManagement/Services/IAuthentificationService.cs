@@ -11,6 +11,8 @@ namespace Cause.SecurityManagement.Services
         List<AuthentificationUserPermission> GetActiveUserPermissions(Guid userId);
         bool IsMobileVersionValid(string mobileVersion, string minimalVersion);
         (UserToken token, User user) Login(string userName, string password, string applicationName, string issuer, string secretKey);
-        string Refresh(string token, string refreshToken, string applicationName, string issuer, string secretKey);
+        (ExternalSystemToken token, ExternalSystem system) LoginForExternalSystem(string secretApiKey, string applicationName, string issuer, string secretKey);
+        string RefreshUserToken(string token, string refreshToken, string applicationName, string issuer, string secretKey);
+        string RefreshExternalSystemToken(string token, string refreshToken, string applicationName, string issuer, string secretKey);
     }
 }
