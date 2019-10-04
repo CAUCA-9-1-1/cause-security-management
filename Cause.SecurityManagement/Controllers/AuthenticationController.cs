@@ -31,7 +31,7 @@ namespace Cause.SecurityManagement.Controllers
             return Login(login);
         }
 
-        [Route("/api/authentification/login"), HttpPost, AllowAnonymous]
+        [Route("/api/authentification/Logon"), HttpPost, AllowAnonymous]
         public ActionResult<LoginResult> OldLogon([FromBody] LoginInformations login)
         {
             return Login(login);
@@ -60,7 +60,7 @@ namespace Cause.SecurityManagement.Controllers
             return RefreshToken(tokens);
         }
 
-        [Route("api/authentification/refresh"), HttpPost, AllowAnonymous]
+        [Route("/api/authentification/refresh"), HttpPost, AllowAnonymous]
         public ActionResult OldRefresh([FromBody] TokenRefreshResult tokens)
         {
             return RefreshToken(tokens);
