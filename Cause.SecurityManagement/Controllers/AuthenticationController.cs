@@ -87,7 +87,7 @@ namespace Cause.SecurityManagement.Controllers
         }
 
         [Route("[Action]"), HttpPost, AllowAnonymous]
-        public ActionResult<LoginResult> LogonForExternalSystemn([FromBody] ExternalSystemLoginInformations login)
+        public ActionResult<LoginResult> LogonForExternalSystem([FromBody] ExternalSystemLoginInformations login)
         {
             var result = service.LoginForExternalSystem(login.Apikey, applicationName, issuer, secretKey);
             if (result.system == null || result.token == null)
