@@ -10,11 +10,29 @@ namespace Cause.SecurityManagement
 		    where TUserManagementService : UserManagementService<TUser>
             where TUser : User, new()
 		{            
-			services.AddTransient<IAuthentificationService, AuthentificationService<TUser>>();
+			services.AddTransient<IAuthentificationService, AuthenticationService<TUser>>();
 			services.AddTransient<TUserManagementService>();
             services.AddTransient<IGroupManagementService, BaseGroupManagementService<TUser>>();
             services.AddTransient<IPermissionManagementService, BasePermissionManagementService<TUser>>();
             return services;
-		}        
+		}
+
+        public static IServiceCollection AddExternalSystemAndUserPolicies(this IServiceCollection services)
+        {
+            services.AddAuthorization(c =>
+            {
+                c.AddPolicy("defaultpolicy", b =>
+                {
+                    b.RequireAuthenticatedUser();
+                    b.RequireRole(SecurityRoles.User);
+                });
+                c.AddPolicy("apipolicy", b =>
+                {
+                    b.RequireAuthenticatedUser();
+                    b.RequireRole(SecurityRoles.ExternalSystem);
+                });
+            });
+            return services;
+        }
     }
 }

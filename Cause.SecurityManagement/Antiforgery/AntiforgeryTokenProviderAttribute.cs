@@ -6,10 +6,6 @@ namespace Cause.SecurityManagement.Antiforgery
 {
     public class AntiforgeryTokenProviderAttribute : ActionFilterAttribute
     {
-        public AntiforgeryTokenProviderAttribute()
-        {
-        }
-
         public override void OnActionExecuting(ActionExecutingContext filterContext)
         {
             var antiforgery = filterContext.HttpContext.RequestServices.GetService<IAntiforgery>();
