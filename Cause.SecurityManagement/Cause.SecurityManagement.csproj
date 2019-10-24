@@ -14,7 +14,7 @@
     <Description>Security Management for Asp.Net Core projects.</Description>
     <Copyright>CAUSE 9-1-1</Copyright>
     <PackageTags>Cause Security Management AspNetCore</PackageTags>
-    <Version>3.0.0-beta1</Version>
+    <Version>3.0.0-beta2</Version>
     <PackageReleaseNotes>Updated to .Net Core 3.0</PackageReleaseNotes>
     <Configurations>Debug;Release;NuGet</Configurations>
     <AssemblyVersion>3.0.0.0</AssemblyVersion>
