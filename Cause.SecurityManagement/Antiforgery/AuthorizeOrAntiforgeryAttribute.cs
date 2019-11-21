@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Antiforgery;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using System;
+using Microsoft.Extensions.Hosting;
 
 namespace Cause.SecurityManagement.Antiforgery
 {
@@ -50,16 +51,19 @@ namespace Cause.SecurityManagement.Antiforgery
 
         private bool IsAuthorize(ActionExecutingContext filterContext)
         {
-            var controller = filterContext.Controller as Controller;
-            var userClaim = controller.User.Claims.FirstOrDefault(claim => claim.Type == JwtRegisteredClaimNames.Sid);
+            if (filterContext.Controller is Controller controller)
+            {
+                var userClaim =
+                    controller.User.Claims.FirstOrDefault(claim => claim.Type == JwtRegisteredClaimNames.Sid);
+                return (!(userClaim is null));
+            }
 
-            return (!(userClaim is null));
+            return false;
         }
 
         private bool IsDev(ActionExecutingContext filterContext)
         {
-            var env = filterContext.HttpContext.RequestServices.GetService<IHostingEnvironment>();
-
+            var env = filterContext.HttpContext.RequestServices.GetService<IWebHostEnvironment>();
             return env.IsDevelopment();
         }
     }

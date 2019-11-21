@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
-    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
     <ApplicationIcon />
     <OutputType>Library</OutputType>
     <StartupObject />
@@ -14,12 +14,11 @@
     <Description>Security Management for Asp.Net Core projects.</Description>
     <Copyright>CAUSE 9-1-1</Copyright>
     <PackageTags>Cause Security Management AspNetCore</PackageTags>
-    <Version>1.3.3</Version>
-    <PackageReleaseNotes>- Add an authentication system for external api.
-- Rename "authentification" for "authentication".</PackageReleaseNotes>
+    <Version>3.0.0</Version>
+    <PackageReleaseNotes>Updated to .Net Core 3.0</PackageReleaseNotes>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <AssemblyVersion>1.3.3.0</AssemblyVersion>
-    <FileVersion>1.3.3.0</FileVersion>
+    <AssemblyVersion>3.0.0.0</AssemblyVersion>
+    <FileVersion>3.0.0.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -29,9 +28,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Cause.Core.DataLayerExtensions" Version="1.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.1.4" />
+    <PackageReference Include="Cause.Core.DataLayerExtensions" Version="3.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.0.0" />
   </ItemGroup>
   
   <ItemGroup>
