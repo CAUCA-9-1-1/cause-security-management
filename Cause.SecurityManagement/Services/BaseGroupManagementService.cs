@@ -1,8 +1,8 @@
-﻿using System;
+﻿using Cause.SecurityManagement.Models;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Cause.SecurityManagement.Models;
-using Microsoft.EntityFrameworkCore;
 
 namespace Cause.SecurityManagement.Services
 {
@@ -30,7 +30,10 @@ namespace Cause.SecurityManagement.Services
 		}
 
 		public bool UpdateGroup(Group group)
-        {
+		{
+			if (GroupNameAlreadyUsed(group))
+				return false;
+
             UpdateGroupUser(group);
             UpdateGroupPermission(group);
 
@@ -43,7 +46,12 @@ namespace Cause.SecurityManagement.Services
 			return true;
 		}
 
-        private void UpdateGroupUser(Group group)
+		public bool GroupNameAlreadyUsed(Group group)
+		{
+			return SecurityContext.Groups.FirstOrDefault(c => c.Name == group.Name) != null;
+		}
+
+		private void UpdateGroupUser(Group group)
         {
             if (group.Users is null)
             {
