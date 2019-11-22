@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Cause.SecurityManagement.Services
 {
-    public interface IGroupManagementService
+	public interface IGroupManagementService
     {
         List<Group> GetActiveGroups();
         Group GetGroup(Guid groupId);
@@ -15,5 +15,6 @@ namespace Cause.SecurityManagement.Services
         bool RemoveUser(Guid userGroupId);
         bool UpdatePermission(GroupPermission permission);
         bool RemovePermission(Guid groupPermissionId);
+        bool GroupNameAlreadyUsed(Group group);
     }
 }
