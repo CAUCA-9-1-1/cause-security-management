@@ -48,7 +48,7 @@ namespace Cause.SecurityManagement.Services
 
 		public bool GroupNameAlreadyUsed(Group group)
 		{
-			return SecurityContext.Groups.FirstOrDefault(c => c.Name == group.Name) != null;
+			return SecurityContext.Groups.Any(c => c.Name == group.Name && c.Id != group.Id);
 		}
 
 		private void UpdateGroupUser(Group group)

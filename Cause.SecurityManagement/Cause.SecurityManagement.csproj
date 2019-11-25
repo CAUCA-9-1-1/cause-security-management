@@ -14,11 +14,11 @@
     <Description>Security Management for Asp.Net Core projects.</Description>
     <Copyright>CAUSE 9-1-1</Copyright>
     <PackageTags>Cause Security Management AspNetCore</PackageTags>
-    <Version>3.0.4</Version>
+    <Version>3.0.5</Version>
     <PackageReleaseNotes>Updated to .Net Core 3.0</PackageReleaseNotes>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <AssemblyVersion>3.0.4.0</AssemblyVersion>
-    <FileVersion>3.0.4.0</FileVersion>
+    <AssemblyVersion>3.0.5.0</AssemblyVersion>
+    <FileVersion>3.0.5.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
