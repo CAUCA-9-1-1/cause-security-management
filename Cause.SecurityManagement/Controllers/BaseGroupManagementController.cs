@@ -1,8 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using Cause.SecurityManagement.Models;
+﻿using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Services;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Collections.Generic;
 
 namespace Cause.SecurityManagement.Controllers
 {
@@ -34,8 +34,10 @@ namespace Cause.SecurityManagement.Controllers
 		[HttpPost]
 		public ActionResult SaveGroup(Group group)
 		{
-            GroupService.UpdateGroup(group);
-			return NoContent();
+			var groupUpdated = GroupService.UpdateGroup(group);
+			if (groupUpdated)
+				return NoContent();
+			return BadRequest();
 		}
 
 		[HttpDelete, Route("{groupId:guid}")]
@@ -65,6 +67,12 @@ namespace Cause.SecurityManagement.Controllers
 			if (GroupService.RemovePermission(groupPermissionId))
 				return NoContent();
 			return NotFound();
+		}
+
+		[HttpPost("GroupNameAlreadyExist")]
+		public ActionResult GroupNameAlreadyExist([FromBody]Group group)
+		{
+			return Ok(GroupService.GroupNameAlreadyUsed(group));
 		}
 	}
 }

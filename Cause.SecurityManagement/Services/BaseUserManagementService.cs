@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Cause.SecurityManagement.Models;
+﻿using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Models.DataTransferObjects;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Cause.SecurityManagement.Services
 {
@@ -31,7 +31,10 @@ namespace Cause.SecurityManagement.Services
 		}
 
 		public bool UpdateUser(TUser user, string applicationName)
-        {
+		{
+			if (UserNameAlreadyUsed(user))
+				return false;
+
             UpdateUserGroup(user);
             UpdateUserPermission(user);
 
@@ -53,7 +56,12 @@ namespace Cause.SecurityManagement.Services
 			return true;
 		}
 
-        private void UpdateUserGroup(User user)
+		public bool UserNameAlreadyUsed(TUser user)
+		{
+			return SecurityContext.Users.Any(c => c.UserName == user.UserName && c.Id != user.Id);
+		}
+
+		private void UpdateUserGroup(User user)
         {
             if (user.Groups is null)
             {

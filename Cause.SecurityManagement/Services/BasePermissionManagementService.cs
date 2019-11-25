@@ -1,7 +1,7 @@
-﻿using System;
+﻿using Cause.SecurityManagement.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Cause.SecurityManagement.Models;
 
 namespace Cause.SecurityManagement.Services
 {
@@ -17,7 +17,7 @@ namespace Cause.SecurityManagement.Services
 
         public bool Add(ModulePermission permission)
         {
-            if (string.IsNullOrEmpty(permission.Name) || string.IsNullOrEmpty(permission.Tag))
+            if (string.IsNullOrEmpty(permission.Name) || string.IsNullOrEmpty(permission.Tag) || PermissionAlreadyExist(permission))
                 return false;
             var modulePermission = new ModulePermission()
             {
@@ -29,6 +29,11 @@ namespace Cause.SecurityManagement.Services
             SecurityContext.ModulePermissions.Add(modulePermission);
             SecurityContext.SaveChanges();
             return true;
+        }
+
+        public bool PermissionAlreadyExist(ModulePermission permission)
+        {
+	        return SecurityContext.ModulePermissions.FirstOrDefault(c => c.Tag == permission.Tag) != null;
         }
 
         public bool Delete(Guid permissionId)
@@ -50,6 +55,9 @@ namespace Cause.SecurityManagement.Services
 
         public bool Update(ModulePermission permission)
         {
+	        if (PermissionAlreadyExist(permission))
+		        return false;
+
             var permissionToChange = SecurityContext.ModulePermissions.FirstOrDefault(c => c.Id == permission.Id);
             if (permissionToChange != null)
             {

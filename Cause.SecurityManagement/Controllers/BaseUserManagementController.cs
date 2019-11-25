@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using Cause.SecurityManagement.Models;
+﻿using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Models.DataTransferObjects;
 using Cause.SecurityManagement.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using System;
+using System.Collections.Generic;
 
 namespace Cause.SecurityManagement.Controllers
 {
@@ -41,8 +41,10 @@ namespace Cause.SecurityManagement.Controllers
 		[HttpPost]
 		public ActionResult SaveUser(TUser user)
 		{
-			UserService.UpdateUser(user, applicationName);
-			return NoContent();
+			var userSaved = UserService.UpdateUser(user, applicationName);
+			if (userSaved)
+				return NoContent();
+			return BadRequest();
 		}
 
 		[HttpDelete, Route("{userId:guid}")]
