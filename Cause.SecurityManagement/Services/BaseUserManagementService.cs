@@ -58,7 +58,7 @@ namespace Cause.SecurityManagement.Services
 
 		public bool UserNameAlreadyUsed(TUser user)
 		{
-			return SecurityContext.Users.Any(c => c.UserName == user.UserName && c.Id != user.Id);
+			return SecurityContext.Users.Any(c => c.UserName == user.UserName && c.Id != user.Id && c.IsActive);
 		}
 
 		private void UpdateUserGroup(User user)
