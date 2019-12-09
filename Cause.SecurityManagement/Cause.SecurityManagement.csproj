@@ -2,11 +2,11 @@
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <ApplicationIcon />
     <OutputType>Library</OutputType>
     <StartupObject />
-    <Authors>Fred Catellier-Poulin</Authors>
+    <Authors>Fred Catellier-Poulin, Michael Jolin, Yannick Jacques, Claudine Gagnon</Authors>
     <Company>CAUSE 9-1-1</Company>
     <RepositoryUrl>https://github.com/CAUCA-9-1-1/cause-security-management</RepositoryUrl>
     <PackageProjectUrl>https://github.com/CAUCA-9-1-1/cause-security-management</PackageProjectUrl>
@@ -14,11 +14,11 @@
     <Description>Security Management for Asp.Net Core projects.</Description>
     <Copyright>CAUSE 9-1-1</Copyright>
     <PackageTags>Cause Security Management AspNetCore</PackageTags>
-    <Version>3.0.6</Version>
-    <PackageReleaseNotes>Updated to .Net Core 3.0</PackageReleaseNotes>
+    <Version>3.1.0</Version>
+    <PackageReleaseNotes>Updated to .Net Core 3.1</PackageReleaseNotes>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <AssemblyVersion>3.0.6.0</AssemblyVersion>
-    <FileVersion>3.0.6.0</FileVersion>
+    <AssemblyVersion>3.1.0.0</AssemblyVersion>
+    <FileVersion>3.1.0.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -28,8 +28,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Cause.Core.DataLayerExtensions" Version="3.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.0.0" />
+    <PackageReference Include="Cause.Core.DataLayerExtensions" Version="3.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.1.0" />
   </ItemGroup>
   
   <ItemGroup>
