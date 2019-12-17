@@ -5,10 +5,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Cause.SecurityManagement
 {
-	public abstract class BaseSecurityContext<TUser> : DbContext, ISecurityContext<TUser>
+    public abstract class BaseSecurityContext<TUser> : DbContext, ISecurityContext<TUser>
         where TUser : User, new()
 	{
-		public DbSet<Module> Modules { get; set; }
+		public CurrentUser CurrentUser { get; set; }
+        public DbSet<Module> Modules { get; set; }
 		public DbSet<ModulePermission> ModulePermissions { get; set; }
 
 		public DbSet<UserToken> UserTokens { get; set; }
@@ -22,8 +23,11 @@ namespace Cause.SecurityManagement
         public DbSet<DataProtectionElement> DataProtectionXmlElements { get; set; }
         public DbSet<ExternalSystem> ExternalSystems { get; set; }
         public DbSet<ExternalSystemToken> ExternalSystemTokens { get; set; }
-        protected BaseSecurityContext(DbContextOptions options) : base(options)
-		{}
+
+        protected BaseSecurityContext(DbContextOptions options, CurrentUser currentUser) : base(options)
+        {
+	        CurrentUser = currentUser;
+        }
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{

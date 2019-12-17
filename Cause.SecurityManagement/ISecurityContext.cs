@@ -7,6 +7,7 @@ namespace Cause.SecurityManagement
     public interface ISecurityContext<TUser>
         where TUser : User, new()
     {
+        CurrentUser CurrentUser { get; set; }
 		DbSet<TUser> Users { get; set; }
 	    DbSet<UserGroup> UserGroups { get; set; }
 	    DbSet<UserPermission> UserPermissions { get; set; }

@@ -4,12 +4,13 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Cause.SecurityManagement
 {
-	public static class ServiceCollectionExtensions
+    public static class ServiceCollectionExtensions
 	{
 		public static IServiceCollection InjectSecurityServices<TUserManagementService, TUser>(this IServiceCollection services) 
 		    where TUserManagementService : UserManagementService<TUser>
             where TUser : User, new()
-		{            
+		{
+			services.AddScoped<CurrentUser>();
 			services.AddTransient<IAuthentificationService, AuthenticationService<TUser>>();
 			services.AddTransient<TUserManagementService>();
             services.AddTransient<IGroupManagementService, BaseGroupManagementService<TUser>>();
