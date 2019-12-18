@@ -1,12 +1,13 @@
 ﻿using Cause.SecurityManagement.Models;
+using Cause.SecurityManagement.Models.DataTransferObjects;
 using System;
 using System.Collections.Generic;
-using Cause.SecurityManagement.Models.DataTransferObjects;
 
 namespace Cause.SecurityManagement.Services
 {
     public interface IAuthentificationService
     {
+	    void SetCurrentUser(Guid userId);
         void EnsureAdminIsCreated(string applicationName);
         List<AuthentificationUserPermission> GetActiveUserPermissions(Guid userId);
         bool IsMobileVersionValid(string mobileVersion, string minimalVersion);

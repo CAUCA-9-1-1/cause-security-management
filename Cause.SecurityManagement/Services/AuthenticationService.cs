@@ -1,19 +1,19 @@
-﻿using System;
+﻿using Cause.SecurityManagement.Models;
+using Cause.SecurityManagement.Models.DataTransferObjects;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
+using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using Cause.SecurityManagement.Models;
-using Cause.SecurityManagement.Models.DataTransferObjects;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
 
 namespace Cause.SecurityManagement.Services
 {
-	public class AuthenticationService<TUser> : IAuthentificationService
+    public class AuthenticationService<TUser> : IAuthentificationService
         where TUser : User, new()
     {
 		private readonly ISecurityContext<TUser> context;
@@ -249,6 +249,18 @@ namespace Cause.SecurityManagement.Services
                 .Distinct();
 
             return restrictedPermissions.Concat(allowedPermissions).ToList();
+        }
+
+        public void SetCurrentUser(Guid userId)
+        {
+	        var user = context.Users.FirstOrDefault(c => c.Id == userId);
+	        if (user != null)
+	        {
+		        context.CurrentUser.Id = userId;
+		        context.CurrentUser.UserName = user.UserName;
+		        context.CurrentUser.FirstName = user.FirstName;
+		        context.CurrentUser.LastName = user.LastName;
+	        }
         }
     }
 }
