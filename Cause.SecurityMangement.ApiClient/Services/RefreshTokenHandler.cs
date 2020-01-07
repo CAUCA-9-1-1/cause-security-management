@@ -30,8 +30,8 @@ namespace Cause.SecurityMangement.ApiClient.Services
                 .AppendPathSegment(GetPathForLogin());
         }
 
-        private string GetPathForLogin() => Configuration.UseExternalSystemLogin ? "LogonForExternalSystem" : "Logon";
-        private string GetPathForRefresh() => Configuration.UseExternalSystemLogin ? "RefreshForExternalSystem" : "refresh";
+        private string GetPathForLogin() => Configuration.UseExternalSystemLogin ? "logonforexternalsystem" : "logon";
+        private string GetPathForRefresh() => Configuration.UseExternalSystemLogin ? "refreshforexternalsystem" : "refresh";
 
         public async Task RefreshToken()
         {
