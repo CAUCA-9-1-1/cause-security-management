@@ -95,7 +95,7 @@ namespace Cause.SecurityManagement.Controllers
 
             return new LoginResult
             {
-                AuthorizationType = "ApiBearer",
+                AuthorizationType = "Bearer",
                 ExpiredOn = result.token.ExpiresOn,
                 AccessToken = result.token.AccessToken,
                 RefreshToken = result.token.RefreshToken,

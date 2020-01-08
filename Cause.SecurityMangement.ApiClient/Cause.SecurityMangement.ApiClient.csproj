@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard1.3</TargetFramework>
+    <Authors>Fred Catellier</Authors>
+    <Company>CAUCA 9-1-1</Company>
+    <Description>Api Client for WebApi secured with Cause.SecurityManagement.ApiClient</Description>
+    <Copyright>2020</Copyright>
+    <PackageProjectUrl>https://github.com/CAUCA-9-1-1/cause-security-management</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/CAUCA-9-1-1/cause-security-management</RepositoryUrl>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Exceptions\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Flurl.Http" Version="2.4.2" />
+  </ItemGroup>
+
+</Project>
