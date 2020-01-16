@@ -54,7 +54,7 @@ namespace Cause.SecurityMangement.ApiClient.Services
             try
             {
                 var response = await request
-                    .PostJsonAsync(new {Configuration.UserId, Configuration.Password})
+                    .PostJsonAsync(GetLoginBody())
                     .ReceiveJson<LoginResult>();
                 return response;
             }
@@ -68,6 +68,13 @@ namespace Cause.SecurityMangement.ApiClient.Services
 
                 throw new InternalErrorApiException("An error occured in the login process", exception);
             }
+        }
+
+        private object GetLoginBody()
+        {
+            if (Configuration.UseExternalSystemLogin)
+                return new {ApiKey = Configuration.UserId};
+            return new {Configuration.UserId, Configuration.Password};
         }
 
         private async Task<string> GetNewAccessToken()
