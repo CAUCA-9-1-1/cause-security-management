@@ -19,26 +19,22 @@ namespace Cause.SecurityMangement.ApiClient.Services
 
         public async Task<TResult> PostAsync<TResult>(string url, object entity)
         {
-            var request = GenerateRequest(url);
-            return await ExecuteAsync(() => ExecutePostAsync<TResult>(request, entity));
+            return await ExecuteAsync(() => ExecutePostAsync<TResult>(GenerateRequest(url), entity));
         }
 
         public async Task<TResult> PutAsync<TResult>(string url, object entity)
         {
-            var request = GenerateRequest(url);
-            return await ExecuteAsync(() => ExecutePutAsync<TResult>(request, entity));
+            return await ExecuteAsync(() => ExecutePutAsync<TResult>(GenerateRequest(url), entity));
         }
 
         public async Task<TResult> DeleteAsync<TResult>(string url)
         {
-            var request = GenerateRequest(url);
-            return await ExecuteAsync(() => ExecuteDeleteAsync<TResult>(request));
+            return await ExecuteAsync(() => ExecuteDeleteAsync<TResult>(GenerateRequest(url)));
         }
 
         public async Task<TResult> GetAsync<TResult>(string url)
         {
-            var request = GenerateRequest(url);
-            return await ExecuteAsync(() => ExecuteGetAsync<TResult>(request));
+            return await ExecuteAsync(() => ExecuteGetAsync<TResult>(GenerateRequest(url)));
         }
 
         protected virtual async Task<TResult> ExecuteAsync<TResult>(Func<Task<TResult>> request)
