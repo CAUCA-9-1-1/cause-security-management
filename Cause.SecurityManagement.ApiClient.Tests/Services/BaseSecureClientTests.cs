@@ -65,6 +65,7 @@ namespace Cause.SecurityManagement.ApiClient.Tests.Services
                 httpTest.ShouldHaveCalled("http://test/mock")
                     .WithRequestJson(country)
                     .WithVerb(HttpMethod.Post)
+                    .WithHeader("Authorization", "Bearer NewAccessToken")
                     .With(call => call.Response.StatusCode == System.Net.HttpStatusCode.OK)
                     .Times(1);
             }
