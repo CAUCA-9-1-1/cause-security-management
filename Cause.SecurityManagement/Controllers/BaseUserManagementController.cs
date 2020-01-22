@@ -106,5 +106,11 @@ namespace Cause.SecurityManagement.Controllers
 		{
 			return Ok(UserService.GetPermissionsForUser(userId));
 		}
+
+        [HttpPost, Route("UserNameAlreadyExist")]
+        public ActionResult UserNameAlreadyExist([FromBody]TUser user)
+        {
+            return Ok(UserService.UserNameAlreadyUsed(user));
+        }
 	}
 }

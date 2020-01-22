@@ -69,7 +69,7 @@ namespace Cause.SecurityManagement.Controllers
 			return NotFound();
 		}
 
-		[HttpPost("GroupNameAlreadyExist")]
+		[HttpPost, Route("GroupNameAlreadyExist")]
 		public ActionResult GroupNameAlreadyExist([FromBody]Group group)
 		{
 			return Ok(GroupService.GroupNameAlreadyUsed(group));
