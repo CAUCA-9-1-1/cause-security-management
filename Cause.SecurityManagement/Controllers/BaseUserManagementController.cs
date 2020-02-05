@@ -10,7 +10,7 @@ namespace Cause.SecurityManagement.Controllers
 {
 	[Route("api/users")]
 	public abstract class BaseUserManagementController<TService, TUser> : Controller
-		where TService : UserManagementService<TUser>
+		where TService : IUserManagementService<TUser>
         where TUser: User, new()
 	{
 		private readonly string applicationName;

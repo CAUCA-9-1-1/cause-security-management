@@ -62,6 +62,7 @@ namespace Cause.SecurityManagement
 	        if (Guid.TryParse(context.Principal.Claims.FirstOrDefault(claim => claim.Type == JwtRegisteredClaimNames.Sid)?.Value, out Guid userId))
 	        {
 		        var authService = context.HttpContext.RequestServices.GetRequiredService<IAuthentificationService>();
+                Console.WriteLine("authService.SetCurrentUser");
 		        authService.SetCurrentUser(userId);
 	        }
 

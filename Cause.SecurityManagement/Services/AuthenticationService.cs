@@ -256,6 +256,7 @@ namespace Cause.SecurityManagement.Services
 	        var user = context.Users.AsNoTracking().FirstOrDefault(c => c.Id == userId);
 	        if (user != null)
 	        {
+                Console.WriteLine("CurrentUser != null");
 		        context.CurrentUser.Id = userId;
 		        context.CurrentUser.UserName = user.UserName;
 		        context.CurrentUser.FirstName = user.FirstName;

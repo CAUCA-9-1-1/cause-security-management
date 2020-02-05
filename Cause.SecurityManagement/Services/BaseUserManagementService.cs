@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace Cause.SecurityManagement.Services
 {
-	public class UserManagementService<TUser> where TUser : User, new()
+	public class UserManagementService<TUser> : IUserManagementService<TUser> where TUser : User, new() 
 	{
 		protected ISecurityContext<TUser> SecurityContext;
 
@@ -16,7 +16,7 @@ namespace Cause.SecurityManagement.Services
 			SecurityContext = securityContext;
 		}
 
-		public List<TUser> GetActiveUsers()
+		public virtual List<TUser> GetActiveUsers()
 		{
 			return SecurityContext.Users
 				.Where(u => u.IsActive)
@@ -30,7 +30,7 @@ namespace Cause.SecurityManagement.Services
 		    return SecurityContext.Users.Find(userId);
 		}
 
-		public bool UpdateUser(TUser user, string applicationName)
+		public virtual bool UpdateUser(TUser user, string applicationName)
 		{
 			if (UserNameAlreadyUsed(user))
 				return false;
