@@ -14,11 +14,11 @@
     <Description>Set update method for user group, permission and password as public</Description>
     <Copyright>CAUSE 9-1-1</Copyright>
     <PackageTags>Cause Security Management AspNetCore Api Client Cauca</PackageTags>
-    <Version>3.1.10</Version>
+    <Version>3.1.11</Version>
     <PackageReleaseNotes>Set update method for user group, permission and password as public</PackageReleaseNotes>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <AssemblyVersion>3.1.10.0</AssemblyVersion>
-    <FileVersion>3.1.10.0</FileVersion>
+    <AssemblyVersion>3.1.11.0</AssemblyVersion>
+    <FileVersion>3.1.11.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
