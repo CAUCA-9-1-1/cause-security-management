@@ -10,6 +10,7 @@ namespace Cause.SecurityManagement.Mapping
 		public override void Map(EntityTypeBuilder<T> model)
 		{
 			model.HasKey(m => m.Id);
+            model.Property(m => m.Id).ValueGeneratedNever();
 			MapProperties(model);
 		}
 
