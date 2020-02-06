@@ -11,14 +11,14 @@
     <RepositoryUrl>https://github.com/CAUCA-9-1-1/cause-security-management</RepositoryUrl>
     <PackageProjectUrl>https://github.com/CAUCA-9-1-1/cause-security-management</PackageProjectUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Description>Set update method for user group, permission and password as public</Description>
+    <Description>Fix delete group and permission</Description>
     <Copyright>CAUSE 9-1-1</Copyright>
     <PackageTags>Cause Security Management AspNetCore Api Client Cauca</PackageTags>
-    <Version>3.1.11</Version>
-    <PackageReleaseNotes>Set update method for user group, permission and password as public</PackageReleaseNotes>
+    <Version>3.1.13</Version>
+    <PackageReleaseNotes>Fix delete group and permission</PackageReleaseNotes>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <AssemblyVersion>3.1.11.0</AssemblyVersion>
-    <FileVersion>3.1.11.0</FileVersion>
+    <AssemblyVersion>3.1.13.0</AssemblyVersion>
+    <FileVersion>3.1.13.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>

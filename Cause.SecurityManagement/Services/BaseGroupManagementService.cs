@@ -111,6 +111,8 @@ namespace Cause.SecurityManagement.Services
 
         public bool DeactivateGroup(Guid groupId)
 		{
+            SecurityContext.GroupPermissions.RemoveRange(SecurityContext.GroupPermissions.Where(p => p.IdGroup == groupId).ToArray());
+            SecurityContext.UserGroups.RemoveRange(SecurityContext.UserGroups.Where(p => p.IdGroup == groupId).ToArray());
 			var group = SecurityContext.Groups.Find(groupId);
 			if (group != null)
 			{

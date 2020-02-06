@@ -1,4 +1,5 @@
 ﻿using Cause.SecurityManagement.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Cause.SecurityManagement.Mapping
@@ -9,7 +10,8 @@ namespace Cause.SecurityManagement.Mapping
 		{
 			model.HasOne(m => m.Group)
 				.WithMany(m => m.Users)
-				.HasForeignKey(m => m.IdGroup);
+				.HasForeignKey(m => m.IdGroup)
+                .OnDelete(DeleteBehavior.NoAction);
 		}
 	}
 }

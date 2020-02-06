@@ -38,6 +38,8 @@ namespace Cause.SecurityManagement.Services
 
         public bool Delete(Guid permissionId)
         {
+            SecurityContext.UserPermissions.RemoveRange(SecurityContext.UserPermissions.Where(p => p.IdModulePermission == permissionId).ToArray());
+            SecurityContext.GroupPermissions.RemoveRange(SecurityContext.GroupPermissions.Where(p => p.IdModulePermission == permissionId).ToArray());
             var permissionToDelete = SecurityContext.ModulePermissions.FirstOrDefault(c => c.Id == permissionId);
             if (permissionToDelete != null)
             {
