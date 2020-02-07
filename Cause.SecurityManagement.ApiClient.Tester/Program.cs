@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Cause.SecurityMangement.ApiClient.Configuration;
 using Cause.SecurityMangement.ApiClient.Services;
+using Flurl.Http.Testing;
 
 namespace Cause.SecurityManagement.ApiClient.Tester
 {
@@ -24,13 +26,24 @@ namespace Cause.SecurityManagement.ApiClient.Tester
                 }
             };
 
-            await service.SendMessage(new List<CommProviderAlertDetail>{message});
+            using var httpTest = new HttpTest();
+            httpTest.RespondWith("farlouche");
+
+            var response = await service.GetWhateve();
+
+            /*httpTest.ShouldHaveCalled("http://test/yo")
+                .WithVerb(HttpMethod.Get)
+                .Times(1);*/
+
+            
+
+            //await service.SendMessage(new List<CommProviderAlertDetail>{message});
 
             Console.WriteLine("Funky whop");
         }
     }
 
-    class WhateverService : BaseSecureService<Configuration>
+    class WhateverService : BaseService<Configuration>
     {
         public WhateverService(Configuration configuration) : base(configuration)
         {
@@ -39,6 +52,12 @@ namespace Cause.SecurityManagement.ApiClient.Tester
         public Task<TransactionProvider> SendMessage(List<CommProviderAlertDetail> details)
         {
             return PostAsync<TransactionProvider>("message", details);
+        }
+
+        public async Task<string> GetWhateve()
+        {
+            var response = await GetStringAsync("yo");
+            return response;
         }
     }
 

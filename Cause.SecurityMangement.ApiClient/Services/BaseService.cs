@@ -1,6 +1,8 @@
 ﻿using System;
+using System.IO;
 using System.Threading.Tasks;
 using Cause.SecurityMangement.ApiClient.Configuration;
+using Cause.SecurityMangement.ApiClient.Exceptions;
 using Cause.SecurityMangement.ApiClient.Services.Interfaces;
 using Flurl;
 using Flurl.Http;
@@ -37,6 +39,21 @@ namespace Cause.SecurityMangement.ApiClient.Services
             return await ExecuteAsync(() => ExecuteGetAsync<TResult>(GenerateRequest(url)));
         }
 
+        public async Task<byte[]> GetBytesAsync(string url)
+        {
+            return await ExecuteAsync(() => ExecuteGetBytesAsync(GenerateRequest(url)));
+        }
+
+        public async Task<Stream> GetStreamAsync(string url)
+        {
+            return await ExecuteAsync(() => ExecuteGetStreamAsync(GenerateRequest(url)));
+        }
+
+        public async Task<string> GetStringAsync(string url)
+        {
+            return await ExecuteAsync(() => ExecuteGetStringAsync(GenerateRequest(url)));
+        }
+
         protected virtual async Task<TResult> ExecuteAsync<TResult>(Func<Task<TResult>> request)
         {
             try
@@ -67,8 +84,47 @@ namespace Cause.SecurityMangement.ApiClient.Services
 
         protected async Task<TResult> ExecuteGetAsync<TResult>(IFlurlRequest request)
         {
-            return await request
-                .GetJsonAsync<TResult>();
+            var type = typeof(TResult);
+            if (type == typeof(string))
+            {
+                var response = await request.GetStringAsync();
+                return (TResult) Convert.ChangeType(response, typeof(TResult));
+            }
+            else if (type == typeof(bool))
+            {
+                var response = (await request.GetStringAsync()).ToUpper() == "TRUE";
+                return (TResult)Convert.ChangeType(response, typeof(TResult));
+            }
+            else if (type == typeof(int))
+            {
+                var response = await request.GetStringAsync();
+                if (int.TryParse(response, out int result))
+                {
+                    return (TResult)Convert.ChangeType(result, typeof(TResult));
+                }
+
+                return (TResult)Convert.ChangeType(0, typeof(TResult));
+            }
+            else
+            {
+                return await request
+                    .GetJsonAsync<TResult>();
+            }
+        }
+
+        protected async Task<Stream> ExecuteGetStreamAsync(IFlurlRequest request)
+        {
+            return await request.GetStreamAsync();
+        }
+
+        protected async Task<string> ExecuteGetStringAsync(IFlurlRequest request)
+        {
+            return await request.GetStringAsync();
+        }
+
+        protected async Task<byte[]> ExecuteGetBytesAsync(IFlurlRequest request)
+        {
+            return await request.GetBytesAsync();
         }
 
         protected async Task<TResult> ExecutePutAsync<TResult>(IFlurlRequest request, object entity)

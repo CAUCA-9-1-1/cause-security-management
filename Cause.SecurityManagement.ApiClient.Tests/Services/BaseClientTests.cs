@@ -92,7 +92,7 @@ namespace Cause.SecurityManagement.ApiClient.Tests.Services
         public async Task BooleanAreCorrectlyReceived()
         {
             using var httpTest = new HttpTest();
-            httpTest.RespondWithJson(true);
+            httpTest.RespondWith(true.ToString());
             var repo = new MockRepository(configuration);
             var response = await repo.GetAsync<bool>("mock");
 
@@ -104,12 +104,42 @@ namespace Cause.SecurityManagement.ApiClient.Tests.Services
         }
 
         [TestCase]
+        public async Task FalseBooleanAreCorrectlyReceived()
+        {
+            using var httpTest = new HttpTest();
+            httpTest.RespondWith(false.ToString());
+            var repo = new MockRepository(configuration);
+            var response = await repo.GetAsync<bool>("mock");
+
+            httpTest.ShouldHaveCalled("http://test/mock")
+                .WithVerb(HttpMethod.Get)
+                .Times(1);
+
+            Assert.AreEqual(response, false);
+        }
+
+        [TestCase]
         public async Task StringAreCorrectlyReceived()
         {
             using var httpTest = new HttpTest();
-            httpTest.RespondWithJson("Allo");
+            httpTest.RespondWith("Allo");
             var repo = new MockRepository(configuration);
             var response = await repo.GetAsync<string>("mock");
+
+            httpTest.ShouldHaveCalled("http://test/mock")
+                .WithVerb(HttpMethod.Get)
+                .Times(1);
+
+            Assert.AreEqual(response, "Allo");
+        }
+
+        [TestCase]
+        public async Task StringAreCorrectlyReceivedWhenUsingGetAsyncString()
+        {
+            using var httpTest = new HttpTest();
+            httpTest.RespondWith("Allo");
+            var repo = new MockRepository(configuration);
+            var response = await repo.GetStringAsync("mock");
 
             httpTest.ShouldHaveCalled("http://test/mock")
                 .WithVerb(HttpMethod.Get)
@@ -122,7 +152,7 @@ namespace Cause.SecurityManagement.ApiClient.Tests.Services
         public async Task IntAreCorrectlyReceived()
         {
             using var httpTest = new HttpTest();
-            httpTest.RespondWithJson(33);
+            httpTest.RespondWith(33.ToString());
             var repo = new MockRepository(configuration);
             var response = await repo.GetAsync<int>("mock");
 
@@ -137,17 +167,16 @@ namespace Cause.SecurityManagement.ApiClient.Tests.Services
         public async Task BytesArrayAreCorrectlyReceived()
         {
             var text = "Ceci est mon test";
-            var value = Encoding.UTF8.GetBytes(text);
             using var httpTest = new HttpTest();
-            httpTest.RespondWithJson(value);
+            httpTest.RespondWith(text);
             var repo = new MockRepository(configuration);
-            var response = await repo.GetAsync<byte[]>("mock");
+            var response = await repo.GetBytesAsync("mock");
 
             httpTest.ShouldHaveCalled("http://test/mock")
                 .WithVerb(HttpMethod.Get)
                 .Times(1);
 
-            Assert.AreEqual(Encoding.UTF8.GetString(response), text);
+            Assert.AreEqual(text, Encoding.UTF8.GetString(response));
         }
     }
 }
