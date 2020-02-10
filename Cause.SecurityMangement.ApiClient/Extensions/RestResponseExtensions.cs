@@ -2,7 +2,7 @@
 using System.Net;
 using Flurl.Http;
 
-namespace Cause.SecurityMangement.ApiClient.Extensions
+namespace Cauca.ApiClient.Extensions
 {
     public static class RestResponseExtensions
     {

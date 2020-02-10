@@ -1,4 +1,4 @@
-﻿namespace Cause.SecurityMangement.ApiClient.Configuration
+﻿namespace Cauca.ApiClient.Configuration
 {
     public interface IConfiguration
     {

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Cause.SecurityMangement.ApiClient
+namespace Cauca.ApiClient
 {
     public class LoginInfo
     {

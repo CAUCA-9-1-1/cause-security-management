@@ -1,4 +1,4 @@
-﻿using Cause.SecurityMangement.ApiClient.Services;
+﻿using Cauca.ApiClient.Services;
 
 namespace Cause.SecurityManagement.ApiClient.Tests.Mocks
 {

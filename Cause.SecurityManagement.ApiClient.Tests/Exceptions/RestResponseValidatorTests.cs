@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net;
-using Cause.SecurityMangement.ApiClient.Exceptions;
-using Cause.SecurityMangement.ApiClient.Services;
+using Cauca.ApiClient.Exceptions;
+using Cauca.ApiClient.Services;
 using NUnit.Framework;
 
 namespace Cause.SecurityManagement.ApiClient.Tests.Exceptions

@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Cause.SecurityMangement.ApiClient.Configuration;
-using Cause.SecurityMangement.ApiClient.Services;
+using Cauca.ApiClient.Configuration;
+using Cauca.ApiClient.Services;
 using Flurl.Http.Testing;
 
 namespace Cause.SecurityManagement.ApiClient.Tester

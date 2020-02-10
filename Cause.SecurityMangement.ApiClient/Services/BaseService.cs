@@ -1,13 +1,12 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
-using Cause.SecurityMangement.ApiClient.Configuration;
-using Cause.SecurityMangement.ApiClient.Exceptions;
-using Cause.SecurityMangement.ApiClient.Services.Interfaces;
+using Cauca.ApiClient.Configuration;
+using Cauca.ApiClient.Services.Interfaces;
 using Flurl;
 using Flurl.Http;
 
-namespace Cause.SecurityMangement.ApiClient.Services
+namespace Cauca.ApiClient.Services
 {
     public abstract class BaseService<TConfiguration> : IBaseService
         where TConfiguration : IConfiguration
@@ -77,9 +76,39 @@ namespace Cause.SecurityMangement.ApiClient.Services
 
         protected async Task<TResult> ExecutePostAsync<TResult>(IFlurlRequest request, object entity)
         {
-            return await request
-                .PostJsonAsync(entity)
-                .ReceiveJson<TResult>();
+            var type = typeof(TResult);
+            if (type == typeof(string))
+            {
+                var response = await request
+                    .PostJsonAsync(entity)
+                    .ReceiveString();
+                return (TResult)Convert.ChangeType(response, typeof(TResult));
+            }
+            else if (type == typeof(bool))
+            {
+                var response = await request
+                    .PostJsonAsync(entity)
+                    .ReceiveString() == "TRUE";
+                return (TResult)Convert.ChangeType(response, typeof(TResult));
+            }
+            else if (type == typeof(int))
+            {
+                var response = await request
+                    .PostJsonAsync(entity)
+                    .ReceiveString();
+                if (int.TryParse(response, out int result))
+                {
+                    return (TResult)Convert.ChangeType(result, typeof(TResult));
+                }
+
+                return (TResult)Convert.ChangeType(0, typeof(TResult));
+            }
+            else
+            {
+                return await request
+                    .PostJsonAsync(entity)
+                    .ReceiveJson<TResult>();
+            }
         }
 
         protected async Task<TResult> ExecuteGetAsync<TResult>(IFlurlRequest request)

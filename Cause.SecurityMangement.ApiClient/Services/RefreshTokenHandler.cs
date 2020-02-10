@@ -1,11 +1,11 @@
 ﻿using System.Threading.Tasks;
-using Cause.SecurityMangement.ApiClient.Configuration;
-using Cause.SecurityMangement.ApiClient.Exceptions;
-using Cause.SecurityMangement.ApiClient.Extensions;
+using Cauca.ApiClient.Configuration;
+using Cauca.ApiClient.Exceptions;
+using Cauca.ApiClient.Extensions;
 using Flurl;
 using Flurl.Http;
 
-namespace Cause.SecurityMangement.ApiClient.Services
+namespace Cauca.ApiClient.Services
 {
     public class RefreshTokenHandler
     {

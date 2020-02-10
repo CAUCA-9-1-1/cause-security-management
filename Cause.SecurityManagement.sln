@@ -9,11 +9,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cause.SecurityManagement.Mo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cause.SecurityManagement.Example", "Cause.SecurityManagement.Example\Cause.SecurityManagement.Example.csproj", "{660127F6-741F-452E-BAAD-F637BBAEE15D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cause.SecurityMangement.ApiClient", "Cause.SecurityMangement.ApiClient\Cause.SecurityMangement.ApiClient.csproj", "{341D0A41-55D7-436B-9617-018E2BE3A57D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cauca.ApiClient", "Cause.SecurityMangement.ApiClient\Cauca.ApiClient.csproj", "{341D0A41-55D7-436B-9617-018E2BE3A57D}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cause.SecurityManagement.ApiClient.Tests", "Cause.SecurityManagement.ApiClient.Tests\Cause.SecurityManagement.ApiClient.Tests.csproj", "{F297F03E-ED9F-4967-ADE1-9F958F2A564F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cause.SecurityManagement.ApiClient.Tester", "Cause.SecurityManagement.ApiClient.Tester\Cause.SecurityManagement.ApiClient.Tester.csproj", "{50B9F672-E36D-45C7-AAD2-79E6FB0F461A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cause.SecurityManagement.ApiClient.Tester", "Cause.SecurityManagement.ApiClient.Tester\Cause.SecurityManagement.ApiClient.Tester.csproj", "{50B9F672-E36D-45C7-AAD2-79E6FB0F461A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

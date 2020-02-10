@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Net;
-using Cause.SecurityMangement.ApiClient.Exceptions;
+using Cauca.ApiClient.Exceptions;
 
-namespace Cause.SecurityMangement.ApiClient.Services
+namespace Cauca.ApiClient.Services
 {
     public class RestResponseValidator
     {

@@ -1,4 +1,4 @@
-﻿namespace Cause.SecurityMangement.ApiClient.Exceptions
+﻿namespace Cauca.ApiClient.Exceptions
 {
 	public class ForbiddenApiException : ApiClientException
 	{

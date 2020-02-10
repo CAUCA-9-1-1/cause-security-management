@@ -1,7 +1,7 @@
 ﻿using System.Net.Http;
 using System.Threading.Tasks;
+using Cauca.ApiClient;
 using Cause.SecurityManagement.ApiClient.Tests.Mocks;
-using Cause.SecurityMangement.ApiClient;
 using Flurl.Http.Testing;
 using NUnit.Framework;
 

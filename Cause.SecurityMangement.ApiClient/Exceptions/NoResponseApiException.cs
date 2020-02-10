@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Cause.SecurityMangement.ApiClient.Exceptions
+namespace Cauca.ApiClient.Exceptions
 {
 	public class NoResponseApiException : ApiClientException
 	{

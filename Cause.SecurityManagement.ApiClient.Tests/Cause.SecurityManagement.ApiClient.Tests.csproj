@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Cause.SecurityMangement.ApiClient\Cause.SecurityMangement.ApiClient.csproj" />
+    <ProjectReference Include="..\Cause.SecurityMangement.ApiClient\Cauca.ApiClient.csproj" />
   </ItemGroup>
 
 </Project>

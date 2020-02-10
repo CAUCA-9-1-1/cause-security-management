@@ -1,4 +1,4 @@
-﻿using Cause.SecurityMangement.ApiClient.Extensions;
+﻿using Cauca.ApiClient.Extensions;
 using NUnit.Framework;
 
 namespace Cause.SecurityManagement.ApiClient.Tests.Exceptions

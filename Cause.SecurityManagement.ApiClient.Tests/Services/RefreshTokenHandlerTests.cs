@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Cauca.ApiClient;
+using Cauca.ApiClient.Configuration;
+using Cauca.ApiClient.Services;
 using Cause.SecurityManagement.ApiClient.Tests.Mocks;
-using Cause.SecurityMangement.ApiClient;
-using Cause.SecurityMangement.ApiClient.Configuration;
-using Cause.SecurityMangement.ApiClient.Services;
 using Flurl.Http.Testing;
 using NUnit.Framework;
 

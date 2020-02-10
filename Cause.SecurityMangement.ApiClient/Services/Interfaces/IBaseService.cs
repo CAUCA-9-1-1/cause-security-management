@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace Cause.SecurityMangement.ApiClient.Services.Interfaces
+namespace Cauca.ApiClient.Services.Interfaces
 {
     public interface IBaseService
     {

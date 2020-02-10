@@ -1,8 +1,8 @@
 ﻿using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using Cauca.ApiClient.Exceptions;
 using Cause.SecurityManagement.ApiClient.Tests.Mocks;
-using Cause.SecurityMangement.ApiClient.Exceptions;
 using Flurl.Http.Testing;
 using NUnit.Framework;
 
