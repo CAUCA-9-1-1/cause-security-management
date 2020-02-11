@@ -1,5 +1,4 @@
-﻿using Cause.SecurityManagement.Models;
-using Cause.SecurityManagement.Services;
+﻿using Cause.SecurityManagement.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -62,7 +61,6 @@ namespace Cause.SecurityManagement
 	        if (Guid.TryParse(context.Principal.Claims.FirstOrDefault(claim => claim.Type == JwtRegisteredClaimNames.Sid)?.Value, out Guid userId))
 	        {
 		        var authService = context.HttpContext.RequestServices.GetRequiredService<IAuthentificationService>();
-                Console.WriteLine("authService.SetCurrentUser");
 		        authService.SetCurrentUser(userId);
 	        }
 

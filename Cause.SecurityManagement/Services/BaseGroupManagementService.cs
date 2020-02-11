@@ -53,10 +53,8 @@ namespace Cause.SecurityManagement.Services
 
 		private void UpdateGroupUser(Group group)
         {
-            if (group.Users is null)
-            {
-                return;
-            }
+            if (group.Users == null)
+	            return;
 
             var groupUsers = group.Users.ToList();
             var dbGroupUsers = SecurityContext.UserGroups.AsNoTracking().Where(uc => uc.IdGroup == group.Id).ToList();
@@ -111,8 +109,6 @@ namespace Cause.SecurityManagement.Services
 
         public bool DeactivateGroup(Guid groupId)
 		{
-            SecurityContext.GroupPermissions.RemoveRange(SecurityContext.GroupPermissions.Where(p => p.IdGroup == groupId).ToArray());
-            SecurityContext.UserGroups.RemoveRange(SecurityContext.UserGroups.Where(p => p.IdGroup == groupId).ToArray());
 			var group = SecurityContext.Groups.Find(groupId);
 			if (group != null)
 			{

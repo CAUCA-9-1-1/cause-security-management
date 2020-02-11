@@ -1,5 +1,4 @@
 ﻿using Cause.SecurityManagement.Models;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Cause.SecurityManagement.Mapping
@@ -16,12 +15,11 @@ namespace Cause.SecurityManagement.Mapping
 			model.Property(m => m.Email).HasMaxLength(100).IsRequired();
 			model.HasMany(m => m.Groups)
 				.WithOne()
-				.HasForeignKey(m => m.IdUser)
-                .OnDelete(DeleteBehavior.NoAction);
+				.HasForeignKey(m => m.IdUser);
+
 			model.HasMany(m => m.Permissions)
 				.WithOne()
-				.HasForeignKey(m => m.IdUser)
-                .OnDelete(DeleteBehavior.NoAction);
+				.HasForeignKey(m => m.IdUser);
 
 		    model.HasMany(m => m.Tokens)
 		        .WithOne()
