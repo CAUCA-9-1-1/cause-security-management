@@ -14,11 +14,11 @@
     <Description>Fix delete group and permission</Description>
     <Copyright>CAUSE 9-1-1</Copyright>
     <PackageTags>Cause Security Management AspNetCore Api Client Cauca</PackageTags>
-    <Version>3.1.13</Version>
+    <Version>3.1.14-beta1</Version>
     <PackageReleaseNotes>Fix delete group and permission</PackageReleaseNotes>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <AssemblyVersion>3.1.13.0</AssemblyVersion>
-    <FileVersion>3.1.13.0</FileVersion>
+    <AssemblyVersion>3.1.14.1</AssemblyVersion>
+    <FileVersion>3.1.14.1</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
