@@ -16,6 +16,7 @@ namespace Cause.SecurityManagement.Mapping
 			model.HasMany(m => m.Groups)
 				.WithOne()
 				.HasForeignKey(m => m.IdUser);
+
 			model.HasMany(m => m.Permissions)
 				.WithOne()
 				.HasForeignKey(m => m.IdUser);

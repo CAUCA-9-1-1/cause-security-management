@@ -53,10 +53,8 @@ namespace Cause.SecurityManagement.Services
 
 		private void UpdateGroupUser(Group group)
         {
-            if (group.Users is null)
-            {
-                return;
-            }
+            if (group.Users == null)
+	            return;
 
             var groupUsers = group.Users.ToList();
             var dbGroupUsers = SecurityContext.UserGroups.AsNoTracking().Where(uc => uc.IdGroup == group.Id).ToList();

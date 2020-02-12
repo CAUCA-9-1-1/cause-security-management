@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Cause.SecurityManagement.Services
 {
-	public class BasePermissionManagementService<TUser> : IPermissionManagementService
+    public class BasePermissionManagementService<TUser> : IPermissionManagementService
         where TUser : User, new()
     {
 		protected ISecurityContext<TUser> SecurityContext;

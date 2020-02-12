@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace Cause.SecurityManagement.Services
 {
-	public class UserManagementService<TUser> where TUser : User, new()
+	public class UserManagementService<TUser> : IUserManagementService<TUser> where TUser : User, new() 
 	{
 		protected ISecurityContext<TUser> SecurityContext;
 
@@ -16,7 +16,7 @@ namespace Cause.SecurityManagement.Services
 			SecurityContext = securityContext;
 		}
 
-		public List<TUser> GetActiveUsers()
+		public virtual List<TUser> GetActiveUsers()
 		{
 			return SecurityContext.Users
 				.Where(u => u.IsActive)
@@ -30,25 +30,17 @@ namespace Cause.SecurityManagement.Services
 		    return SecurityContext.Users.Find(userId);
 		}
 
-		public bool UpdateUser(TUser user, string applicationName)
+		public virtual bool UpdateUser(TUser user, string applicationName)
 		{
 			if (UserNameAlreadyUsed(user))
 				return false;
 
             UpdateUserGroup(user);
             UpdateUserPermission(user);
-
-            if (!string.IsNullOrWhiteSpace(user.Password))
-                user.Password = new PasswordGenerator().EncodePassword(user.Password, applicationName);
+            UpdatePassword(user, applicationName);
 
             if (SecurityContext.Users.AsNoTracking().Any(u => u.Id == user.Id))
-            {
-                if (string.IsNullOrWhiteSpace(user.Password))
-                    user.Password = SecurityContext.Users.AsNoTracking()
-                        .Where(u => u.Id == user.Id)
-                        .Select(u => u.Password).First();
                 SecurityContext.Users.Update(user);
-            }
             else
                 SecurityContext.Users.Add(user);
 
@@ -56,12 +48,22 @@ namespace Cause.SecurityManagement.Services
 			return true;
 		}
 
-		public bool UserNameAlreadyUsed(TUser user)
+        public void UpdatePassword(TUser user, string applicationName)
+        {
+            if (!string.IsNullOrWhiteSpace(user.Password))
+                user.Password = new PasswordGenerator().EncodePassword(user.Password, applicationName);
+			else
+				user.Password = SecurityContext.Users.AsNoTracking()
+                    .Where(u => u.Id == user.Id)
+                    .Select(u => u.Password).First();
+		}
+
+        public bool UserNameAlreadyUsed(TUser user)
 		{
 			return SecurityContext.Users.Any(c => c.UserName == user.UserName && c.Id != user.Id && c.IsActive);
 		}
 
-		private void UpdateUserGroup(User user)
+		public void UpdateUserGroup(User user)
         {
             if (user.Groups is null)
             {
@@ -90,7 +92,7 @@ namespace Cause.SecurityManagement.Services
             });
         }
 
-        private void UpdateUserPermission(User user)
+        public void UpdateUserPermission(User user)
         {
             if (user.Permissions is null)
             {

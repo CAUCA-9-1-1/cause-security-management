@@ -1,5 +1,4 @@
-﻿using Cause.SecurityManagement.Models;
-using Cause.SecurityManagement.Services;
+﻿using Cause.SecurityManagement.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

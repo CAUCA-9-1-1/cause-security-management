@@ -253,7 +253,7 @@ namespace Cause.SecurityManagement.Services
 
         public void SetCurrentUser(Guid userId)
         {
-	        var user = context.Users.FirstOrDefault(c => c.Id == userId);
+	        var user = context.Users.AsNoTracking().FirstOrDefault(c => c.Id == userId);
 	        if (user != null)
 	        {
 		        context.CurrentUser.Id = userId;
