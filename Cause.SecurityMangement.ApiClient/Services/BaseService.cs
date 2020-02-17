@@ -62,7 +62,7 @@ namespace Cauca.ApiClient.Services
             catch (FlurlHttpException exception)
             {
                 new RestResponseValidator()
-                    .ThrowExceptionForStatusCode(request.ToString(), exception.Call.Succeeded, exception.Call.HttpStatus, exception);
+                    .ThrowExceptionForStatusCode(exception.Call.FlurlRequest.Url, exception.Call.Succeeded, exception.Call.HttpStatus, exception);
                 throw;
             }
         }
