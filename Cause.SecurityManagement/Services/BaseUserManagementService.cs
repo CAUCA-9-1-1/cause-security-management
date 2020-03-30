@@ -4,17 +4,21 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Cause.SecurityManagement.Models.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace Cause.SecurityManagement.Services
 {
 	public class UserManagementService<TUser> : IUserManagementService<TUser> where TUser : User, new() 
 	{
 		protected ISecurityContext<TUser> SecurityContext;
+		protected SecurityConfiguration SecurityConfiguration;
 
-		public UserManagementService(ISecurityContext<TUser> securityContext)
+		public UserManagementService(ISecurityContext<TUser> securityContext, IOptions<SecurityConfiguration> securityOptions)
 		{
 			SecurityContext = securityContext;
-		}
+            SecurityConfiguration = securityOptions.Value;
+        }
 
 		public virtual List<TUser> GetActiveUsers()
 		{
@@ -30,14 +34,14 @@ namespace Cause.SecurityManagement.Services
 		    return SecurityContext.Users.Find(userId);
 		}
 
-		public virtual bool UpdateUser(TUser user, string applicationName)
+		public virtual bool UpdateUser(TUser user)
 		{
 			if (UserNameAlreadyUsed(user))
 				return false;
 
             UpdateUserGroup(user);
             UpdateUserPermission(user);
-            UpdatePassword(user, applicationName);
+            UpdatePassword(user);
 
             if (SecurityContext.Users.AsNoTracking().Any(u => u.Id == user.Id))
                 SecurityContext.Users.Update(user);
@@ -48,10 +52,10 @@ namespace Cause.SecurityManagement.Services
 			return true;
 		}
 
-        public void UpdatePassword(TUser user, string applicationName)
+        public void UpdatePassword(TUser user)
         {
             if (!string.IsNullOrWhiteSpace(user.Password))
-                user.Password = new PasswordGenerator().EncodePassword(user.Password, applicationName);
+                user.Password = new PasswordGenerator().EncodePassword(user.Password, SecurityConfiguration.PackageName);
 			else
 				user.Password = SecurityContext.Users.AsNoTracking()
                     .Where(u => u.Id == user.Id)
@@ -121,12 +125,12 @@ namespace Cause.SecurityManagement.Services
             });
         }
 
-        public bool ChangePassword(Guid userId, string newPassword, string applicationName)
+        public bool ChangePassword(Guid userId, string newPassword)
         {
             var user = SecurityContext.Users.Find(userId);
             if (user != null)
             {
-                user.Password = new PasswordGenerator().EncodePassword(newPassword, applicationName);
+                user.Password = new PasswordGenerator().EncodePassword(newPassword, SecurityConfiguration.PackageName);
                 SecurityContext.SaveChanges();
                 return true;
             }
