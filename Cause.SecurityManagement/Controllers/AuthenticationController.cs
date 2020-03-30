@@ -2,7 +2,6 @@
 using Cause.SecurityManagement.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Cause.SecurityManagement.Controllers
@@ -11,18 +10,10 @@ namespace Cause.SecurityManagement.Controllers
     public class AuthenticationController : AuthentifiedController
     {
         private readonly IAuthentificationService service;
-        private readonly string issuer;
-        private readonly string applicationName;
-        private readonly string secretKey;
-        private readonly string minimalVersion;
 
-        public AuthenticationController(IAuthentificationService service, IConfiguration configuration)
+        public AuthenticationController(IAuthentificationService service)
         {
             this.service = service;
-            issuer = configuration.GetSection("APIConfig:Issuer").Value;
-            applicationName = configuration.GetSection("APIConfig:PackageName").Value;
-            secretKey = configuration.GetSection("APIConfig:SecretKey").Value;
-            minimalVersion = configuration.GetSection("APIConfig:MinimalVersion").Value;
         }
 
         [Route("[Action]"), HttpPost, AllowAnonymous]
@@ -39,7 +30,7 @@ namespace Cause.SecurityManagement.Controllers
 
         private ActionResult<LoginResult> Login(LoginInformations login)
         {
-            var result = service.Login(login.UserName, login.Password, applicationName, issuer, secretKey);
+            var result = service.Login(login.UserName, login.Password);
             if (result.user == null || result.token == null)
                 return Unauthorized();
 
@@ -70,8 +61,7 @@ namespace Cause.SecurityManagement.Controllers
         {
             try
             {
-                var newAccessToken = service.RefreshUserToken(tokens.AccessToken, tokens.RefreshToken, applicationName, issuer,
-                    secretKey);
+                var newAccessToken = service.RefreshUserToken(tokens.AccessToken, tokens.RefreshToken);
                 return Ok(new {AccessToken = newAccessToken, tokens.RefreshToken});
             }
             catch (SecurityTokenExpiredException)
@@ -89,7 +79,7 @@ namespace Cause.SecurityManagement.Controllers
         [Route("[Action]"), HttpPost, AllowAnonymous]
         public ActionResult<LoginResult> LogonForExternalSystem([FromBody] ExternalSystemLoginInformations login)
         {
-            var result = service.LoginForExternalSystem(login.Apikey, applicationName, issuer, secretKey);
+            var result = service.LoginForExternalSystem(login.Apikey);
             if (result.system == null || result.token == null)
                 return Unauthorized();
 
@@ -109,8 +99,7 @@ namespace Cause.SecurityManagement.Controllers
         {
             try
             {
-                var newAccessToken = service.RefreshUserToken(tokens.AccessToken, tokens.RefreshToken, applicationName, issuer,
-                    secretKey);
+                var newAccessToken = service.RefreshUserToken(tokens.AccessToken, tokens.RefreshToken);
                 return Ok(new { AccessToken = newAccessToken, tokens.RefreshToken });
             }
             catch (SecurityTokenExpiredException)
@@ -129,7 +118,7 @@ namespace Cause.SecurityManagement.Controllers
         [ProducesResponseType(200)]
         public ActionResult MobileVersionIsValid(string mobileVersion)
         {
-            return Ok(service.IsMobileVersionValid(mobileVersion, minimalVersion));
+            return Ok(service.IsMobileVersionValid(mobileVersion));
         }
 
         [HttpGet, Route("Permissions")]

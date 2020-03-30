@@ -11,14 +11,14 @@
     <RepositoryUrl>https://github.com/CAUCA-9-1-1/cause-security-management</RepositoryUrl>
     <PackageProjectUrl>https://github.com/CAUCA-9-1-1/cause-security-management</PackageProjectUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Description>Fix delete group and permission</Description>
-    <Copyright>CAUSE 9-1-1</Copyright>
+    <Description>Security Management for Asp.Net Core projects.</Description>
+    <Copyright>CAUCA 9-1-1 (c) 2020</Copyright>
     <PackageTags>Cause Security Management AspNetCore Api Client Cauca</PackageTags>
-    <Version>3.1.14-beta1</Version>
-    <PackageReleaseNotes>Fix delete group and permission</PackageReleaseNotes>
+    <Version>3.3.0</Version>
+    <PackageReleaseNotes>Use dependancy injection to access security's configuration.</PackageReleaseNotes>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <AssemblyVersion>3.1.14.1</AssemblyVersion>
-    <FileVersion>3.1.14.1</FileVersion>
+    <AssemblyVersion>3.3.0.0</AssemblyVersion>
+    <FileVersion>3.3.0.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
