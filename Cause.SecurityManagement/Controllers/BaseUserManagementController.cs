@@ -2,7 +2,6 @@
 using Cause.SecurityManagement.Models.DataTransferObjects;
 using Cause.SecurityManagement.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 
@@ -13,14 +12,11 @@ namespace Cause.SecurityManagement.Controllers
 		where TService : IUserManagementService<TUser>
         where TUser: User, new()
 	{
-		private readonly string applicationName;
-
 		protected TService UserService;
 
-		protected BaseUserManagementController(TService userService, IConfiguration configuration)
+		protected BaseUserManagementController(TService userService)
 		{
 			UserService = userService;
-			applicationName = configuration.GetSection("APIConfig:PackageName").Value;
 		}
 
 		[HttpGet]
@@ -41,7 +37,7 @@ namespace Cause.SecurityManagement.Controllers
 		[HttpPost]
 		public ActionResult SaveUser(TUser user)
 		{
-			var userSaved = UserService.UpdateUser(user, applicationName);
+			var userSaved = UserService.UpdateUser(user);
 			if (userSaved)
 				return NoContent();
 			return BadRequest();
@@ -96,7 +92,7 @@ namespace Cause.SecurityManagement.Controllers
 		{
 			if (userPassword.PasswordConfirmation != userPassword.Password)
 				return BadRequest("Password confirmation is different from password.");
-			if (UserService.ChangePassword(userPassword.Id, userPassword.Password, applicationName))
+			if (UserService.ChangePassword(userPassword.Id, userPassword.Password))
 				return NoContent();
 			return NotFound();
 		}
