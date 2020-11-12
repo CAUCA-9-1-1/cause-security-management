@@ -2,7 +2,7 @@
 
 namespace Cause.SecurityManagement.Models.DataTransferObjects
 {
-    public class AuthentificationUserPermission
+    public class AuthenticationUserPermission
     {
         public Guid IdModulePermission { get; set; }
         public string Tag { get; set; }

@@ -9,9 +9,9 @@ namespace Cause.SecurityManagement.Controllers
     [Route("api/[controller]")]
     public class AuthenticationController : AuthentifiedController
     {
-        private readonly IAuthentificationService service;
+        private readonly IAuthenticationService service;
 
-        public AuthenticationController(IAuthentificationService service)
+        public AuthenticationController(IAuthenticationService service)
         {
             this.service = service;
         }
@@ -22,37 +22,25 @@ namespace Cause.SecurityManagement.Controllers
             return Login(login);
         }
 
-        [Route("/api/authentification/Logon"), HttpPost, AllowAnonymous]
-        public ActionResult<LoginResult> OldLogon([FromBody] LoginInformations login)
-        {
-            return Login(login);
-        }
-
         private ActionResult<LoginResult> Login(LoginInformations login)
         {
-            var result = service.Login(login.UserName, login.Password);
-            if (result.user == null || result.token == null)
+            var (token, user) = service.Login(login.UserName, login.Password);
+            if (user == null || token == null)
                 return Unauthorized();
 
             return new LoginResult
             {
                 AuthorizationType = "Bearer",
-                ExpiredOn = result.token.ExpiresOn,
-                AccessToken = result.token.AccessToken,
-                RefreshToken = result.token.RefreshToken,
-                IdUser = result.user.Id,
-                Name = result.user.FirstName + " " + result.user.LastName,
+                ExpiredOn = token.ExpiresOn,
+                AccessToken = token.AccessToken,
+                RefreshToken = token.RefreshToken,
+                IdUser = user.Id,
+                Name = user.FirstName + " " + user.LastName,
             };
         }
 
         [Route("[Action]"), HttpPost, AllowAnonymous]
         public ActionResult Refresh([FromBody] TokenRefreshResult tokens)
-        {
-            return RefreshToken(tokens);
-        }
-
-        [Route("/api/authentification/refresh"), HttpPost, AllowAnonymous]
-        public ActionResult OldRefresh([FromBody] TokenRefreshResult tokens)
         {
             return RefreshToken(tokens);
         }
@@ -79,18 +67,18 @@ namespace Cause.SecurityManagement.Controllers
         [Route("[Action]"), HttpPost, AllowAnonymous]
         public ActionResult<LoginResult> LogonForExternalSystem([FromBody] ExternalSystemLoginInformations login)
         {
-            var result = service.LoginForExternalSystem(login.Apikey);
-            if (result.system == null || result.token == null)
+            var (token, system) = service.LoginForExternalSystem(login.Apikey);
+            if (system == null || token == null)
                 return Unauthorized();
 
             return new LoginResult
             {
                 AuthorizationType = "Bearer",
-                ExpiredOn = result.token.ExpiresOn,
-                AccessToken = result.token.AccessToken,
-                RefreshToken = result.token.RefreshToken,
-                IdUser = result.system.Id,
-                Name = result.system.Name,
+                ExpiredOn = token.ExpiresOn,
+                AccessToken = token.AccessToken,
+                RefreshToken = token.RefreshToken,
+                IdUser = system.Id,
+                Name = system.Name,
             };
         }
 

@@ -7,7 +7,7 @@ using NUnit.Framework;
 
 namespace Cause.SecurityManagement.Tests
 {
-    public class AuthentificationServiceTests
+    public class AuthenticationServiceTests
     {
         [Test]
         public void GetAccessTokenLifeTimeInMinute_ShouldReturnValueFromOptionWhenItIsSet()

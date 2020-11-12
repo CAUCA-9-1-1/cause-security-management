@@ -14,7 +14,7 @@ using Microsoft.Extensions.Options;
 
 namespace Cause.SecurityManagement.Services
 {
-    public class AuthenticationService<TUser> : IAuthentificationService
+    public class AuthenticationService<TUser> : IAuthenticationService
         where TUser : User, new()
     {
 		private readonly ISecurityContext<TUser> context;
@@ -227,7 +227,7 @@ namespace Cause.SecurityManagement.Services
 			return true;
 		}
 
-        public List<AuthentificationUserPermission> GetActiveUserPermissions(Guid userId)
+        public List<AuthenticationUserPermission> GetActiveUserPermissions(Guid userId)
         {
             var idGroups = context.UserGroups
                 .Where(ug => ug.IdUser == userId)
@@ -235,7 +235,7 @@ namespace Cause.SecurityManagement.Services
             var restrictedPermissions = context.GroupPermissions
                 .Where(g => idGroups.Contains(g.IdGroup) && g.IsAllowed == false)
                 .Include(g => g.Permission)
-                .Select(p => new AuthentificationUserPermission
+                .Select(p => new AuthenticationUserPermission
                 {
                     IdModulePermission = p.IdModulePermission,
                     Tag = p.Permission.Tag,
@@ -245,7 +245,7 @@ namespace Cause.SecurityManagement.Services
                 .Where(g => idGroups.Contains(g.IdGroup) && g.IsAllowed && !restrictedPermissions
                                 .Select(p => p.IdModulePermission).Contains(g.IdModulePermission))
                 .Include(g => g.Permission)
-                .Select(p => new AuthentificationUserPermission
+                .Select(p => new AuthenticationUserPermission
                 {
                     IdModulePermission = p.IdModulePermission,
                     Tag = p.Permission.Tag,

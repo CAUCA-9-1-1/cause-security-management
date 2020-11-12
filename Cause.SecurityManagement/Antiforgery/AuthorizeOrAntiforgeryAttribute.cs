@@ -27,7 +27,7 @@ namespace Cause.SecurityManagement.Antiforgery
             }
             else
             {
-                Console.WriteLine($"Is authorize : {authorize.ToString()}, Has Antiforgery : {antiforgery.ToString()}, Is DEV : {dev.ToString()}");
+                Console.WriteLine($"Is authorize : {authorize}, Has Antiforgery : {antiforgery}, Is DEV : {dev}");
                 filterContext.Result = new UnauthorizedResult();
             }
         }

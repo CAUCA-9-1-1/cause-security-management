@@ -11,7 +11,7 @@ namespace Cause.SecurityManagement
             where TUser : User, new()
 		{
 			services.AddScoped<CurrentUser>();
-			services.AddTransient<IAuthentificationService, AuthenticationService<TUser>>();
+			services.AddTransient<IAuthenticationService, AuthenticationService<TUser>>();
 			services.AddTransient<TUserManagementService>();
             services.AddTransient<IGroupManagementService, BaseGroupManagementService<TUser>>();
             services.AddTransient<IPermissionManagementService, BasePermissionManagementService<TUser>>();
