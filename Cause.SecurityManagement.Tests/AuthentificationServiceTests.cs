@@ -3,12 +3,19 @@ using Cause.SecurityManagement.Models.Configuration;
 using Cause.SecurityManagement.Services;
 using FluentAssertions;
 using Microsoft.Extensions.Options;
+using NSubstitute;
 using NUnit.Framework;
 
 namespace Cause.SecurityManagement.Tests
 {
     public class AuthenticationServiceTests
     {
+        private ICurrentUserService userService;
+        public AuthenticationServiceTests()
+        {
+            userService = Substitute.For<ICurrentUserService>();
+        }
+
         [Test]
         public void GetAccessTokenLifeTimeInMinute_ShouldReturnValueFromOptionWhenItIsSet()
         {
@@ -16,7 +23,7 @@ namespace Cause.SecurityManagement.Tests
             {
                 AccessTokenLifeTimeInMinutes = 33
             };
-            var service = new AuthenticationService<User>(null, Options.Create(option));
+            var service = new AuthenticationService<User>(userService, null, Options.Create(option));
 
             var result = service.GetAccessTokenLifeTimeInMinute();
 
@@ -30,7 +37,7 @@ namespace Cause.SecurityManagement.Tests
             {
                 AccessTokenLifeTimeInMinutes = null
             };
-            var service = new AuthenticationService<User>(null, Options.Create(option));
+            var service = new AuthenticationService<User>(userService, null, Options.Create(option));
 
             var result = service.GetAccessTokenLifeTimeInMinute();
 
@@ -44,7 +51,7 @@ namespace Cause.SecurityManagement.Tests
             {
                 RefreshTokenLifeTimeInMinutes = 33
             };
-            var service = new AuthenticationService<User>(null, Options.Create(option));
+            var service = new AuthenticationService<User>(userService, null, Options.Create(option));
 
             var result = service.GetRefreshTokenLifeTimeInMinute();
 
@@ -58,7 +65,7 @@ namespace Cause.SecurityManagement.Tests
             {
                 RefreshTokenLifeTimeInMinutes = null
             };
-            var service = new AuthenticationService<User>(null, Options.Create(option));
+            var service = new AuthenticationService<User>(userService, null, Options.Create(option));
 
             var result = service.GetRefreshTokenLifeTimeInMinute();
 

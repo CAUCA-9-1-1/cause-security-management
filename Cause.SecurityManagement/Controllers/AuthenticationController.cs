@@ -7,7 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 namespace Cause.SecurityManagement.Controllers
 {
     [Route("api/[controller]")]
-    public class AuthenticationController : AuthentifiedController
+    public class AuthenticationController : Controller
     {
         private readonly IAuthenticationService service;
 
@@ -114,7 +114,7 @@ namespace Cause.SecurityManagement.Controllers
         [ProducesResponseType(401)]
         public ActionResult GetPermissions()
         {
-            return Ok(service.GetActiveUserPermissions(GetUserId()));
+            return Ok(service.GetActiveUserPermissions());
         }
     }
 }

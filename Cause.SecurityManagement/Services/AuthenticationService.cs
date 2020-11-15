@@ -17,14 +17,19 @@ namespace Cause.SecurityManagement.Services
     public class AuthenticationService<TUser> : IAuthenticationService
         where TUser : User, new()
     {
-		private readonly ISecurityContext<TUser> context;
+        private readonly ICurrentUserService currentUserService;
+        private readonly ISecurityContext<TUser> context;
         private readonly SecurityConfiguration securityConfiguration;
         public readonly int DefaultRefreshTokenLifetimeInMinutes = 9 * 60;
         public readonly int DefaultAccessTokenLifetimeInMinutes = 60;
 
-        public AuthenticationService(ISecurityContext<TUser> context, IOptions<SecurityConfiguration> securityOptions)
+        public AuthenticationService(
+            ICurrentUserService currentUserService,
+            ISecurityContext<TUser> context, 
+            IOptions<SecurityConfiguration> securityOptions)
 		{
-			this.context = context;
+            this.currentUserService = currentUserService;
+            this.context = context;
             securityConfiguration = securityOptions.Value;
         }
 
@@ -227,10 +232,10 @@ namespace Cause.SecurityManagement.Services
 			return true;
 		}
 
-        public List<AuthenticationUserPermission> GetActiveUserPermissions(Guid userId)
+        public List<AuthenticationUserPermission> GetActiveUserPermissions()
         {
             var idGroups = context.UserGroups
-                .Where(ug => ug.IdUser == userId)
+                .Where(ug => ug.IdUser == currentUserService.GetUserId())
                 .Select(ug => ug.IdGroup);
             var restrictedPermissions = context.GroupPermissions
                 .Where(g => idGroups.Contains(g.IdGroup) && g.IsAllowed == false)
@@ -256,7 +261,7 @@ namespace Cause.SecurityManagement.Services
             return restrictedPermissions.Concat(allowedPermissions).ToList();
         }
 
-        public void SetCurrentUser(Guid userId)
+        /*public void SetCurrentUser(Guid userId)
         {
 	        var user = context.Users.AsNoTracking().FirstOrDefault(c => c.Id == userId);
 	        if (user != null)
@@ -266,6 +271,6 @@ namespace Cause.SecurityManagement.Services
 		        context.CurrentUser.FirstName = user.FirstName;
 		        context.CurrentUser.LastName = user.LastName;
 	        }
-        }
+        }*/
     }
 }

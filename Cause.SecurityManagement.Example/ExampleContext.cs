@@ -10,7 +10,6 @@ namespace Cause.SecurityManagement.Example
 
     public class ExampleContext: DbContext, ISecurityContext<UserCauca>
     {
-	    public CurrentUser CurrentUser { get; set; }
 	    public DbSet<UserCauca> Users { get; set; }
         public DbSet<UserGroup> UserGroups { get; set; }
         public DbSet<UserPermission> UserPermissions { get; set; }

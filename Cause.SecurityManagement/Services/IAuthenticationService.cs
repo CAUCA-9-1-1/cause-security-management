@@ -7,9 +7,8 @@ namespace Cause.SecurityManagement.Services
 {
     public interface IAuthenticationService
     {
-	    void SetCurrentUser(Guid userId);
         void EnsureAdminIsCreated();
-        List<AuthenticationUserPermission> GetActiveUserPermissions(Guid userId);
+        List<AuthenticationUserPermission> GetActiveUserPermissions();
         bool IsMobileVersionValid(string mobileVersion);
         (UserToken token, User user) Login(string userName, string password);
         (ExternalSystemToken token, ExternalSystem system) LoginForExternalSystem(string secretApiKey);

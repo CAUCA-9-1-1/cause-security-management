@@ -1,6 +1,8 @@
 ﻿using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Cause.SecurityManagement
 {
@@ -10,11 +12,12 @@ namespace Cause.SecurityManagement
 		    where TUserManagementService : UserManagementService<TUser>
             where TUser : User, new()
 		{
-			services.AddScoped<CurrentUser>();
-			services.AddTransient<IAuthenticationService, AuthenticationService<TUser>>();
-			services.AddTransient<TUserManagementService>();
-            services.AddTransient<IGroupManagementService, BaseGroupManagementService<TUser>>();
-            services.AddTransient<IPermissionManagementService, BasePermissionManagementService<TUser>>();
+            services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            services.AddScoped<ICurrentUserService, CurrentUserService>();
+			services.AddScoped<IAuthenticationService, AuthenticationService<TUser>>();
+			services.AddScoped<TUserManagementService>();
+            services.AddScoped<IGroupManagementService, BaseGroupManagementService<TUser>>();
+            services.AddScoped<IPermissionManagementService, BasePermissionManagementService<TUser>>();
             return services;
 		}
 

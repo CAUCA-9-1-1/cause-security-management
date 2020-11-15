@@ -7,8 +7,7 @@ namespace Cause.SecurityManagement
 {
     public abstract class BaseSecurityContext<TUser> : DbContext, ISecurityContext<TUser>
         where TUser : User, new()
-	{
-		public CurrentUser CurrentUser { get; set; }
+    { 
         public DbSet<Module> Modules { get; set; }
 		public DbSet<ModulePermission> ModulePermissions { get; set; }
 
@@ -24,9 +23,8 @@ namespace Cause.SecurityManagement
         public DbSet<ExternalSystem> ExternalSystems { get; set; }
         public DbSet<ExternalSystemToken> ExternalSystemTokens { get; set; }
 
-        protected BaseSecurityContext(DbContextOptions options, CurrentUser currentUser) : base(options)
+        protected BaseSecurityContext(DbContextOptions options) : base(options)
         {
-	        CurrentUser = currentUser;
         }
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
