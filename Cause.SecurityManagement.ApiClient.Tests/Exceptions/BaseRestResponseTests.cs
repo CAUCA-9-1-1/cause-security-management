@@ -1,7 +1,7 @@
 ﻿using System.Net.Http;
 using Flurl.Http;
 
-namespace Cause.SecurityManagement.ApiClient.Tests.Exceptions
+namespace Cauca.ApiClient.Tests.Exceptions
 {
     public abstract class BaseRestResponseTests
     {

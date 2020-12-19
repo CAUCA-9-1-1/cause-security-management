@@ -1,7 +1,7 @@
-﻿using Cause.SecurityManagement.ApiClient.Tests.Mocks;
+﻿using Cauca.ApiClient.Tests.Mocks;
 using NUnit.Framework;
 
-namespace Cause.SecurityManagement.ApiClient.Tests.Services
+namespace Cauca.ApiClient.Tests.Services
 {
     [TestFixture]
     public class BaseSecureClientInternalTests : MockSecureRepository
@@ -19,7 +19,7 @@ namespace Cause.SecurityManagement.ApiClient.Tests.Services
         [TestCase]
         public void AuthorizationHeaderIsCorrectlyGenerated()
         {
-            Assert.AreEqual("Mock Token", this.GetAuthorizationHeaderValue());
+            Assert.AreEqual("Mock Token", GetAuthorizationHeaderValue());
         }
     }
 }

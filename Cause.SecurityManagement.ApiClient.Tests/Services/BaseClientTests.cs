@@ -2,11 +2,11 @@
 using System.Text;
 using System.Threading.Tasks;
 using Cauca.ApiClient.Exceptions;
-using Cause.SecurityManagement.ApiClient.Tests.Mocks;
+using Cauca.ApiClient.Tests.Mocks;
 using Flurl.Http.Testing;
 using NUnit.Framework;
 
-namespace Cause.SecurityManagement.ApiClient.Tests.Services
+namespace Cauca.ApiClient.Tests.Services
 {
     public class BaseClientTests
     {

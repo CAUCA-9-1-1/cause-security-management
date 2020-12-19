@@ -4,7 +4,7 @@ using Cauca.ApiClient.Exceptions;
 using Cauca.ApiClient.Services;
 using NUnit.Framework;
 
-namespace Cause.SecurityManagement.ApiClient.Tests.Exceptions
+namespace Cauca.ApiClient.Tests.Exceptions
 {
     [TestFixture]
     public class RestResponseValidatorTests : BaseRestResponseTests
