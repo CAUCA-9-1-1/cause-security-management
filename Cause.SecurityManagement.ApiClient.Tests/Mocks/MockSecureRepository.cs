@@ -1,6 +1,6 @@
 ﻿using Cauca.ApiClient.Services;
 
-namespace Cause.SecurityManagement.ApiClient.Tests.Mocks
+namespace Cauca.ApiClient.Tests.Mocks
 {
     public class MockSecureRepository : BaseSecureService<MockConfiguration>
     {

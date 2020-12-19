@@ -1,6 +1,6 @@
 ﻿using Cauca.ApiClient.Configuration;
 
-namespace Cause.SecurityManagement.ApiClient.Tests.Mocks
+namespace Cauca.ApiClient.Tests.Mocks
 {
     public class MockConfiguration : IConfiguration
     {

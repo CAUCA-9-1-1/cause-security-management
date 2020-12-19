@@ -10,7 +10,7 @@ namespace Cause.SecurityManagement.Tests
 {
     public class AuthenticationServiceTests
     {
-        private ICurrentUserService userService;
+        private readonly ICurrentUserService userService;
         public AuthenticationServiceTests()
         {
             userService = Substitute.For<ICurrentUserService>();

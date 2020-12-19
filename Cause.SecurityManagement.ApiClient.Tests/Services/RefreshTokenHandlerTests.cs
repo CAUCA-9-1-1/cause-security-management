@@ -1,13 +1,11 @@
-﻿using System;
-using System.Threading.Tasks;
-using Cauca.ApiClient;
+﻿using System.Threading.Tasks;
 using Cauca.ApiClient.Configuration;
 using Cauca.ApiClient.Services;
-using Cause.SecurityManagement.ApiClient.Tests.Mocks;
+using Cauca.ApiClient.Tests.Mocks;
 using Flurl.Http.Testing;
 using NUnit.Framework;
 
-namespace Cause.SecurityManagement.ApiClient.Tests.Services
+namespace Cauca.ApiClient.Tests.Services
 {
     [TestFixture]
     public class RefreshTokenHandlerTests
@@ -46,7 +44,7 @@ namespace Cause.SecurityManagement.ApiClient.Tests.Services
             var newToken = "newtoken";
 
             using var httpTest = new HttpTest();
-            httpTest.RespondWithJson(new TokenRefreshResult {AccessToken = newToken});
+            httpTest.RespondWithJson(new TokenRefreshResult { AccessToken = newToken });
             var tokenHandler = new RefreshTokenHandler(configuration);
             await tokenHandler.RefreshToken();
 

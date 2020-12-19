@@ -1,11 +1,11 @@
 ﻿using System.Net.Http;
 using System.Threading.Tasks;
 using Cauca.ApiClient;
-using Cause.SecurityManagement.ApiClient.Tests.Mocks;
+using Cauca.ApiClient.Tests.Mocks;
 using Flurl.Http.Testing;
 using NUnit.Framework;
 
-namespace Cause.SecurityManagement.ApiClient.Tests.Services
+namespace Cauca.ApiClient.Tests.Services
 {
     [TestFixture]
     public class BaseSecureClientTests
@@ -128,12 +128,13 @@ namespace Cause.SecurityManagement.ApiClient.Tests.Services
         [TestCase]
         public async Task RequestLogBackInWhenRefreshTokenAndAccessTokenAreExpired()
         {
+            var loginResult = new LoginResult { AuthorizationType = "Bearer", RefreshToken = "NewRefreshToken", AccessToken = "NewAccessToken" };
             using (var httpTest = new HttpTest())
             {
                 httpTest
                     .RespondWithJson(new MockResponse(), 401, new { Token_Expired = "True" })
                     .RespondWithJson(new TokenRefreshResult(), 401, new { Refresh_Token_Expired = true })
-                    .RespondWithJson(new LoginResult { AuthorizationType = "Bearer", RefreshToken = "NewRefreshToken", AccessToken = "NewAccessToken" })
+                    .RespondWithJson(loginResult)
                     .RespondWithJson(new MockResponse());
 
                 var country = new MockEntity();
@@ -158,6 +159,7 @@ namespace Cause.SecurityManagement.ApiClient.Tests.Services
                 httpTest.ShouldHaveCalled("http://test/mock")
                     .WithRequestJson(country)
                     .WithVerb(HttpMethod.Post)
+                    .WithHeader("Authorization", $"{loginResult.AuthorizationType} {loginResult.AccessToken}")
                     .With(call => call.Response.StatusCode == System.Net.HttpStatusCode.OK)
                     .Times(1);
             }
