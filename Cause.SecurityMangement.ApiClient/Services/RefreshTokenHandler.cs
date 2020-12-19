@@ -91,7 +91,10 @@ namespace Cauca.ApiClient.Services
             catch (FlurlHttpException exception)
             {
                 if (exception.Call.RefreshTokenIsExpired() || exception.Call.RefreshTokenIsInvalid())
+                { 
                     await Login();
+                    return Configuration.AccessToken;
+                }
             }
 
             return null;
