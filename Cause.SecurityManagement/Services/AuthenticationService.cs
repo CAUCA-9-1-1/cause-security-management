@@ -1,6 +1,8 @@
 ﻿using Cause.SecurityManagement.Models;
+using Cause.SecurityManagement.Models.Configuration;
 using Cause.SecurityManagement.Models.DataTransferObjects;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
@@ -9,12 +11,10 @@ using System.Linq;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using Cause.SecurityManagement.Models.Configuration;
-using Microsoft.Extensions.Options;
 
 namespace Cause.SecurityManagement.Services
 {
-    public class AuthenticationService<TUser> : IAuthenticationService
+	public class AuthenticationService<TUser> : IAuthenticationService
         where TUser : User, new()
     {
         private readonly ICurrentUserService currentUserService;
@@ -113,7 +113,7 @@ namespace Cause.SecurityManagement.Services
         }
 
         // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
-        private static void ThrowExceptionWhenTokenIsNotValid(string refreshToken, BaseToken token)
+        private void ThrowExceptionWhenTokenIsNotValid(string refreshToken, BaseToken token)
         {
             if (token == null)
                 throw new SecurityTokenException("Invalid token.");
@@ -121,7 +121,7 @@ namespace Cause.SecurityManagement.Services
             if (token.RefreshToken != refreshToken)
                 throw new SecurityTokenValidationException("Invalid token.");
 
-            if (token.ExpiresOn < DateTime.Now)
+            if (securityConfiguration.HasToValidateRefreshTokenExpiresOn && token.ExpiresOn < DateTime.Now)
                 throw new SecurityTokenExpiredException("Token expired.");
         }
 
