@@ -113,7 +113,7 @@ namespace Cause.SecurityManagement.Services
         }
 
         // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
-        private void ThrowExceptionWhenTokenIsNotValid(string refreshToken, BaseToken token)
+        public void ThrowExceptionWhenTokenIsNotValid(string refreshToken, BaseToken token)
         {
             if (token == null)
                 throw new SecurityTokenException("Invalid token.");
@@ -121,7 +121,7 @@ namespace Cause.SecurityManagement.Services
             if (token.RefreshToken != refreshToken)
                 throw new SecurityTokenValidationException("Invalid token.");
 
-            if (securityConfiguration.HasToValidateRefreshTokenExpiresOn && token.ExpiresOn < DateTime.Now)
+            if (securityConfiguration.RefreshTokenCanExpire && token.ExpiresOn < DateTime.Now)
                 throw new SecurityTokenExpiredException("Token expired.");
         }
 

@@ -8,6 +8,6 @@
         public string MinimalVersion { get; set; }
         public int? AccessTokenLifeTimeInMinutes { get; set; }
         public int? RefreshTokenLifeTimeInMinutes { get; set; }
-        public bool HasToValidateRefreshTokenExpiresOn { get; set; } = true;
+        public bool RefreshTokenCanExpire { get; set; } = true;
     }
 }
