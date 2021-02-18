@@ -15,9 +15,10 @@ Some configuration needs to be added:
 ```
 You can change any of of these values to anything you want.  
 
-Two more settings can also be added in the APIConfig section when needed and have these default values: 
+Three more settings can also be added in the APIConfig section when needed and have these default values: 
 - "AccessTokenLifeTimeInMinutes": 540
 - "RefreshTokenLifeTimeInMinutes": 60
+- "RefreshTokenCanExpire": true
 
 ### Models
 You need to have a `User` model that inherits from `SecurityManagement.Models.User`.  You can add whatever you need to your model.

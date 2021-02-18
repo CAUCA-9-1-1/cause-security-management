@@ -5,10 +5,11 @@ using FluentAssertions;
 using Microsoft.Extensions.Options;
 using NSubstitute;
 using NUnit.Framework;
+using System;
 
 namespace Cause.SecurityManagement.Tests
 {
-    public class AuthenticationServiceTests
+	public class AuthenticationServiceTests
     {
         private readonly ICurrentUserService userService;
         public AuthenticationServiceTests()
@@ -70,6 +71,39 @@ namespace Cause.SecurityManagement.Tests
             var result = service.GetRefreshTokenLifeTimeInMinute();
 
             result.Should().Be(service.DefaultRefreshTokenLifetimeInMinutes, "it should use the default value when no value is provided by the configuration");
+        }
+
+        [Test]
+        public void RefreshTokenCanExpire_WhenRefreshToken_ShouldNotReturnTokenExpired()
+        {
+			var option = new SecurityConfiguration
+			{
+                RefreshTokenCanExpire = false
+			};
+			var token = new UserToken { AccessToken = "anAccessToken", ExpiresOn = DateTime.Now, RefreshToken = "aRefreshToken"};
+			var service = new AuthenticationService<User>(userService, null, Options.Create(option));
+
+			Action result = () => service.ValidateRefreshToken("aRefreshToken", token);
+
+
+            result.Should().NotThrow<Exception>();
+        }
+
+        [Test]
+        public void RefreshTokenCanTExpire_WhenRefreshToken_ShouldThrowTokenExpired()
+        {
+	        var option = new SecurityConfiguration
+	        {
+		        AccessTokenLifeTimeInMinutes = null,
+                RefreshTokenLifeTimeInMinutes = null
+	        };
+	        var token = new UserToken { AccessToken = "anAccessToken", ExpiresOn = DateTime.Now, RefreshToken = "aRefreshToken" };
+	        var service = new AuthenticationService<User>(userService, null, Options.Create(option));
+
+	        Action result = () => service.ValidateRefreshToken("aRefreshToken", token);
+
+
+	        result.Should().Throw<Exception>();
         }
     }
 }
