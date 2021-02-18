@@ -75,7 +75,7 @@ namespace Cause.SecurityManagement.Services
                 .FirstOrDefault(t => t.IdUser == userId && t.RefreshToken == refreshToken);
 		    var user = context.Users.Find(userId);
 
-			ThrowExceptionWhenTokenIsNotValid(refreshToken, userToken);
+			ValidateRefreshToken(refreshToken, userToken);
 
             var newAccessToken = GenerateAccessTokenForUser(user);
             // ReSharper disable once PossibleNullReferenceException
@@ -92,7 +92,7 @@ namespace Cause.SecurityManagement.Services
                 .FirstOrDefault(t => t.IdExternalSystem == externalSystemId && t.RefreshToken == refreshToken);
             var externalSystem = context.ExternalSystems.Find(externalSystemId);
 
-            ThrowExceptionWhenTokenIsNotValid(refreshToken, externalSystemToken);
+            ValidateRefreshToken(refreshToken, externalSystemToken);
 
             var newAccessToken = GenerateAccessTokenForExternalSystem(externalSystem);
             // ReSharper disable once PossibleNullReferenceException
@@ -113,7 +113,7 @@ namespace Cause.SecurityManagement.Services
         }
 
         // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
-        public void ThrowExceptionWhenTokenIsNotValid(string refreshToken, BaseToken token)
+        public void ValidateRefreshToken(string refreshToken, BaseToken token)
         {
             if (token == null)
                 throw new SecurityTokenException("Invalid token.");
