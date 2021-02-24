@@ -3,6 +3,7 @@ using Cause.SecurityManagement.Models.Configuration;
 using Cause.SecurityManagement.Services;
 using FluentAssertions;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using NSubstitute;
 using NUnit.Framework;
 using System;
@@ -83,10 +84,10 @@ namespace Cause.SecurityManagement.Tests
 			var token = new UserToken { AccessToken = "anAccessToken", ExpiresOn = DateTime.Now, RefreshToken = "aRefreshToken"};
 			var service = new AuthenticationService<User>(userService, null, Options.Create(option));
 
-			Action result = () => service.ValidateRefreshToken("aRefreshToken", token);
+			Action result = () => service.ThrowExceptionWhenTokenIsNotValid("aRefreshToken", token);
 
 
-            result.Should().NotThrow<Exception>();
+            result.Should().NotThrow<SecurityTokenException>();
         }
 
         [Test]
@@ -100,10 +101,10 @@ namespace Cause.SecurityManagement.Tests
 	        var token = new UserToken { AccessToken = "anAccessToken", ExpiresOn = DateTime.Now, RefreshToken = "aRefreshToken" };
 	        var service = new AuthenticationService<User>(userService, null, Options.Create(option));
 
-	        Action result = () => service.ValidateRefreshToken("aRefreshToken", token);
+	        Action result = () => service.ThrowExceptionWhenTokenIsNotValid("aRefreshToken", token);
 
 
-	        result.Should().Throw<Exception>();
+	        result.Should().Throw<SecurityTokenException>();
         }
     }
 }
