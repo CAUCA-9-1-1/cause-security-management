@@ -15,7 +15,7 @@ namespace Cause.SecurityManagement
             services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddScoped<ICurrentUserService, CurrentUserService>();
 			services.AddScoped<IAuthenticationService, AuthenticationService<TUser>>();
-			services.AddScoped<TUserManagementService>();
+			services.AddScoped<IUserManagementService<TUser>, TUserManagementService>();
             services.AddScoped<IGroupManagementService, BaseGroupManagementService<TUser>>();
             services.AddScoped<IPermissionManagementService, BasePermissionManagementService<TUser>>();
             return services;
