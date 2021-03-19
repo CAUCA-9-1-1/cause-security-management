@@ -29,7 +29,7 @@ namespace Cause.SecurityManagement.Services
                 .ToList();
 		}
 
-		public TUser GetUser(Guid userId)
+		public virtual TUser GetUser(Guid userId)
 		{
 		    return SecurityContext.Users.Find(userId);
 		}
@@ -52,7 +52,7 @@ namespace Cause.SecurityManagement.Services
 			return true;
 		}
 
-        public void UpdatePassword(TUser user)
+        public virtual void UpdatePassword(TUser user)
         {
             if (!string.IsNullOrWhiteSpace(user.Password))
                 user.Password = new PasswordGenerator().EncodePassword(user.Password, SecurityConfiguration.PackageName);
@@ -62,12 +62,12 @@ namespace Cause.SecurityManagement.Services
                     .Select(u => u.Password).First();
 		}
 
-        public bool UserNameAlreadyUsed(TUser user)
+        public virtual bool UserNameAlreadyUsed(TUser user)
 		{
 			return SecurityContext.Users.Any(c => c.UserName == user.UserName && c.Id != user.Id && c.IsActive);
 		}
 
-		public void UpdateUserGroup(User user)
+		public virtual void UpdateUserGroup(User user)
         {
             if (user.Groups is null)
             {
@@ -96,7 +96,7 @@ namespace Cause.SecurityManagement.Services
             });
         }
 
-        public void UpdateUserPermission(User user)
+        public virtual void UpdateUserPermission(User user)
         {
             if (user.Permissions is null)
             {
@@ -125,7 +125,7 @@ namespace Cause.SecurityManagement.Services
             });
         }
 
-        public bool ChangePassword(Guid userId, string newPassword)
+        public virtual bool ChangePassword(Guid userId, string newPassword)
         {
             var user = SecurityContext.Users.Find(userId);
             if (user != null)
@@ -137,7 +137,7 @@ namespace Cause.SecurityManagement.Services
             return false;
         }
 
-        public bool DeactivateUser(Guid userId)
+        public virtual bool DeactivateUser(Guid userId)
 		{
 			var user = SecurityContext.Users.Find(userId);
 			if (user != null)
@@ -150,21 +150,21 @@ namespace Cause.SecurityManagement.Services
 			return false;
 		}
 
-		public List<UserGroup> GetGroups(Guid userId)
+		public virtual List<UserGroup> GetGroups(Guid userId)
 		{
 			return SecurityContext.UserGroups
 				.Where(group => group.IdUser == userId)
 				.ToList();
 		}
 
-		public bool AddGroup(UserGroup group)
+		public virtual bool AddGroup(UserGroup group)
 		{
 			SecurityContext.Add(group);
 			SecurityContext.SaveChanges();
 			return true;
 		}
 
-		public bool RemoveGroup(Guid userGroupId)
+		public virtual bool RemoveGroup(Guid userGroupId)
 		{
 			var group = SecurityContext.UserGroups.Find(userGroupId);
 			if (group != null)
@@ -177,7 +177,7 @@ namespace Cause.SecurityManagement.Services
 			return false;
 		}
 
-		public bool UpdatePermission(UserPermission permission)
+		public virtual bool UpdatePermission(UserPermission permission)
 		{
 			if (SecurityContext.UserPermissions.Any(u => u.Id == permission.Id))
 				SecurityContext.UserPermissions.Update(permission);
@@ -187,7 +187,7 @@ namespace Cause.SecurityManagement.Services
 			return true;
 		}
 
-		public bool RemovePermission(Guid userPermissionId)
+		public virtual bool RemovePermission(Guid userPermissionId)
 		{
 			var permission = SecurityContext.UserPermissions.Find(userPermissionId);
 			if (permission != null)
@@ -200,7 +200,7 @@ namespace Cause.SecurityManagement.Services
 			return false;
 		}
 
-		public List<UserMergedPermission> GetPermissionsForUser(Guid userId)
+		public virtual List<UserMergedPermission> GetPermissionsForUser(Guid userId)
 		{
 			var userPermissions = GetUserPermissions(userId);
 			var groupPermissions = GetUserGroupsPermission(userId);

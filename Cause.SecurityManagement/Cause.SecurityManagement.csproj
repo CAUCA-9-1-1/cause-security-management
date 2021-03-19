@@ -14,12 +14,12 @@
     <Description>Security Management for Asp.Net Core projects.</Description>
     <Copyright>CAUCA 9-1-1 (c) 2020</Copyright>
     <PackageTags>Cause Security Management AspNetCore Api Client Cauca</PackageTags>
-    <Version>5.0.3</Version>
+    <Version>5.0.4</Version>
     <PackageReleaseNotes>Add a way to not validate refresh token to always stay connected
 Update DatalayerExtensions to fix autosnakecase for the migration</PackageReleaseNotes>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <AssemblyVersion>5.0.3.0</AssemblyVersion>
-    <FileVersion>5.0.3.0</FileVersion>
+    <AssemblyVersion>5.0.4.0</AssemblyVersion>
+    <FileVersion>5.0.4.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
