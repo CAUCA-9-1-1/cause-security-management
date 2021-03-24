@@ -22,6 +22,7 @@ namespace Cause.SecurityManagement.Services
         private readonly SecurityConfiguration securityConfiguration;
         public readonly int DefaultRefreshTokenLifetimeInMinutes = 9 * 60;
         public readonly int DefaultAccessTokenLifetimeInMinutes = 60;
+        public readonly int DefaultTemporaryAccessTokenLifetimeInMinutes = 5;
 
         public AuthenticationService(
             ICurrentUserService currentUserService,
@@ -40,7 +41,7 @@ namespace Cause.SecurityManagement.Services
 				.SingleOrDefault(user => user.UserName == userName && user.Password.ToUpper() == encodedPassword && user.IsActive);
 			if (userFound != null)
 			{
-				var accessToken = GenerateAccessTokenForUser(userFound);
+				var accessToken = GenerateAccessToken(userFound.Id, userFound.UserName, SecurityRoles.User);
 				var refreshToken = GenerateRefreshToken();
 				var token = new UserToken {AccessToken = accessToken, RefreshToken = refreshToken, ExpiresOn = DateTime.Now.AddMinutes(GetRefreshTokenLifeTimeInMinute()), IdUser = userFound.Id};
 				context.Add(token);
@@ -51,13 +52,35 @@ namespace Cause.SecurityManagement.Services
 			return (null, null);
 		}
 
+        public UserToken GenerateUserRecoveryToken(Guid userId)
+        {
+            var userFound = context.Users
+                .SingleOrDefault(user => user.Id == userId && user.IsActive);
+            if (userFound != null)
+            {
+                var accessToken = GenerateAccessToken(userFound.Id, userFound.UserName, SecurityRoles.UserRecovery);
+                var token = new UserToken { AccessToken = accessToken, RefreshToken = "", ExpiresOn = DateTime.Now.AddMinutes(GetTemporaryAccessTokenLifeTimeInMinute()), IdUser = userFound.Id };
+                context.Add(token);
+                context.SaveChanges();
+                return token;
+            }
+            return null;
+        }
+
+        public UserToken GenerateUserCreationToken(Guid userId)
+        {            
+            var accessToken = GenerateAccessToken(userId, "temporary", SecurityRoles.UserCreation);
+            var token = new UserToken { AccessToken = accessToken, RefreshToken = "", ExpiresOn = DateTime.Now.AddMinutes(GetTemporaryAccessTokenLifeTimeInMinute()), IdUser = userId };
+            return token;
+        }
+
         public (ExternalSystemToken token, ExternalSystem system) LoginForExternalSystem(string secretApiKey)
         {
             var externalSystemFound = context.ExternalSystems
                 .SingleOrDefault(externalSystem => externalSystem.ApiKey == secretApiKey && externalSystem.IsActive);
             if (externalSystemFound != null)
             {
-                var accessToken = GenerateAccessTokenForExternalSystem(externalSystemFound);
+                var accessToken = GenerateAccessToken(externalSystemFound.Id, externalSystemFound.Name, SecurityRoles.ExternalSystem);
                 var refreshToken = GenerateRefreshToken();
                 var token = new ExternalSystemToken { AccessToken = accessToken, RefreshToken = refreshToken, ExpiresOn = DateTime.Now.AddMinutes(GetRefreshTokenLifeTimeInMinute()), IdExternalSystem = externalSystemFound.Id };
                 context.Add(token);
@@ -77,7 +100,7 @@ namespace Cause.SecurityManagement.Services
 
 			ThrowExceptionWhenTokenIsNotValid(refreshToken, userToken);
 
-            var newAccessToken = GenerateAccessTokenForUser(user);
+            var newAccessToken = GenerateAccessToken(user.Id, user.UserName, SecurityRoles.User);
             // ReSharper disable once PossibleNullReferenceException
             userToken.AccessToken = newAccessToken;
 			context.SaveChanges();
@@ -94,7 +117,7 @@ namespace Cause.SecurityManagement.Services
 
             ThrowExceptionWhenTokenIsNotValid(refreshToken, externalSystemToken);
 
-            var newAccessToken = GenerateAccessTokenForExternalSystem(externalSystem);
+            var newAccessToken = GenerateAccessToken(externalSystem.Id, externalSystem.Name, SecurityRoles.ExternalSystem);
             // ReSharper disable once PossibleNullReferenceException
             externalSystemToken.AccessToken = newAccessToken;
             context.SaveChanges();
@@ -105,6 +128,11 @@ namespace Cause.SecurityManagement.Services
         public int GetRefreshTokenLifeTimeInMinute()
         {
             return securityConfiguration.RefreshTokenLifeTimeInMinutes ?? DefaultRefreshTokenLifetimeInMinutes;
+        }
+
+        public int GetTemporaryAccessTokenLifeTimeInMinute()
+        {
+            return securityConfiguration.TemporaryAccessTokenLifeTimeInMinutes ?? DefaultTemporaryAccessTokenLifetimeInMinutes;
         }
 
         public int GetAccessTokenLifeTimeInMinute()
@@ -136,7 +164,6 @@ namespace Cause.SecurityManagement.Services
 
         private ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
 		{
-
             var tokenValidationParameters = new TokenValidationParameters
 			{
 				ValidateIssuerSigningKey = true,
@@ -158,29 +185,17 @@ namespace Cause.SecurityManagement.Services
 			return principal;
 		}
 
-		private string GenerateAccessTokenForUser(User userLoggedIn)
+		private string GenerateAccessToken(Guid userId, string userName, string role)
         {
             var claims = new[]
 			{
-                new Claim(ClaimTypes.Role, SecurityRoles.User),
-                new Claim(JwtRegisteredClaimNames.UniqueName, userLoggedIn.UserName),
-				new Claim(JwtRegisteredClaimNames.Sid, userLoggedIn.Id.ToString()),
+                new Claim(ClaimTypes.Role, role),
+                new Claim(JwtRegisteredClaimNames.UniqueName, userName),
+				new Claim(JwtRegisteredClaimNames.Sid, userId.ToString()),
 			};
 
             return GenerateAccessToken(claims);
-        }
-
-        private string GenerateAccessTokenForExternalSystem(ExternalSystem externalSystem)
-        {
-            var claims = new[]
-            {
-                new Claim(ClaimTypes.Role, SecurityRoles.ExternalSystem),
-                new Claim(JwtRegisteredClaimNames.UniqueName, externalSystem.ApiKey),
-                new Claim(JwtRegisteredClaimNames.Sid, externalSystem.Id.ToString()),
-            };
-
-            return GenerateAccessToken(claims);
-        }
+        }       
 
         private string GenerateAccessToken(Claim[] claims)
         {
@@ -260,17 +275,5 @@ namespace Cause.SecurityManagement.Services
 
             return restrictedPermissions.Concat(allowedPermissions).ToList();
         }
-
-        /*public void SetCurrentUser(Guid userId)
-        {
-	        var user = context.Users.AsNoTracking().FirstOrDefault(c => c.Id == userId);
-	        if (user != null)
-	        {
-		        context.CurrentUser.Id = userId;
-		        context.CurrentUser.UserName = user.UserName;
-		        context.CurrentUser.FirstName = user.FirstName;
-		        context.CurrentUser.LastName = user.LastName;
-	        }
-        }*/
     }
 }

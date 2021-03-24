@@ -1,6 +1,7 @@
 ﻿using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Models.DataTransferObjects;
 using Cause.SecurityManagement.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -26,7 +27,7 @@ namespace Cause.SecurityManagement.Controllers
 		}
 
 		[HttpGet, Route("{userId:guid}")]
-		public ActionResult<TUser> GetUser(Guid userId)
+		public virtual ActionResult<TUser> GetUser(Guid userId)
 		{
 			var user = UserService.GetUser(userId);
 			if (user == null)
@@ -34,8 +35,8 @@ namespace Cause.SecurityManagement.Controllers
 			return user;
 		}
 
-		[HttpPost]
-		public ActionResult SaveUser(TUser user)
+		[HttpPost, Authorize(Roles = SecurityRoles.UserAndUserCreation)]
+		public virtual ActionResult SaveUser(TUser user)
 		{
 			var userSaved = UserService.UpdateUser(user);
 			if (userSaved)
@@ -87,8 +88,8 @@ namespace Cause.SecurityManagement.Controllers
 			return NotFound();
 		}
 
-		[HttpPost, Route("password")]
-		public ActionResult ChangePassword([FromBody]UserPassword userPassword)
+		[HttpPost, Route("password"), Authorize(Roles = SecurityRoles.UserAndUserRecovery)]
+		public virtual ActionResult ChangePassword([FromBody]UserPassword userPassword)
 		{
 			if (userPassword.PasswordConfirmation != userPassword.Password)
 				return BadRequest("Password confirmation is different from password.");
@@ -104,7 +105,7 @@ namespace Cause.SecurityManagement.Controllers
 		}
 
         [HttpPost, Route("UserNameAlreadyExist")]
-        public ActionResult UserNameAlreadyExist([FromBody]TUser user)
+        public virtual ActionResult UserNameAlreadyExist([FromBody]TUser user)
         {
             return Ok(UserService.UserNameAlreadyUsed(user));
         }

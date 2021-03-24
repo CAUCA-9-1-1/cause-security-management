@@ -14,5 +14,7 @@ namespace Cause.SecurityManagement.Services
         (ExternalSystemToken token, ExternalSystem system) LoginForExternalSystem(string secretApiKey);
         string RefreshUserToken(string token, string refreshToken);
         string RefreshExternalSystemToken(string token, string refreshToken);
+        UserToken GenerateUserCreationToken(Guid userId);
+        UserToken GenerateUserRecoveryToken(Guid userId);
     }
 }

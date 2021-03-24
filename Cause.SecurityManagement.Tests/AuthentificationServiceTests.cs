@@ -75,6 +75,34 @@ namespace Cause.SecurityManagement.Tests
         }
 
         [Test]
+        public void GetTemporaryTokenLifeTimeInMinute_ShouldReturnValueFromOptionWhenItIsSet()
+        {
+            var option = new SecurityConfiguration
+            {
+                TemporaryAccessTokenLifeTimeInMinutes = 33
+            };
+            var service = new AuthenticationService<User>(userService, null, Options.Create(option));
+
+            var result = service.GetTemporaryAccessTokenLifeTimeInMinute();
+
+            result.Should().Be(option.TemporaryAccessTokenLifeTimeInMinutes, "it was provided by the configuration");
+        }
+
+        [Test]
+        public void GetTemporaryTokenLifeTimeInMinute_ShouldReturnDefaultValueWhenItIsNotSet()
+        {
+            var option = new SecurityConfiguration
+            {
+                TemporaryAccessTokenLifeTimeInMinutes = null
+            };
+            var service = new AuthenticationService<User>(userService, null, Options.Create(option));
+
+            var result = service.GetTemporaryAccessTokenLifeTimeInMinute();
+
+            result.Should().Be(service.DefaultTemporaryAccessTokenLifetimeInMinutes, "it should use the default value when no value is provided by the configuration");
+        }
+
+        [Test]
         public void RefreshTokenCanExpire_WhenRefreshToken_ShouldNotReturnTokenExpired()
         {
 			var option = new SecurityConfiguration
