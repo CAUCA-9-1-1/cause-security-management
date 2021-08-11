@@ -19,6 +19,7 @@ namespace Cause.SecurityManagement.Services
     {
         private readonly ICurrentUserService currentUserService;
         private readonly ISecurityContext<TUser> context;
+        private readonly IUserManagementService<TUser> userManagementService;
         private readonly SecurityConfiguration securityConfiguration;
         public readonly int DefaultRefreshTokenLifetimeInMinutes = 9 * 60;
         public readonly int DefaultAccessTokenLifetimeInMinutes = 60;
@@ -27,10 +28,12 @@ namespace Cause.SecurityManagement.Services
         public AuthenticationService(
             ICurrentUserService currentUserService,
             ISecurityContext<TUser> context, 
+            IUserManagementService<TUser> userManagementService,
             IOptions<SecurityConfiguration> securityOptions)
 		{
             this.currentUserService = currentUserService;
             this.context = context;
+            this.userManagementService = userManagementService;
             securityConfiguration = securityOptions.Value;
         }
 
@@ -39,7 +42,7 @@ namespace Cause.SecurityManagement.Services
 			var encodedPassword = new PasswordGenerator().EncodePassword(password, securityConfiguration.PackageName);
 			var userFound = context.Users
 				.SingleOrDefault(user => user.UserName == userName && user.Password.ToUpper() == encodedPassword && user.IsActive);
-			if (userFound != null)
+			if (userFound != null && CanLogIn(userFound))
 			{
 				var accessToken = GenerateAccessToken(userFound.Id, userFound.UserName, SecurityRoles.User);
 				var refreshToken = GenerateRefreshToken();
@@ -51,6 +54,12 @@ namespace Cause.SecurityManagement.Services
 
 			return (null, null);
 		}
+
+        private bool CanLogIn(User user)
+        {
+            return string.IsNullOrWhiteSpace(securityConfiguration.RequiredPermissionForLogin)
+                || userManagementService.HasPermission(user.Id, securityConfiguration.RequiredPermissionForLogin);
+        }
 
         public UserToken GenerateUserRecoveryToken(Guid userId)
         {

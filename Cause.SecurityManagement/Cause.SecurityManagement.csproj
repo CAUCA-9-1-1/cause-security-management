@@ -14,10 +14,10 @@
     <Description>Security Management for Asp.Net Core projects.</Description>
     <Copyright>CAUCA 9-1-1 (c) 2020</Copyright>
     <PackageTags>Cause Security Management AspNetCore Api Client Cauca</PackageTags>
-    <Version>5.0.7</Version>
+    <Version>5.0.8</Version>
     <PackageReleaseNotes>Add roles to temporary tokens.</PackageReleaseNotes>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <AssemblyVersion>5.0.7.0</AssemblyVersion>
+    <AssemblyVersion>5.0.8.0</AssemblyVersion>
     <FileVersion>5.0.7.0</FileVersion>
   </PropertyGroup>
 

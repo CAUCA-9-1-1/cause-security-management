@@ -10,5 +10,6 @@
         public int? RefreshTokenLifeTimeInMinutes { get; set; }
         public int? TemporaryAccessTokenLifeTimeInMinutes { get; set; }
         public bool RefreshTokenCanExpire { get; set; } = true;
+        public string RequiredPermissionForLogin { get; set; }
     }
 }

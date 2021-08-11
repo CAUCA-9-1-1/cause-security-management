@@ -19,5 +19,6 @@ namespace Cause.SecurityManagement.Services
         bool UpdatePermission(UserPermission permission);
         bool RemovePermission(Guid userPermissionId);
         List<UserMergedPermission> GetPermissionsForUser(Guid userId);
+        bool HasPermission(Guid userId, string permissionTag);
     }
 }

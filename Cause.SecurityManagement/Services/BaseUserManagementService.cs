@@ -225,5 +225,10 @@ namespace Cause.SecurityManagement.Services
 				.ToList();
 			return userPermissions;
 		}
-	}
+
+        public bool HasPermission(Guid userId, string permissionTag)
+        {
+			return GetPermissionsForUser(userId).Any(permission => permission.FeatureName == permissionTag && permission.Access);
+		}
+    }
 }
