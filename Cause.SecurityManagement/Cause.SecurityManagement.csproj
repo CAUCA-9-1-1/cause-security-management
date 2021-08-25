@@ -29,7 +29,7 @@
 
   <ItemGroup>
     <PackageReference Include="Cause.Core.DataLayerExtensions" Version="5.0.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="5.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="5.0.9" />
   </ItemGroup>
   
   <ItemGroup>
