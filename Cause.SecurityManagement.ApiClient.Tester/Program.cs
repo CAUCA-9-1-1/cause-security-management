@@ -105,6 +105,7 @@ namespace Cause.SecurityManagement.ApiClient.Tester
     class Configuration : IConfiguration
     {
         public string ApiBaseUrl { get; set; } = "http://localhost:5000/api/";
+        public string ApiBaseUrlForAuthentication { get; set; }
         public string UserId { get; set; } = "9F3C60EDC1DDD704EE6C2C78AD48A64545E3D23F59AEC974710FB7E39C5433C0";
         public string Password { get; set; }
         public bool UseExternalSystemLogin { get; set; } = true;

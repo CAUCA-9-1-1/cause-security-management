@@ -39,6 +39,34 @@ namespace Cauca.ApiClient.Tests.Services
         }
 
         [Test]
+        public async Task AuthenticationUrlIsSet_WhenLoggingIn_ShouldUseBaseUrl()
+        {
+            var loginResult = new LoginResult { AuthorizationType = "Bearer", RefreshToken = "NewRefreshToken", AccessToken = "NewAccessToken" };
+            configuration.ApiBaseUrlForAuthentication = null;
+            using var httpTest = new HttpTest();
+            httpTest.RespondWithJson(loginResult);
+            var tokenHandler = new RefreshTokenHandler(configuration);
+            
+            await tokenHandler.Login();
+
+            httpTest.ShouldHaveCalled($"{configuration.ApiBaseUrl}/Authentication/logon");
+        }
+
+        [Test]
+        public async Task AuthenticationUrlIsSet_WhenLoggingIn_ShouldUseBaseAuthenticationUrl()
+        {
+            var loginResult = new LoginResult { AuthorizationType = "Bearer", RefreshToken = "NewRefreshToken", AccessToken = "NewAccessToken" };
+            configuration.ApiBaseUrlForAuthentication = "http://test/secureApi";
+            using var httpTest = new HttpTest();
+            httpTest.RespondWithJson(loginResult);
+
+            var tokenHandler = new RefreshTokenHandler(configuration);
+            await tokenHandler.Login();
+
+            httpTest.ShouldHaveCalled($"{configuration.ApiBaseUrlForAuthentication}/Authentication/logon");
+        }
+
+        [Test]
         public async Task NewAccessTokenIsCorrectlyCopiedInTheCurrentConfiguration()
         {
             var newToken = "newtoken";

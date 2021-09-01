@@ -92,7 +92,6 @@ namespace Cauca.ApiClient.Tests.Services
             }
         }
 
-
         [TestCase]
         public async Task RequestRefreshTokenThenRetryWhenItsExpired()
         {

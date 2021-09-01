@@ -18,14 +18,16 @@ namespace Cauca.ApiClient.Services
 
         private Url GenerateRefreshRequest()
         {
-            return Configuration.ApiBaseUrl
+            var baseUrl = Configuration.ApiBaseUrlForAuthentication ?? Configuration.ApiBaseUrl;
+            return baseUrl
                 .AppendPathSegment("Authentication")
                 .AppendPathSegment(GetPathForRefresh());
         }
 
         private Url GenerateLoginRequest()
         {
-            return Configuration.ApiBaseUrl
+            var baseUrl = Configuration.ApiBaseUrlForAuthentication ?? Configuration.ApiBaseUrl;
+            return baseUrl
                 .AppendPathSegment("Authentication")
                 .AppendPathSegment(GetPathForLogin());
         }
