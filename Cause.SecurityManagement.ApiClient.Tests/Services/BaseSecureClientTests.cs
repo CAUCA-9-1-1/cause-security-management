@@ -66,7 +66,7 @@ namespace Cauca.ApiClient.Tests.Services
                     .WithRequestJson(country)
                     .WithVerb(HttpMethod.Post)
                     .WithHeader("Authorization", "Bearer NewAccessToken")
-                    .With(call => call.Response.StatusCode == System.Net.HttpStatusCode.OK)
+                    .With(call => call.Response.StatusCode == (int)System.Net.HttpStatusCode.OK)
                     .Times(1);
             }
         }
@@ -110,7 +110,7 @@ namespace Cauca.ApiClient.Tests.Services
                 httpTest.ShouldHaveCalled("http://test/mock")
                     .WithRequestJson(country)
                     .WithVerb(HttpMethod.Post)
-                    .With(call => call.Response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                    .With(call => call.Response.StatusCode == (int)System.Net.HttpStatusCode.Unauthorized)
                     .Times(1);
 
                 httpTest.ShouldHaveCalled("http://test/Authentication/refresh")
@@ -120,7 +120,7 @@ namespace Cauca.ApiClient.Tests.Services
                 httpTest.ShouldHaveCalled("http://test/mock")
                     .WithRequestJson(country)
                     .WithVerb(HttpMethod.Post)
-                    .With(call => call.Response.StatusCode == System.Net.HttpStatusCode.OK)
+                    .With(call => call.Response.StatusCode == (int)System.Net.HttpStatusCode.OK)
                     .Times(1);
             }
         }
@@ -144,12 +144,12 @@ namespace Cauca.ApiClient.Tests.Services
                 httpTest.ShouldHaveCalled("http://test/mock")
                     .WithRequestJson(country)
                     .WithVerb(HttpMethod.Post)
-                    .With(call => call.Response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                    .With(call => call.Response.StatusCode == (int)System.Net.HttpStatusCode.Unauthorized)
                     .Times(1);
 
                 httpTest.ShouldHaveCalled("http://test/Authentication/refresh")
                     .WithVerb(HttpMethod.Post)
-                    .With(call => call.Response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                    .With(call => call.Response.StatusCode == (int)System.Net.HttpStatusCode.Unauthorized)
                     .Times(1);
 
                 httpTest.ShouldHaveCalled("http://test/Authentication/logon")
@@ -160,7 +160,7 @@ namespace Cauca.ApiClient.Tests.Services
                     .WithRequestJson(country)
                     .WithVerb(HttpMethod.Post)
                     .WithHeader("Authorization", $"{loginResult.AuthorizationType} {loginResult.AccessToken}")
-                    .With(call => call.Response.StatusCode == System.Net.HttpStatusCode.OK)
+                    .With(call => call.Response.StatusCode == (int)System.Net.HttpStatusCode.OK)
                     .Times(1);
             }
         }

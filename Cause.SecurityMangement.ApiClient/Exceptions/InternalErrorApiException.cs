@@ -8,7 +8,7 @@ namespace Cauca.ApiClient.Exceptions
 		{
 		}
 
-	    public InternalErrorApiException(string url, FlurlHttpException innerException) : base($"API returned a {innerException.Call.HttpStatus} error code response for url '{url}'.", innerException)
+	    public InternalErrorApiException(string url, FlurlHttpException innerException) : base($"API returned a {innerException.Call.Response.StatusCode} error code response for url '{url}'.", innerException)
 	    {
 	    }
     }

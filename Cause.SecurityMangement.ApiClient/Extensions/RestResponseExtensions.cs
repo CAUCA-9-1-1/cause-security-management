@@ -10,32 +10,32 @@ namespace Cauca.ApiClient.Extensions
         public const string RefreshTokenInvalid = "Token-Invalid";
         public const string AccessTokenExpired = "Token-Expired";
 
-        public static bool IsUnauthorized(this HttpCall response)
+        public static bool IsUnauthorized(this FlurlCall response)
         {
-            return response.HttpStatus == HttpStatusCode.Unauthorized;
+            return response.Response.StatusCode == (int)HttpStatusCode.Unauthorized;
         }
 
-        public static bool RefreshTokenIsExpired(this HttpCall response)
+        public static bool RefreshTokenIsExpired(this FlurlCall response)
         {
-            return response.HttpStatus == HttpStatusCode.Unauthorized
-                && response.Response.Headers.ToList().Any(h => h.Key == RefreshTokenExpired);
+            return response.Response.StatusCode == (int)HttpStatusCode.Unauthorized
+                && response.Response.Headers.ToList().Any(h => h.Name == RefreshTokenExpired);
         }
 
-        public static bool RefreshTokenIsInvalid(this HttpCall response)
+        public static bool RefreshTokenIsInvalid(this FlurlCall response)
         {
-            return response.HttpStatus == HttpStatusCode.Unauthorized
-                && response.Response.Headers.ToList().Any(h => h.Key == RefreshTokenInvalid);
+            return response.Response.StatusCode == (int)HttpStatusCode.Unauthorized
+                && response.Response.Headers.ToList().Any(h => h.Name == RefreshTokenInvalid);
         }
 
-        public static bool AccessTokenIsExpired(this HttpCall response)
+        public static bool AccessTokenIsExpired(this FlurlCall response)
         {
-            return response.HttpStatus == HttpStatusCode.Unauthorized
-                && response.Response.Headers.ToList().Any(h => h.Key == AccessTokenExpired);
+            return response.Response.StatusCode == (int)HttpStatusCode.Unauthorized
+                && response.Response.Headers.ToList().Any(h => h.Name == AccessTokenExpired);
         }
 
-        public static bool NoResponse(this HttpCall response)
+        public static bool NoResponse(this FlurlCall response)
         {
-            return response.Response == null && response.HttpStatus != HttpStatusCode.NotFound;
+            return response.Response == null && response.Response.StatusCode != (int)HttpStatusCode.NotFound;
         }
     }
 }

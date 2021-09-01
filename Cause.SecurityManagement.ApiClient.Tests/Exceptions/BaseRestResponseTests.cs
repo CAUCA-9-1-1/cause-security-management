@@ -5,12 +5,12 @@ namespace Cauca.ApiClient.Tests.Exceptions
 {
     public abstract class BaseRestResponseTests
     {
-        protected static HttpCall GetResponse(System.Net.HttpStatusCode code, string headerName)
+        protected static FlurlCall GetResponse(System.Net.HttpStatusCode code, string headerName)
         {
             var response = new HttpResponseMessage();
             response.Headers.Add(headerName, "True");
             response.StatusCode = code;
-            return new HttpCall { Response = response };
+            return new FlurlCall { Response = new FlurlResponse(response) };
         }
     }
 }

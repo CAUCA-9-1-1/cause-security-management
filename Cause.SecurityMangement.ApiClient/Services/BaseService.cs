@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Net;
 using System.Threading.Tasks;
 using Cauca.ApiClient.Configuration;
 using Cauca.ApiClient.Services.Interfaces;
@@ -62,7 +63,7 @@ namespace Cauca.ApiClient.Services
             catch (FlurlHttpException exception)
             {
                 new RestResponseValidator()
-                    .ThrowExceptionForStatusCode(exception.Call.FlurlRequest.Url, exception.Call.Succeeded, exception.Call.HttpStatus, exception);
+                    .ThrowExceptionForStatusCode(exception.Call.Request.Url, exception.Call.Succeeded, (HttpStatusCode?)exception.Call.Response?.StatusCode, exception);
                 throw;
             }
         }

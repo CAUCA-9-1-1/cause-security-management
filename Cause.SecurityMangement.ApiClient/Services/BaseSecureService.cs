@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.Threading.Tasks;
 using Cauca.ApiClient.Configuration;
 using Cauca.ApiClient.Extensions;
@@ -42,7 +43,7 @@ namespace Cauca.ApiClient.Services
 
                 new RestResponseValidator()
                     .ThrowExceptionForStatusCode(request.ToString(), exception.Call.Succeeded,
-                        exception.Call.HttpStatus, exception);
+                        (HttpStatusCode?)exception.Call.Response?.StatusCode, exception);
                 throw;
             }
         }
