@@ -72,6 +72,36 @@ namespace Cauca.ApiClient.Tests.Services
         }
 
         [TestCase]
+        public async Task WithApiBaseUrlForAuthentication_RequestLoginBeforeExecutingWhenNotLoggedIn_ShouldBeExecutedWithUrlForAuthentication()
+        {
+            configuration.AccessToken = null;
+            configuration.RefreshToken = null;
+            configuration.ApiBaseUrlForAuthentication = "http://test-for-authentication";
+
+            using (var httpTest = new HttpTest())
+            {
+                httpTest
+                    .RespondWithJson(new LoginResult { AuthorizationType = "Bearer", RefreshToken = "NewRefreshToken", AccessToken = "NewAccessToken" })
+                    .RespondWithJson(new MockResponse());
+
+                var country = new MockEntity();
+                var repo = new MockSecureRepository(configuration);
+                await repo.PostAsync<MockResponse>("mock", country);
+
+                httpTest.ShouldHaveCalled("http://test-for-authentication/Authentication/logon")
+                    .WithVerb(HttpMethod.Post)
+                    .Times(1);
+
+                httpTest.ShouldHaveCalled("http://test/mock")
+                    .WithRequestJson(country)
+                    .WithVerb(HttpMethod.Post)
+                    .WithHeader("Authorization", "Bearer NewAccessToken")
+                    .With(call => call.Response.StatusCode == (int)System.Net.HttpStatusCode.OK)
+                    .Times(1);
+            }
+        }
+
+        [TestCase]
         public async Task LoginCorrectlySetAccessAndRefreshToken()
         {
             configuration.AccessToken = null;
