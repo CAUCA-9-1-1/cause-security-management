@@ -70,8 +70,7 @@ namespace Cauca.ApiClient.Services
 
         protected virtual IFlurlRequest GenerateRequest(string url)
         {
-            return Configuration.ApiBaseUrl
-                .AppendPathSegment(url)
+            return $"{Configuration.ApiBaseUrl}{url}"
                 .WithTimeout(TimeSpan.FromSeconds(Configuration.RequestTimeoutInSeconds));
         }
 

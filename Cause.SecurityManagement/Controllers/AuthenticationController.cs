@@ -3,6 +3,7 @@ using Cause.SecurityManagement.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using System;
 
 namespace Cause.SecurityManagement.Controllers
 {
@@ -100,6 +101,13 @@ namespace Cause.SecurityManagement.Controllers
             }
 
             return Unauthorized();
+        }
+
+        [HttpGet, Route("VersionValidator/{mobileVersion}/Latest"), AllowAnonymous]
+        [ProducesResponseType(200)]
+        public ActionResult MobileVersionIsLatest(string mobileVersion)
+        {
+            return Ok(service.IsMobileVersionLatest(mobileVersion));
         }
 
         [HttpGet, Route("VersionValidator/{mobileVersion}"), AllowAnonymous]

@@ -9,6 +9,7 @@ namespace Cause.SecurityManagement.Services
     {
         void EnsureAdminIsCreated();
         List<AuthenticationUserPermission> GetActiveUserPermissions();
+        bool IsMobileVersionLatest(string mobileVersion);
         bool IsMobileVersionValid(string mobileVersion);
         (UserToken token, User user) Login(string userName, string password);
         (ExternalSystemToken token, ExternalSystem system) LoginForExternalSystem(string secretApiKey);
