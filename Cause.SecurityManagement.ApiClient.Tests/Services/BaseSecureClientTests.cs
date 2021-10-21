@@ -1,6 +1,8 @@
-﻿using System.Net.Http;
+﻿using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Cauca.ApiClient;
+using Cauca.ApiClient.Exceptions;
 using Cauca.ApiClient.Tests.Mocks;
 using Flurl.Http.Testing;
 using NUnit.Framework;
@@ -192,6 +194,56 @@ namespace Cauca.ApiClient.Tests.Services
                     .With(call => call.Response.StatusCode == (int)System.Net.HttpStatusCode.OK)
                     .Times(1);
             }
+        }
+
+        [TestCase]
+        public void RequestIsThrowingErrorWhenUrlIsNotFound()
+        {
+            using var httpTest = new HttpTest();
+            httpTest.RespondWithJson(new MockResponse(), 404);
+            var entity = new MockEntity();
+            var repo = new MockSecureRepository(configuration);
+            Assert.ThrowsAsync<NotFoundApiException>(async () => await repo.PostAsync<MockResponse>("mock", entity));
+        }
+
+        [TestCase]
+        public void RequestIsThrowingErrorWhenGettingBadParameters()
+        {
+            using var httpTest = new HttpTest();
+            httpTest.RespondWithJson(new MockResponse(), 400);
+            var entity = new MockEntity();
+            var repo = new MockSecureRepository(configuration);
+            Assert.ThrowsAsync<BadParameterApiException>(async () => await repo.PostAsync<MockResponse>("mock", entity));
+        }
+
+        [TestCase]
+        public void RequestIsThrowingErrorWhenGettingForbidden()
+        {
+            using var httpTest = new HttpTest();
+            httpTest.RespondWithJson(new MockResponse(), 403);
+            var entity = new MockEntity();
+            var repo = new MockSecureRepository(configuration);
+            Assert.ThrowsAsync<ForbiddenApiException>(async () => await repo.PostAsync<MockResponse>("mock", entity));
+        }
+
+        [TestCase]
+        public void RequestIsThrowingErrorWhenGettingInternalError()
+        {
+            using var httpTest = new HttpTest();
+            httpTest.RespondWithJson(new MockResponse(), 500);
+            var entity = new MockEntity();
+            var repo = new MockSecureRepository(configuration);
+            Assert.ThrowsAsync<InternalErrorApiException>(async () => await repo.PostAsync<MockResponse>("mock", entity));
+        }
+
+        [TestCase]
+        public void RequestIsThrowingErrorWhenNotGettingAnAnswer()
+        {
+            using var httpTest = new HttpTest();
+            httpTest.SimulateTimeout();
+            var entity = new MockEntity();
+            var repo = new MockSecureRepository(configuration);
+            Assert.ThrowsAsync<NoResponseApiException>(async () => await repo.PostAsync<MockResponse>("mock", entity));
         }
     }
 }
