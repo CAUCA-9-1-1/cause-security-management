@@ -42,7 +42,7 @@ namespace Cauca.ApiClient.Services
                 }
 
                 new RestResponseValidator()
-                    .ThrowExceptionForStatusCode(request.ToString(), exception.Call.Succeeded,
+                    .ThrowExceptionForStatusCode(exception.Call.Request.Url, exception.Call.Succeeded,
                         (HttpStatusCode?)exception.Call.Response?.StatusCode, exception);
                 throw;
             }

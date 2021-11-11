@@ -24,6 +24,11 @@ namespace Cauca.ApiClient.Services
             return await ExecuteAsync(() => ExecutePostAsync<TResult>(GenerateRequest(url), entity));
         }
 
+        public async Task PostAsync(string url, object entity)
+        {
+            await ExecuteAsync(() => ExecutePostAsync(GenerateRequest(url), entity));
+        }
+
         public async Task<TResult> PutAsync<TResult>(string url, object entity)
         {
             return await ExecuteAsync(() => ExecutePutAsync<TResult>(GenerateRequest(url), entity));
@@ -68,10 +73,31 @@ namespace Cauca.ApiClient.Services
             }
         }
 
+        protected virtual async Task ExecuteAsync(Func<Task> request)
+        {
+            try
+            {
+                await request();
+            }
+            catch (FlurlHttpException exception)
+            {
+                new RestResponseValidator()
+                    .ThrowExceptionForStatusCode(exception.Call.Request.Url, exception.Call.Succeeded, (HttpStatusCode?)exception.Call.Response?.StatusCode, exception);
+                throw;
+            }
+        }
+
         protected virtual IFlurlRequest GenerateRequest(string url)
         {
-            return $"{Configuration.ApiBaseUrl}{url}"
+            return Configuration.ApiBaseUrl
+                .AppendPathSegment(url)
                 .WithTimeout(TimeSpan.FromSeconds(Configuration.RequestTimeoutInSeconds));
+        }
+
+        protected async Task ExecutePostAsync(IFlurlRequest request, object entity)
+        {
+            await request
+                .PostJsonAsync(entity);
         }
 
         protected async Task<TResult> ExecutePostAsync<TResult>(IFlurlRequest request, object entity)
