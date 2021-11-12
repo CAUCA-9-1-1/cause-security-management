@@ -3,101 +3,88 @@ using Cause.SecurityManagement.Models.Configuration;
 using Cause.SecurityManagement.Models.DataTransferObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
-using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace Cause.SecurityManagement.Services
 {
-	public class AuthenticationService<TUser> : IAuthenticationService
+    public class AuthenticationService<TUser> 
+        : BaseAuthenticationService<TUser>, IAuthenticationService
         where TUser : User, new()
     {
-        private readonly ICurrentUserService currentUserService;
-        private readonly ISecurityContext<TUser> context;
+        private readonly ICurrentUserService currentUserService;        
         private readonly IUserManagementService<TUser> userManagementService;
-        private readonly SecurityConfiguration securityConfiguration;
-        public readonly int DefaultRefreshTokenLifetimeInMinutes = 9 * 60;
-        public readonly int DefaultAccessTokenLifetimeInMinutes = 60;
-        public readonly int DefaultTemporaryAccessTokenLifetimeInMinutes = 5;
 
         public AuthenticationService(
             ICurrentUserService currentUserService,
             ISecurityContext<TUser> context, 
             IUserManagementService<TUser> userManagementService,
-            IOptions<SecurityConfiguration> securityOptions)
+            IOptions<SecurityConfiguration> securityOptions) : base(context, securityOptions)
 		{
             this.currentUserService = currentUserService;
-            this.context = context;
             this.userManagementService = userManagementService;
-            securityConfiguration = securityOptions.Value;
         }
 
-		public (UserToken token, User user) Login(string userName, string password)
-		{
-			var encodedPassword = new PasswordGenerator().EncodePassword(password, securityConfiguration.PackageName);
-			var userFound = context.Users
-				.SingleOrDefault(user => user.UserName == userName && user.Password.ToUpper() == encodedPassword && user.IsActive);
-			if (userFound != null && CanLogIn(userFound))
-			{
-				var accessToken = GenerateAccessToken(userFound.Id, userFound.UserName, SecurityRoles.User);
-				var refreshToken = GenerateRefreshToken();
-				var token = new UserToken {AccessToken = accessToken, RefreshToken = refreshToken, ExpiresOn = DateTime.Now.AddMinutes(GetRefreshTokenLifeTimeInMinute()), IdUser = userFound.Id};
-				context.Add(token);
-				context.SaveChanges();
-				return (token, userFound);
-			}
+		public virtual (UserToken token, User user) Login(string userName, string password)
+        {
+            var (userFound, roles) = GetUser(userName, password);
+            return CanLogIn(userFound) ?
+                (GenerateUserToken(userFound, roles), userFound) :
+                (null, null);
+        }
 
-			return (null, null);
-		}
+        protected virtual UserToken GenerateUserToken(TUser user, string roles)
+        {
+            var tokenLifeTimeInMinute = GetRefreshTokenLifeTimeInMinute();
+            return GenerateUserToken(user, roles, tokenLifeTimeInMinute);
+        }
 
-        private bool CanLogIn(User user)
+        protected virtual UserToken GenerateUserToken(TUser user, string roles, int tokenLifeTimeInMinute, bool setRefreshToken = true)
+        {
+            var accessToken = GenerateAccessToken(user.Id, user.UserName, roles);
+            var refreshToken = setRefreshToken ? GenerateRefreshToken() : "";
+            var token = new UserToken { AccessToken = accessToken, RefreshToken = refreshToken, ExpiresOn = DateTime.Now.AddMinutes(tokenLifeTimeInMinute), IdUser = user.Id };
+            context.Add(token);
+            context.SaveChanges();
+            return token;
+        }
+
+        protected virtual (TUser user, string rolesToGive) GetUser(string userName, string password)
+        {
+            var encodedPassword = new PasswordGenerator().EncodePassword(password, securityConfiguration.PackageName);
+            var userFound = context.Users
+                .SingleOrDefault(user => user.UserName == userName && user.Password.ToUpper() == encodedPassword && user.IsActive);
+            return (userFound, SecurityRoles.User);
+        }
+
+        protected virtual bool CanLogIn(User user)
+        {
+            return user != null && HasRequiredPermissionToLogIn(user);
+        }
+
+        protected virtual bool HasRequiredPermissionToLogIn(User user)
         {
             return string.IsNullOrWhiteSpace(securityConfiguration.RequiredPermissionForLogin)
                 || userManagementService.HasPermission(user.Id, securityConfiguration.RequiredPermissionForLogin);
         }
 
-        public UserToken GenerateUserRecoveryToken(Guid userId)
+        public virtual UserToken GenerateUserRecoveryToken(Guid userId)
         {
             var userFound = context.Users
                 .SingleOrDefault(user => user.Id == userId && user.IsActive);
             if (userFound != null)
             {
-                var accessToken = GenerateAccessToken(userFound.Id, userFound.UserName, SecurityRoles.UserRecovery);
-                var token = new UserToken { AccessToken = accessToken, RefreshToken = "", ExpiresOn = DateTime.Now.AddMinutes(GetTemporaryAccessTokenLifeTimeInMinute()), IdUser = userFound.Id };
-                context.Add(token);
-                context.SaveChanges();
-                return token;
+                return GenerateUserToken(userFound, SecurityRoles.UserRecovery, GetTemporaryAccessTokenLifeTimeInMinute(), false);
             }
             return null;
         }
 
-        public UserToken GenerateUserCreationToken(Guid userId)
+        public virtual UserToken GenerateUserCreationToken(Guid userId)
         {            
             var accessToken = GenerateAccessToken(userId, "temporary", SecurityRoles.UserCreation);
             var token = new UserToken { AccessToken = accessToken, RefreshToken = "", ExpiresOn = DateTime.Now.AddMinutes(GetTemporaryAccessTokenLifeTimeInMinute()), IdUser = userId };
             return token;
-        }
-
-        public (ExternalSystemToken token, ExternalSystem system) LoginForExternalSystem(string secretApiKey)
-        {
-            var externalSystemFound = context.ExternalSystems
-                .SingleOrDefault(externalSystem => externalSystem.ApiKey == secretApiKey && externalSystem.IsActive);
-            if (externalSystemFound != null)
-            {
-                var accessToken = GenerateAccessToken(externalSystemFound.Id, externalSystemFound.Name, SecurityRoles.ExternalSystem);
-                var refreshToken = GenerateRefreshToken();
-                var token = new ExternalSystemToken { AccessToken = accessToken, RefreshToken = refreshToken, ExpiresOn = DateTime.Now.AddMinutes(GetRefreshTokenLifeTimeInMinute()), IdExternalSystem = externalSystemFound.Id };
-                context.Add(token);
-                context.SaveChanges();
-                return (token, externalSystemFound);
-            }
-
-            return (null, null);
         }
 
         public string RefreshUserToken(string token, string refreshToken)
@@ -116,118 +103,7 @@ namespace Cause.SecurityManagement.Services
 
 			return newAccessToken;
 		}
-
-        public string RefreshExternalSystemToken(string token, string refreshToken)
-        {
-            var externalSystemId = GetSidFromExpiredToken(token);
-            var externalSystemToken = context.ExternalSystemTokens
-                .FirstOrDefault(t => t.IdExternalSystem == externalSystemId && t.RefreshToken == refreshToken);
-            var externalSystem = context.ExternalSystems.Find(externalSystemId);
-
-            ThrowExceptionWhenTokenIsNotValid(refreshToken, externalSystemToken);
-
-            var newAccessToken = GenerateAccessToken(externalSystem.Id, externalSystem.Name, SecurityRoles.ExternalSystem);
-            // ReSharper disable once PossibleNullReferenceException
-            externalSystemToken.AccessToken = newAccessToken;
-            context.SaveChanges();
-
-            return newAccessToken;
-        }
-
-        public int GetRefreshTokenLifeTimeInMinute()
-        {
-            return securityConfiguration.RefreshTokenLifeTimeInMinutes ?? DefaultRefreshTokenLifetimeInMinutes;
-        }
-
-        public int GetTemporaryAccessTokenLifeTimeInMinute()
-        {
-            return securityConfiguration.TemporaryAccessTokenLifeTimeInMinutes ?? DefaultTemporaryAccessTokenLifetimeInMinutes;
-        }
-
-        public int GetAccessTokenLifeTimeInMinute()
-        {
-            return securityConfiguration.AccessTokenLifeTimeInMinutes ?? DefaultAccessTokenLifetimeInMinutes;
-        }
-
-        // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
-        public void ThrowExceptionWhenTokenIsNotValid(string refreshToken, BaseToken token)
-        {
-            if (token == null)
-                throw new SecurityTokenException("Invalid token.");
-
-            if (token.RefreshToken != refreshToken)
-                throw new SecurityTokenValidationException("Invalid token.");
-
-            if (securityConfiguration.RefreshTokenCanExpire && token.ExpiresOn < DateTime.Now)
-                throw new SecurityTokenExpiredException("Token expired.");
-        }
-
-        private Guid GetSidFromExpiredToken(string token)
-		{
-			var principal = GetPrincipalFromExpiredToken(token);
-			var id = principal.Claims.FirstOrDefault(claim => claim.Type == JwtRegisteredClaimNames.Sid)?.Value;
-			if (Guid.TryParse(id, out Guid userId))
-				return userId;
-			return Guid.Empty;
-		}
-
-        private ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
-		{
-            var tokenValidationParameters = new TokenValidationParameters
-			{
-				ValidateIssuerSigningKey = true,
-				IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(securityConfiguration.SecretKey)),
-				ValidateIssuer = true,
-				ValidIssuer = securityConfiguration.Issuer,
-				ValidateAudience = true,
-				ValidAudience = securityConfiguration.PackageName,
-				ValidateLifetime = false,
-				ClockSkew = TimeSpan.Zero
-			};
-
-			var tokenHandler = new JwtSecurityTokenHandler();
-			var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out var securityToken);
-			if (!(securityToken is JwtSecurityToken jwtSecurityToken)
-			    || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
-				throw new SecurityTokenException("Invalid token");
-
-			return principal;
-		}
-
-		private string GenerateAccessToken(Guid userId, string userName, string role)
-        {
-            var claims = new[]
-			{
-                new Claim(ClaimTypes.Role, role),
-                new Claim(JwtRegisteredClaimNames.UniqueName, userName),
-				new Claim(JwtRegisteredClaimNames.Sid, userId.ToString()),
-			};
-
-            return GenerateAccessToken(claims);
-        }       
-
-        private string GenerateAccessToken(Claim[] claims)
-        {
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(securityConfiguration.SecretKey));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            var token = new JwtSecurityToken(securityConfiguration.Issuer,
-                securityConfiguration.PackageName,
-                claims,
-                notBefore: DateTime.Now,
-                expires: DateTime.Now.AddMinutes(GetAccessTokenLifeTimeInMinute()),
-                signingCredentials: creds);
-            return new JwtSecurityTokenHandler().WriteToken(token);
-        }
-
-        private string GenerateRefreshToken()
-		{
-			var randomNumber = new byte[32];
-            using var rng = RandomNumberGenerator.Create();
-            rng.GetBytes(randomNumber);
-            return Convert.ToBase64String(randomNumber);
-        }
-
+      
 		public void EnsureAdminIsCreated()
 		{
 			if (!context.Users.Any(user => user.UserName == "admin"))

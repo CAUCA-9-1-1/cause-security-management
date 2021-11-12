@@ -3,7 +3,6 @@ using Cause.SecurityManagement.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
-using System;
 
 namespace Cause.SecurityManagement.Controllers
 {
@@ -11,10 +10,14 @@ namespace Cause.SecurityManagement.Controllers
     public class AuthenticationController : Controller
     {
         private readonly IAuthenticationService service;
+        private readonly IExternalSystemAuthenticationService externalSystemAuthenticationService;
 
-        public AuthenticationController(IAuthenticationService service)
+        public AuthenticationController(
+            IAuthenticationService service,
+            IExternalSystemAuthenticationService externalSystemAuthenticationService)
         {
             this.service = service;
+            this.externalSystemAuthenticationService = externalSystemAuthenticationService;
         }
 
         [Route("[Action]"), HttpPost, AllowAnonymous]
@@ -68,7 +71,7 @@ namespace Cause.SecurityManagement.Controllers
         [Route("[Action]"), HttpPost, AllowAnonymous]
         public ActionResult<LoginResult> LogonForExternalSystem([FromBody] ExternalSystemLoginInformations login)
         {
-            var (token, system) = service.LoginForExternalSystem(login.Apikey);
+            var (token, system) = externalSystemAuthenticationService.LoginForExternalSystem(login.Apikey);
             if (system == null || token == null)
                 return Unauthorized();
 
@@ -88,7 +91,7 @@ namespace Cause.SecurityManagement.Controllers
         {
             try
             {
-                var newAccessToken = service.RefreshUserToken(tokens.AccessToken, tokens.RefreshToken);
+                var newAccessToken = externalSystemAuthenticationService.RefreshExternalSystemToken(tokens.AccessToken, tokens.RefreshToken);
                 return Ok(new { AccessToken = newAccessToken, tokens.RefreshToken });
             }
             catch (SecurityTokenExpiredException)

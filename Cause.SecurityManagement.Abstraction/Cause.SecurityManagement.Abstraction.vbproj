@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Cause.SecurityManagement.Abstraction</RootNamespace>
+    <TargetFramework>net6.0</TargetFramework>
+    <Version>6.0.0-beta2</Version>
+    <Description>Cause.SecurityManagement's abstraction.</Description>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="IAuthenticationService.cs" />
+    <None Remove="IContextService.cs" />
+    <None Remove="IExternalSystemAuthenticationService.cs" />
+    <None Remove="IGroupManagementService.cs" />
+    <None Remove="IPermissionManagementService.cs" />
+    <None Remove="IUserManagementService.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="IAuthenticationService.cs" />
+    <Compile Include="IContextService.cs" />
+    <Compile Include="IExternalSystemAuthenticationService.cs" />
+    <Compile Include="IGroupManagementService.cs" />
+    <Compile Include="IPermissionManagementService.cs" />
+    <Compile Include="IUserManagementService.cs" />
+  </ItemGroup>
+
+</Project>
