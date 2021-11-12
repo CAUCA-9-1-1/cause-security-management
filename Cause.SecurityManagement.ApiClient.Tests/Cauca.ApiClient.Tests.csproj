@@ -18,8 +18,4 @@
     </PackageReference>
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Cause.SecurityMangement.ApiClient\Cauca.ApiClient.csproj" />
-  </ItemGroup>
-
 </Project>
