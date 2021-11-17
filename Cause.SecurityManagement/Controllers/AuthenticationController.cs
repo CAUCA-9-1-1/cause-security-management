@@ -28,9 +28,9 @@ namespace Cause.SecurityManagement.Controllers
         }
 
         [Route("[Action]"), HttpPost, AllowAnonymous]
-        public async Task<ActionResult<LoginResult>> Logon([FromBody] LoginInformations login)
+        public ActionResult<LoginResult> Logon([FromBody] LoginInformations login)
         {            
-            var (token, user) = await service.LoginAsync(login.UserName, login.Password);
+            var (token, user) = service.Login(login.UserName, login.Password);
             if (user == null || token == null)
                 return Unauthorized();
 

@@ -4,7 +4,6 @@ using Cause.SecurityManagement.Models.DataTransferObjects;
 using Microsoft.Extensions.Options;
 using System;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace Cause.SecurityManagement.Services
 {
@@ -30,11 +29,11 @@ namespace Cause.SecurityManagement.Services
             this.multiFactorHandler = multiFactorHandler;
         }
 
-        public virtual async Task<(UserToken token, User user)> LoginAsync(string userName, string password)
+        public virtual (UserToken token, User user) Login(string userName, string password)
         {
             var (userFound, roles) = GetUserWithTemporaryPassword(userName, password)
                 ?? GetUser(userName, password);
-            return await GenerateUserIfUserCanLogInAsync(userFound, roles);
+            return GenerateUserIfUserCanLogIn(userFound, roles);
         }
 
         protected virtual (TUser user, string role)? GetUserWithTemporaryPassword(string userName, string password)
@@ -47,12 +46,12 @@ namespace Cause.SecurityManagement.Services
             return null;
         }
 
-        protected virtual async Task<(UserToken token, TUser user)> GenerateUserIfUserCanLogInAsync(TUser userFound, string roles)
+        protected virtual (UserToken token, TUser user) GenerateUserIfUserCanLogIn(TUser userFound, string roles)
         {
             var user = CanLogIn(userFound) ?
                 (GenerateUserToken(userFound, roles), userFound) :
                 (null, null);
-            await multiFactorHandler.SendValidationCodeWhenNeededAsync(user.userFound);            
+            multiFactorHandler.SendValidationCodeWhenNeeded(user.userFound);            
             return user;
         }     
 

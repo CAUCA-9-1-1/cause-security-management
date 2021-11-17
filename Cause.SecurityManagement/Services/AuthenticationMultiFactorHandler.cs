@@ -1,7 +1,6 @@
 ﻿using Cause.SecurityManagement.Models;
 using System;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace Cause.SecurityManagement.Services
 {
@@ -19,12 +18,12 @@ namespace Cause.SecurityManagement.Services
             this.sender = sender;
         }
 
-        public async Task SendValidationCodeWhenNeededAsync(TUser user)
+        public void SendValidationCodeWhenNeeded(TUser user)
         {
             if (MustSendValidationCode(user))
             {
                 DeleteExistingValidationCode(user.Id, ValidationCodeType.MultiFactorLogin);
-                await SendValidationCodeAsync(user, ValidationCodeType.MultiFactorLogin);
+                SendValidationCode(user, ValidationCodeType.MultiFactorLogin);
             }
         }
 
@@ -43,7 +42,7 @@ namespace Cause.SecurityManagement.Services
             context.SaveChanges();
         }
 
-        private async Task SendValidationCodeAsync(TUser user, ValidationCodeType type)
+        private void SendValidationCode(TUser user, ValidationCodeType type)
         {
             var code = new UserValidationCode
             {
@@ -54,7 +53,7 @@ namespace Cause.SecurityManagement.Services
             };
             context.UserValidationCodes.Add(code);
             context.SaveChanges();
-            await sender.SendCodeAsync(user.Email, code.Code);
+            sender.SendCode(user.Email, code.Code);
         }
 
         private static string GenerateValidationCode()

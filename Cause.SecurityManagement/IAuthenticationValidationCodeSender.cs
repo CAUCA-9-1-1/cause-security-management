@@ -1,9 +1,7 @@
-﻿using System.Threading.Tasks;
-
-namespace Cause.SecurityManagement
+﻿namespace Cause.SecurityManagement
 {
     public interface IAuthenticationValidationCodeSender
     {
-        Task SendCodeAsync(string email, string code);
+        void SendCode(string email, string code);
     }
 }
