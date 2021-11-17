@@ -33,7 +33,7 @@ namespace Cause.SecurityManagement.Services
         {
             var (userFound, roles) = GetUserWithTemporaryPassword(userName, password)
                 ?? GetUser(userName, password);
-            return GenerateUserIfUserCanLogIn(userFound, roles);
+            return GenerateTokenIfUserCanLogIn(userFound, roles);
         }
 
         protected virtual (TUser user, string role)? GetUserWithTemporaryPassword(string userName, string password)
@@ -46,10 +46,10 @@ namespace Cause.SecurityManagement.Services
             return null;
         }
 
-        protected virtual (UserToken token, TUser user) GenerateUserIfUserCanLogIn(TUser userFound, string roles)
+        protected virtual (UserToken token, TUser user) GenerateTokenIfUserCanLogIn(TUser userFound, string role)
         {
             var user = CanLogIn(userFound) ?
-                (GenerateUserToken(userFound, roles), userFound) :
+                (GenerateUserToken(userFound, role), userFound) :
                 (null, null);
             multiFactorHandler.SendValidationCodeWhenNeeded(user.userFound);            
             return user;
@@ -65,15 +65,16 @@ namespace Cause.SecurityManagement.Services
             throw new InvalidValidationCodeException($"Validation code {validationInformation.ValidationCode} is invalid for this user.");
         }        
 
-        protected virtual UserToken GenerateUserToken(TUser user, string roles)
+        protected virtual UserToken GenerateUserToken(TUser user, string role)
         {
-            var tokenLifeTimeInMinute = GetRefreshTokenLifeTimeInMinute();
-            return GenerateUserToken(user, roles, tokenLifeTimeInMinute);
+            var isTemporaryRole = SecurityRoles.IsTemporaryRole(role);
+            var tokenLifeTimeInMinute = isTemporaryRole ? GetTemporaryAccessTokenLifeTimeInMinute() : GetRefreshTokenLifeTimeInMinute();
+            return GenerateUserToken(user, role, tokenLifeTimeInMinute, !isTemporaryRole);
         }
 
-        protected virtual UserToken GenerateUserToken(TUser user, string roles, int tokenLifeTimeInMinute, bool setRefreshToken = true)
+        protected virtual UserToken GenerateUserToken(TUser user, string role, int tokenLifeTimeInMinute, bool setRefreshToken = true)
         {
-            var accessToken = GenerateAccessToken(user.Id, user.UserName, roles, GetAccessTokenLifeTimeInMinute());
+            var accessToken = GenerateAccessToken(user.Id, user.UserName, role, tokenLifeTimeInMinute);
             var refreshToken = setRefreshToken ? GenerateRefreshToken() : "";
             var token = new UserToken { AccessToken = accessToken, RefreshToken = refreshToken, ExpiresOn = DateTime.Now.AddMinutes(tokenLifeTimeInMinute), IdUser = user.Id };
             context.Add(token);

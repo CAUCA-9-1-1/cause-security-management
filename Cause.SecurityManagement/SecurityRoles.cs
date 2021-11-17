@@ -1,4 +1,6 @@
-﻿namespace Cause.SecurityManagement
+﻿using System.Linq;
+
+namespace Cause.SecurityManagement
 {
     public static class SecurityRoles
     {
@@ -12,5 +14,12 @@
         public const string UserAndUserCreation = User + "," + UserCreation;
         public const string UserAndUserRecovery = User + "," + UserRecovery;
         public const string UserAndRecoveryAndCreation = User + "," + UserCreation + "," + UserRecovery;
+        
+        internal static string[] TemporaryRoles = new[] { UserCreation, UserRecovery, UserPasswordSetup, UserLoginWithMultiFactor };
+
+        public static bool IsTemporaryRole(string role)
+        {
+            return TemporaryRoles.Contains(role);
+        }
     }
 }

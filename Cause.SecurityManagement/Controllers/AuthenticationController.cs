@@ -3,7 +3,6 @@ using Cause.SecurityManagement.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
-using System.Threading.Tasks;
 
 namespace Cause.SecurityManagement.Controllers
 {
@@ -85,13 +84,9 @@ namespace Cause.SecurityManagement.Controllers
                     Name = user.FirstName + " " + user.LastName,
                 };
             }
-            catch (SecurityTokenExpiredException)
+            catch (InvalidValidationCodeException exception)
             {
-                HttpContext.Response.Headers.Add("Refresh-Token-Expired", "true");
-            }
-            catch (SecurityTokenException)
-            {
-                HttpContext.Response.Headers.Add("Token-Invalid", "true");
+                return BadRequest(new { ErrorMessage = exception.Message });
             }
             return Unauthorized();
         }
