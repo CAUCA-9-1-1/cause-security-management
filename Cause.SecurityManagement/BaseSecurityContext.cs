@@ -12,7 +12,8 @@ namespace Cause.SecurityManagement
 		public DbSet<ModulePermission> ModulePermissions { get; set; }
 
 		public DbSet<UserToken> UserTokens { get; set; }
-		public DbSet<Group> Groups { get; set; }
+        public DbSet<UserValidationCode> UserValidationCodes { get; set; }
+        public DbSet<Group> Groups { get; set; }
 		public DbSet<GroupPermission> GroupPermissions { get; set; }
 
 		public DbSet<TUser> Users { get; set; }
@@ -21,7 +22,7 @@ namespace Cause.SecurityManagement
 		public DbSet<UserPermission> UserPermissions { get; set; }
         public DbSet<DataProtectionElement> DataProtectionXmlElements { get; set; }
         public DbSet<ExternalSystem> ExternalSystems { get; set; }
-        public DbSet<ExternalSystemToken> ExternalSystemTokens { get; set; }
+        public DbSet<ExternalSystemToken> ExternalSystemTokens { get; set; }        
 
         protected BaseSecurityContext(DbContextOptions options) : base(options)
         {

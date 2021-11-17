@@ -1,4 +1,5 @@
-﻿using Cause.SecurityManagement.Services;
+﻿using Cause.SecurityManagement.Models.Configuration;
+using Cause.SecurityManagement.Services;
 using System;
 using System.Diagnostics.CodeAnalysis;
 
@@ -9,6 +10,8 @@ namespace Cause.SecurityManagement
         internal (Type serviceType, Type implementationType)? CustomAuthenticationService { get; set; } = null;
         internal (Type serviceType, Type implementationType)? CustomUserManagementService { get; set; } = null;
         internal (Type serviceType, Type implementationType)? CustomCurrentUserService { get; set; } = null;
+        internal Type ValidationCodeSender { get; set; } = null;
+        internal static bool MultiFactorAuthenticationIsActivated { get; private set; }
               
         public void SetCustomUserManagementService<TUser, TService, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TImplementation>()
             where TService : IUserManagementService<TUser>
@@ -29,6 +32,12 @@ namespace Cause.SecurityManagement
             where TImplementation : class, ICurrentUserService
         {
             CustomCurrentUserService = (typeof(TService), typeof(TImplementation));
+        }
+
+        public void UseMultiFactorAuthentication<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TImplementation>()
+        {
+            MultiFactorAuthenticationIsActivated = true;
+            ValidationCodeSender = typeof(TImplementation);
         }
     }
 }

@@ -13,8 +13,11 @@ namespace Cause.SecurityManagement.Tests
 	public class AuthenticationServiceTests
     {
         private readonly ICurrentUserService userService;
+        private readonly IAuthenticationMultiFactorHandler<User> handler;
+
         public AuthenticationServiceTests()
         {
+            handler = Substitute.For<IAuthenticationMultiFactorHandler<User>>();
             userService = Substitute.For<ICurrentUserService>();
         }
 
@@ -25,7 +28,7 @@ namespace Cause.SecurityManagement.Tests
             {
                 AccessTokenLifeTimeInMinutes = 33
             };
-            var service = new AuthenticationService<User>(userService, null, null, Options.Create(option));
+            var service = new AuthenticationService<User>(userService, null, null, Options.Create(option), handler);
 
             var result = service.GetAccessTokenLifeTimeInMinute();
 
@@ -39,7 +42,7 @@ namespace Cause.SecurityManagement.Tests
             {
                 AccessTokenLifeTimeInMinutes = null
             };
-            var service = new AuthenticationService<User>(userService, null, null, Options.Create(option));
+            var service = new AuthenticationService<User>(userService, null, null, Options.Create(option), handler);
 
             var result = service.GetAccessTokenLifeTimeInMinute();
 
@@ -53,7 +56,7 @@ namespace Cause.SecurityManagement.Tests
             {
                 RefreshTokenLifeTimeInMinutes = 33
             };
-            var service = new AuthenticationService<User>(userService, null, null, Options.Create(option));
+            var service = new AuthenticationService<User>(userService, null, null, Options.Create(option), handler);
 
             var result = service.GetRefreshTokenLifeTimeInMinute();
 
@@ -67,7 +70,7 @@ namespace Cause.SecurityManagement.Tests
             {
                 RefreshTokenLifeTimeInMinutes = null
             };
-            var service = new AuthenticationService<User>(userService, null, null, Options.Create(option));
+            var service = new AuthenticationService<User>(userService, null, null, Options.Create(option), handler);
 
             var result = service.GetRefreshTokenLifeTimeInMinute();
 
@@ -81,7 +84,7 @@ namespace Cause.SecurityManagement.Tests
             {
                 TemporaryAccessTokenLifeTimeInMinutes = 33
             };
-            var service = new AuthenticationService<User>(userService, null, null, Options.Create(option));
+            var service = new AuthenticationService<User>(userService, null, null, Options.Create(option), handler);
 
             var result = service.GetTemporaryAccessTokenLifeTimeInMinute();
 
@@ -95,7 +98,7 @@ namespace Cause.SecurityManagement.Tests
             {
                 TemporaryAccessTokenLifeTimeInMinutes = null
             };
-            var service = new AuthenticationService<User>(userService, null, null, Options.Create(option));
+            var service = new AuthenticationService<User>(userService, null, null, Options.Create(option), handler);
 
             var result = service.GetTemporaryAccessTokenLifeTimeInMinute();
 
@@ -110,7 +113,7 @@ namespace Cause.SecurityManagement.Tests
                 RefreshTokenCanExpire = false
 			};
 			var token = new UserToken { AccessToken = "anAccessToken", ExpiresOn = DateTime.Now, RefreshToken = "aRefreshToken"};
-            var service = new AuthenticationService<User>(userService, null, null, Options.Create(option));
+            var service = new AuthenticationService<User>(userService, null, null, Options.Create(option), handler);
 
             Action result = () => service.ThrowExceptionWhenTokenIsNotValid("aRefreshToken", token);
 
@@ -127,7 +130,7 @@ namespace Cause.SecurityManagement.Tests
                 RefreshTokenLifeTimeInMinutes = null
 	        };
 	        var token = new UserToken { AccessToken = "anAccessToken", ExpiresOn = DateTime.Now, RefreshToken = "aRefreshToken" };
-            var service = new AuthenticationService<User>(userService, null, null, Options.Create(option));
+            var service = new AuthenticationService<User>(userService, null, null, Options.Create(option), handler);
 
             Action result = () => service.ThrowExceptionWhenTokenIsNotValid("aRefreshToken", token);
 

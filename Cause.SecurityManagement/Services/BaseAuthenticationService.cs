@@ -14,6 +14,8 @@ namespace Cause.SecurityManagement.Services
     public abstract class BaseAuthenticationService<TUser>
         where TUser : User, new()
     {
+        public static bool UseTwoFactorsAuthentication { get; set; }
+
         protected readonly SecurityConfiguration securityConfiguration;
         protected readonly ISecurityContext<TUser> context;
 
@@ -73,7 +75,7 @@ namespace Cause.SecurityManagement.Services
             return principal;
         }
 
-        protected string GenerateAccessToken(Guid userId, string userName, string role)
+        protected string GenerateAccessToken(Guid userId, string userName, string role, int? lifeTimeInMinute = null)
         {
             var claims = new[]
             {
@@ -82,10 +84,10 @@ namespace Cause.SecurityManagement.Services
                 new Claim(JwtRegisteredClaimNames.Sid, userId.ToString()),
             };
 
-            return GenerateAccessToken(claims);
+            return GenerateAccessToken(claims, lifeTimeInMinute ?? GetAccessTokenLifeTimeInMinute());
         }
 
-        protected string GenerateAccessToken(Claim[] claims)
+        protected string GenerateAccessToken(Claim[] claims, int? lifeTimeInMinute = null)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(securityConfiguration.SecretKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -94,7 +96,7 @@ namespace Cause.SecurityManagement.Services
                 securityConfiguration.PackageName,
                 claims,
                 notBefore: DateTime.Now,
-                expires: DateTime.Now.AddMinutes(GetAccessTokenLifeTimeInMinute()),
+                expires: DateTime.Now.AddMinutes(lifeTimeInMinute ?? GetAccessTokenLifeTimeInMinute()),
                 signingCredentials: creds);
             return new JwtSecurityTokenHandler().WriteToken(token);
         }

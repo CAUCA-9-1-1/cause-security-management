@@ -3,32 +3,34 @@ using Cause.SecurityManagement.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using System.Threading.Tasks;
 
 namespace Cause.SecurityManagement.Controllers
 {
     [Route("api/[controller]")]
     public class AuthenticationController : Controller
     {
+        private readonly IUserPermissionReader permissionsReader;
         private readonly IAuthenticationService service;
         private readonly IExternalSystemAuthenticationService externalSystemAuthenticationService;
+        private readonly IMobileVersionService mobileVersionService;
 
         public AuthenticationController(
+            IUserPermissionReader permissionsReader,
             IAuthenticationService service,
-            IExternalSystemAuthenticationService externalSystemAuthenticationService)
+            IExternalSystemAuthenticationService externalSystemAuthenticationService,
+            IMobileVersionService mobileVersionService)
         {
+            this.permissionsReader = permissionsReader;
             this.service = service;
             this.externalSystemAuthenticationService = externalSystemAuthenticationService;
+            this.mobileVersionService = mobileVersionService;
         }
 
         [Route("[Action]"), HttpPost, AllowAnonymous]
-        public ActionResult<LoginResult> Logon([FromBody] LoginInformations login)
-        {
-            return Login(login);
-        }
-
-        private ActionResult<LoginResult> Login(LoginInformations login)
-        {
-            var (token, user) = service.Login(login.UserName, login.Password);
+        public async Task<ActionResult<LoginResult>> Logon([FromBody] LoginInformations login)
+        {            
+            var (token, user) = await service.LoginAsync(login.UserName, login.Password);
             if (user == null || token == null)
                 return Unauthorized();
 
@@ -38,6 +40,8 @@ namespace Cause.SecurityManagement.Controllers
                 ExpiredOn = token.ExpiresOn,
                 AccessToken = token.AccessToken,
                 RefreshToken = token.RefreshToken,
+                MustChangePassword = user.PasswordMustBeResetAfterLogin,
+                MustVerifyCode = SecurityManagementOptions.MultiFactorAuthenticationIsActivated,
                 IdUser = user.Id,
                 Name = user.FirstName + " " + user.LastName,
             };
@@ -45,11 +49,6 @@ namespace Cause.SecurityManagement.Controllers
 
         [Route("[Action]"), HttpPost, AllowAnonymous]
         public ActionResult Refresh([FromBody] TokenRefreshResult tokens)
-        {
-            return RefreshToken(tokens);
-        }
-
-        private ActionResult RefreshToken(TokenRefreshResult tokens)
         {
             try
             {
@@ -65,6 +64,35 @@ namespace Cause.SecurityManagement.Controllers
                 HttpContext.Response.Headers.Add("Token-Invalid", "true");
             }
 
+            return Unauthorized();
+        }
+
+        [Route("validationCode"), HttpPost, Authorize(Roles = SecurityRoles.UserLoginWithMultiFactor)]
+        public ActionResult<LoginResult> VerifyCode([FromBody] ValidationInformation validationInformation)
+        {
+            try
+            {
+                var (token, user) = service.ValidateMultiFactorCode(validationInformation);
+                return new LoginResult
+                {
+                    AuthorizationType = "Bearer",
+                    ExpiredOn = token.ExpiresOn,
+                    AccessToken = token.AccessToken,
+                    RefreshToken = token.RefreshToken,
+                    MustChangePassword = user.PasswordMustBeResetAfterLogin,
+                    MustVerifyCode = false,
+                    IdUser = user.Id,
+                    Name = user.FirstName + " " + user.LastName,
+                };
+            }
+            catch (SecurityTokenExpiredException)
+            {
+                HttpContext.Response.Headers.Add("Refresh-Token-Expired", "true");
+            }
+            catch (SecurityTokenException)
+            {
+                HttpContext.Response.Headers.Add("Token-Invalid", "true");
+            }
             return Unauthorized();
         }
 
@@ -110,14 +138,14 @@ namespace Cause.SecurityManagement.Controllers
         [ProducesResponseType(200)]
         public ActionResult MobileVersionIsLatest(string mobileVersion)
         {
-            return Ok(service.IsMobileVersionLatest(mobileVersion));
+            return Ok(mobileVersionService.IsMobileVersionLatest(mobileVersion));
         }
 
         [HttpGet, Route("VersionValidator/{mobileVersion}"), AllowAnonymous]
         [ProducesResponseType(200)]
         public ActionResult MobileVersionIsValid(string mobileVersion)
         {
-            return Ok(service.IsMobileVersionValid(mobileVersion));
+            return Ok(mobileVersionService.IsMobileVersionValid(mobileVersion));
         }
 
         [HttpGet, Route("Permissions")]
@@ -125,7 +153,7 @@ namespace Cause.SecurityManagement.Controllers
         [ProducesResponseType(401)]
         public ActionResult GetPermissions()
         {
-            return Ok(service.GetActiveUserPermissions());
+            return Ok(permissionsReader.GetActiveUserPermissions());
         }
     }
 }

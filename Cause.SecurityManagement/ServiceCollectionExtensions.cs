@@ -17,14 +17,18 @@ namespace Cause.SecurityManagement
 
             return services
                 .AddBaseConfiguration<TUser>()
-                .AddCustomServiceOrDefault<IUserManagementService<TUser>>(managementOptions.CustomUserManagementService, () => services.AddScoped<IUserManagementService<TUser>, UserManagementService<TUser>>())
-                .AddCustomServiceOrDefault<IAuthenticationService>(managementOptions.CustomAuthenticationService, () => services.AddScoped<IAuthenticationService, AuthenticationService<TUser>>())
-                .AddCustomServiceOrDefault<ICurrentUserService>(managementOptions.CustomCurrentUserService, () => services.AddScoped<ICurrentUserService, CurrentUserService>());
+                .AddScopedCustomServiceOrDefault<IUserManagementService<TUser>>(managementOptions.CustomUserManagementService, () => services.AddScoped<IUserManagementService<TUser>, UserManagementService<TUser>>())
+                .AddScopedCustomServiceOrDefault<IAuthenticationService>(managementOptions.CustomAuthenticationService, () => services.AddScoped<IAuthenticationService, AuthenticationService<TUser>>())
+                .AddScopedCustomServiceOrDefault<ICurrentUserService>(managementOptions.CustomCurrentUserService, () => services.AddScoped<ICurrentUserService, CurrentUserService>())
+                .AddScopedWhenImplementationIsKnown<IAuthenticationValidationCodeSender>(managementOptions.ValidationCodeSender);
         }
 
         private static IServiceCollection AddBaseConfiguration<TUser>(this IServiceCollection services) where TUser : User, new()
         {
             services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            services.AddScoped<IAuthenticationMultiFactorHandler<TUser>, AuthenticationMultiFactorHandler<TUser>>();
+            services.AddScoped<IMobileVersionService, MobileVersionService>();
+            services.AddScoped<IUserPermissionReader, UserPermissionReader<TUser>>();
             services.AddScoped<IAuthenticationService, AuthenticationService<TUser>>();
             services.AddScoped<IExternalSystemAuthenticationService, ExternalSystemAuthenticationService<TUser>>();
             services.AddScoped<IGroupManagementService, BaseGroupManagementService<TUser>>();
@@ -50,7 +54,16 @@ namespace Cause.SecurityManagement
             return services;
         }
 
-        internal static IServiceCollection AddCustomServiceOrDefault<TDefaultService>(this IServiceCollection services, (Type serviceType, Type implementationType)? customImplementation, Action defaultImplementation)
+        internal static IServiceCollection AddScopedWhenImplementationIsKnown<T>(this IServiceCollection services, Type serviceType)
+        {
+            if (serviceType != null)
+            {
+                services.AddScoped(typeof(T), serviceType);
+            }
+            return services;
+        }
+
+        internal static IServiceCollection AddScopedCustomServiceOrDefault<TDefaultService>(this IServiceCollection services, (Type serviceType, Type implementationType)? customImplementation, Action defaultImplementation = null)
         {
             if (customImplementation.HasValue)
             {

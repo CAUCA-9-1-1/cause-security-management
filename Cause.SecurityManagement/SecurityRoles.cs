@@ -7,6 +7,7 @@
         public const string UserCreation = "UserCreation";
         public const string UserRecovery = "UserRecovery";
         public const string UserPasswordSetup = "UserPasswordSetup";
+        public const string UserLoginWithMultiFactor = "UserLoginWithMultiFactor";
 
         public const string UserAndUserCreation = User + "," + UserCreation;
         public const string UserAndUserRecovery = User + "," + UserRecovery;

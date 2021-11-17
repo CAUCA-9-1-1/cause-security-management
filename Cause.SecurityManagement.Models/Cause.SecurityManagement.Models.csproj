@@ -3,13 +3,13 @@
   <PropertyGroup>
     <TargetFramework>netstandard1.2</TargetFramework>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <Version>1.3.10</Version>
+    <Version>1.4.0-beta1</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <AssemblyVersion>1.3.10</AssemblyVersion>
-    <FileVersion>1.3.10</FileVersion>
+    <AssemblyVersion>1.4.0</AssemblyVersion>
+    <FileVersion>1.4.0</FileVersion>
     <Authors>Fred Catellier</Authors>
     <Description>Base models for the Cause.SecurityManagement's library.</Description>
-    <Copyright>CAUCA 9-1-1 2020</Copyright>
+    <Copyright>CAUCA 9-1-1 2022</Copyright>
     <PackageReleaseNotes>Transform security configuration into a class to make it injectable.</PackageReleaseNotes>
     <Company>CAUCA 9-1-1</Company>
   </PropertyGroup>

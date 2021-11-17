@@ -1,38 +1,70 @@
 ﻿using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Models.Configuration;
 using Cause.SecurityManagement.Models.DataTransferObjects;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Cause.SecurityManagement.Services
 {
+
     public class AuthenticationService<TUser> 
         : BaseAuthenticationService<TUser>, IAuthenticationService
         where TUser : User, new()
     {
         private readonly ICurrentUserService currentUserService;        
         private readonly IUserManagementService<TUser> userManagementService;
+        private readonly IAuthenticationMultiFactorHandler<TUser> multiFactorHandler;
 
         public AuthenticationService(
             ICurrentUserService currentUserService,
-            ISecurityContext<TUser> context, 
+            ISecurityContext<TUser> context,
             IUserManagementService<TUser> userManagementService,
-            IOptions<SecurityConfiguration> securityOptions) : base(context, securityOptions)
-		{
+            IOptions<SecurityConfiguration> securityOptions,
+            IAuthenticationMultiFactorHandler<TUser> multiFactorHandler)
+            : base(context, securityOptions)
+        {
             this.currentUserService = currentUserService;
             this.userManagementService = userManagementService;
+            this.multiFactorHandler = multiFactorHandler;
         }
 
-		public virtual (UserToken token, User user) Login(string userName, string password)
+        public virtual async Task<(UserToken token, User user)> LoginAsync(string userName, string password)
         {
-            var (userFound, roles) = GetUser(userName, password);
-            return CanLogIn(userFound) ?
+            var (userFound, roles) = GetUserWithTemporaryPassword(userName, password)
+                ?? GetUser(userName, password);
+            return await GenerateUserIfUserCanLogInAsync(userFound, roles);
+        }
+
+        protected virtual (TUser user, string role)? GetUserWithTemporaryPassword(string userName, string password)
+        {
+            var tempUser = TryToGetUserWithTemporaryPassword(userName, password);
+            if (tempUser != null && CanLogIn(tempUser))
+            {
+                return (tempUser, SecurityRoles.UserPasswordSetup);
+            }
+            return null;
+        }
+
+        protected virtual async Task<(UserToken token, TUser user)> GenerateUserIfUserCanLogInAsync(TUser userFound, string roles)
+        {
+            var user = CanLogIn(userFound) ?
                 (GenerateUserToken(userFound, roles), userFound) :
                 (null, null);
-        }
+            await multiFactorHandler.SendValidationCodeWhenNeededAsync(user.userFound);            
+            return user;
+        }     
+
+        public (UserToken token, User user) ValidateMultiFactorCode(ValidationInformation validationInformation)
+        {
+            var (userFound, roles) = GetUser(currentUserService.GetUserId());
+            if (userFound != null && multiFactorHandler.CodeIsValid(userFound.Id, validationInformation.ValidationCode, ValidationCodeType.MultiFactorLogin))
+            {
+                return (GenerateUserToken(userFound, roles), userFound);
+            }
+            throw new InvalidValidationCodeException($"Validation code {validationInformation.ValidationCode} is invalid for this user.");
+        }        
 
         protected virtual UserToken GenerateUserToken(TUser user, string roles)
         {
@@ -42,7 +74,7 @@ namespace Cause.SecurityManagement.Services
 
         protected virtual UserToken GenerateUserToken(TUser user, string roles, int tokenLifeTimeInMinute, bool setRefreshToken = true)
         {
-            var accessToken = GenerateAccessToken(user.Id, user.UserName, roles);
+            var accessToken = GenerateAccessToken(user.Id, user.UserName, roles, GetAccessTokenLifeTimeInMinute());
             var refreshToken = setRefreshToken ? GenerateRefreshToken() : "";
             var token = new UserToken { AccessToken = accessToken, RefreshToken = refreshToken, ExpiresOn = DateTime.Now.AddMinutes(tokenLifeTimeInMinute), IdUser = user.Id };
             context.Add(token);
@@ -50,12 +82,31 @@ namespace Cause.SecurityManagement.Services
             return token;
         }
 
+        protected virtual (TUser user, string rolesToGive) GetUser(Guid idUser)
+        {
+            var userFound = context.Users
+                .SingleOrDefault(user => user.Id == idUser && user.IsActive);
+            return (userFound, GetSecurityRoleForUser(userFound));
+        }
+
         protected virtual (TUser user, string rolesToGive) GetUser(string userName, string password)
         {
             var encodedPassword = new PasswordGenerator().EncodePassword(password, securityConfiguration.PackageName);
             var userFound = context.Users
                 .SingleOrDefault(user => user.UserName == userName && user.Password.ToUpper() == encodedPassword && user.IsActive);
-            return (userFound, SecurityRoles.User);
+            return (userFound, SecurityManagementOptions.MultiFactorAuthenticationIsActivated ? SecurityRoles.UserLoginWithMultiFactor : GetSecurityRoleForUser(userFound));
+        }
+
+        protected TUser TryToGetUserWithTemporaryPassword(string userName, string password)
+        {
+            return context.Users.FirstOrDefault(user => user.UserName == userName && user.Password == password && user.PasswordMustBeResetAfterLogin && user.IsActive);
+        }
+
+        private static string GetSecurityRoleForUser(TUser userFound)
+        {
+            return userFound?.PasswordMustBeResetAfterLogin == true ? 
+                SecurityRoles.UserPasswordSetup : 
+                SecurityRoles.User;
         }
 
         protected virtual bool CanLogIn(User user)
@@ -82,7 +133,7 @@ namespace Cause.SecurityManagement.Services
 
         public virtual UserToken GenerateUserCreationToken(Guid userId)
         {            
-            var accessToken = GenerateAccessToken(userId, "temporary", SecurityRoles.UserCreation);
+            var accessToken = GenerateAccessToken(userId, "temporary", SecurityRoles.UserCreation, GetTemporaryAccessTokenLifeTimeInMinute());
             var token = new UserToken { AccessToken = accessToken, RefreshToken = "", ExpiresOn = DateTime.Now.AddMinutes(GetTemporaryAccessTokenLifeTimeInMinute()), IdUser = userId };
             return token;
         }
@@ -96,7 +147,7 @@ namespace Cause.SecurityManagement.Services
 
 			ThrowExceptionWhenTokenIsNotValid(refreshToken, userToken);
 
-            var newAccessToken = GenerateAccessToken(user.Id, user.UserName, SecurityRoles.User);
+            var newAccessToken = GenerateAccessToken(user.Id, user.UserName, SecurityRoles.User, GetAccessTokenLifeTimeInMinute());
             // ReSharper disable once PossibleNullReferenceException
             userToken.AccessToken = newAccessToken;
 			context.SaveChanges();
@@ -120,55 +171,6 @@ namespace Cause.SecurityManagement.Services
 				context.Add(user);
 				context.SaveChanges();
 			}
-		}
-
-        public bool IsMobileVersionLatest(string mobileVersion)
-        {
-            var mobile = new Version(mobileVersion);
-            var latestVersion = new Version(securityConfiguration.LatestVersion);
-
-            if (mobile.CompareTo(latestVersion) < 0)
-                return false;
-            return true;
-        }
-
-        public bool IsMobileVersionValid(string mobileVersion)
-		{
-			var mobile = new Version(mobileVersion);
-			var minVersion = new Version(securityConfiguration.MinimalVersion);
-
-			if (mobile.CompareTo(minVersion) < 0)
-				return false;
-			return true;
-		}
-
-        public List<AuthenticationUserPermission> GetActiveUserPermissions()
-        {
-            var idGroups = context.UserGroups
-                .Where(ug => ug.IdUser == currentUserService.GetUserId())
-                .Select(ug => ug.IdGroup);
-            var restrictedPermissions = context.GroupPermissions
-                .Where(g => idGroups.Contains(g.IdGroup) && g.IsAllowed == false)
-                .Include(g => g.Permission)
-                .Select(p => new AuthenticationUserPermission
-                {
-                    IdModulePermission = p.IdModulePermission,
-                    Tag = p.Permission.Tag,
-                    IsAllowed = p.IsAllowed,
-                });
-            var allowedPermissions = context.GroupPermissions
-                .Where(g => idGroups.Contains(g.IdGroup) && g.IsAllowed && !restrictedPermissions
-                                .Select(p => p.IdModulePermission).Contains(g.IdModulePermission))
-                .Include(g => g.Permission)
-                .Select(p => new AuthenticationUserPermission
-                {
-                    IdModulePermission = p.IdModulePermission,
-                    Tag = p.Permission.Tag,
-                    IsAllowed = p.IsAllowed,
-                })
-                .Distinct();
-
-            return restrictedPermissions.Concat(allowedPermissions).ToList();
-        }
+		}        
     }
 }

@@ -21,6 +21,7 @@ namespace Cause.SecurityManagement.Example
         public DbSet<Module> Modules { get; set; }
         public DbSet<ModulePermission> ModulePermissions { get; set; }
         public DbSet<DataProtectionElement> DataProtectionXmlElements { get; set; }
+        public DbSet<UserValidationCode> UserValidationCodes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

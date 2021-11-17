@@ -26,7 +26,7 @@ namespace Cause.SecurityManagement.Services
 
             ThrowExceptionWhenTokenIsNotValid(refreshToken, externalSystemToken);
 
-            var newAccessToken = GenerateAccessToken(externalSystem.Id, externalSystem.Name, SecurityRoles.ExternalSystem);
+            var newAccessToken = GenerateAccessToken(externalSystem.Id, externalSystem.Name, SecurityRoles.ExternalSystem, GetAccessTokenLifeTimeInMinute());
             // ReSharper disable once PossibleNullReferenceException
             externalSystemToken.AccessToken = newAccessToken;
             context.SaveChanges();
@@ -40,7 +40,7 @@ namespace Cause.SecurityManagement.Services
                 .SingleOrDefault(externalSystem => externalSystem.ApiKey == secretApiKey && externalSystem.IsActive);
             if (externalSystemFound != null)
             {
-                var accessToken = GenerateAccessToken(externalSystemFound.Id, externalSystemFound.Name, SecurityRoles.ExternalSystem);
+                var accessToken = GenerateAccessToken(externalSystemFound.Id, externalSystemFound.Name, SecurityRoles.ExternalSystem, GetAccessTokenLifeTimeInMinute());
                 var refreshToken = GenerateRefreshToken();
                 var token = new ExternalSystemToken { AccessToken = accessToken, RefreshToken = refreshToken, ExpiresOn = DateTime.Now.AddMinutes(GetRefreshTokenLifeTimeInMinute()), IdExternalSystem = externalSystemFound.Id };
                 context.Add(token);

@@ -2,7 +2,7 @@
 
 namespace Cause.SecurityManagement.Models
 {
-	public class User : BaseModel
+    public class User : BaseModel
 	{		
 		public string UserName { get; set; }
 		public string FirstName { get; set; }
@@ -11,9 +11,11 @@ namespace Cause.SecurityManagement.Models
 		public string Email { get; set; }
 
         public bool IsActive { get; set; } = true;
+		public bool PasswordMustBeResetAfterLogin { get; set; }
 
 		public ICollection<UserGroup> Groups { get; set; } = new List<UserGroup>();
 		public ICollection<UserPermission> Permissions { get; set; } = new List<UserPermission>();
         public ICollection<UserToken> Tokens { get; set; }
+		public ICollection<UserValidationCode> ValidationCodes { get; set; }
 	}
 }
