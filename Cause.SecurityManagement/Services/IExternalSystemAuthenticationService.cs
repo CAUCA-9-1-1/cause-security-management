@@ -4,7 +4,7 @@ namespace Cause.SecurityManagement.Services
 {
     public interface IExternalSystemAuthenticationService
     {
-        (ExternalSystemToken token, ExternalSystem system) LoginForExternalSystem(string secretApiKey);
-        string RefreshExternalSystemToken(string token, string refreshToken);
+        (ExternalSystemToken token, ExternalSystem system) Login(string secretApiKey);
+        string RefreshAccessToken(string token, string refreshToken);
     }
 }

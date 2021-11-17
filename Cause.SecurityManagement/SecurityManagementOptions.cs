@@ -11,7 +11,12 @@ namespace Cause.SecurityManagement
         internal (Type serviceType, Type implementationType)? CustomUserManagementService { get; set; } = null;
         internal (Type serviceType, Type implementationType)? CustomCurrentUserService { get; set; } = null;
         internal Type ValidationCodeSender { get; set; } = null;
-        internal static bool MultiFactorAuthenticationIsActivated { get; private set; }
+        internal static bool MultiFactorAuthenticationIsActivated { get; set; }
+
+        public SecurityManagementOptions()
+        {
+            MultiFactorAuthenticationIsActivated = false;
+        }
               
         public void SetCustomUserManagementService<TUser, TService, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TImplementation>()
             where TService : IUserManagementService<TUser>

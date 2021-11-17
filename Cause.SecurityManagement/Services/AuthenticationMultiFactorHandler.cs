@@ -1,20 +1,20 @@
 ﻿using Cause.SecurityManagement.Models;
+using Cause.SecurityManagement.Repositories;
 using System;
-using System.Linq;
 
 namespace Cause.SecurityManagement.Services
 {
     public class AuthenticationMultiFactorHandler<TUser> : IAuthenticationMultiFactorHandler<TUser>
         where TUser : User, new()
     {
-        private readonly ISecurityContext<TUser> context;
-        private readonly IAuthenticationValidationCodeSender sender;
+        private readonly IUserValidationCodeRepository repository;
+        private readonly IAuthenticationValidationCodeSender<TUser> sender;
 
         public AuthenticationMultiFactorHandler(
-            ISecurityContext<TUser> context,
-            IAuthenticationValidationCodeSender sender = null)
+            IUserValidationCodeRepository repository,
+            IAuthenticationValidationCodeSender<TUser> sender = null)
         {
-            this.context = context;
+            this.repository = repository;
             this.sender = sender;
         }
 
@@ -22,7 +22,7 @@ namespace Cause.SecurityManagement.Services
         {
             if (MustSendValidationCode(user))
             {
-                DeleteExistingValidationCode(user.Id, ValidationCodeType.MultiFactorLogin);
+                repository.DeleteExistingValidationCode(user.Id, ValidationCodeType.MultiFactorLogin);
                 SendValidationCode(user, ValidationCodeType.MultiFactorLogin);
             }
         }
@@ -32,15 +32,7 @@ namespace Cause.SecurityManagement.Services
             return userFound != null
                 && !userFound.PasswordMustBeResetAfterLogin
                 && SecurityManagementOptions.MultiFactorAuthenticationIsActivated;
-        }
-
-        private void DeleteExistingValidationCode(Guid idUser, ValidationCodeType type)
-        {
-            var existingCode = context.UserValidationCodes
-                .Where(code => code.IdUser == idUser && code.Type == type).ToList();
-            context.UserValidationCodes.RemoveRange(existingCode);
-            context.SaveChanges();
-        }
+        }        
 
         private void SendValidationCode(TUser user, ValidationCodeType type)
         {
@@ -51,9 +43,8 @@ namespace Cause.SecurityManagement.Services
                 IdUser = user.Id,
                 Type = type
             };
-            context.UserValidationCodes.Add(code);
-            context.SaveChanges();
-            sender.SendCode(user.Email, code.Code);
+            repository.SaveNewValidationCode(code);
+            sender.SendCode(user, code.Code);
         }
 
         private static string GenerateValidationCode()
@@ -64,14 +55,11 @@ namespace Cause.SecurityManagement.Services
 
         public virtual bool CodeIsValid(Guid idUser, string validationCode, ValidationCodeType type)
         {
-            var code = context.UserValidationCodes
-                .Where(code => code.IdUser == idUser && code.ExpiresOn >= DateTime.Now && code.Code == validationCode && code.Type == type)
-                .FirstOrDefault();
+            var code = repository.GetExistingValidCode(idUser, validationCode, type);
 
             if (code != null)
             {
-                context.UserValidationCodes.Remove(code);
-                context.SaveChanges();
+                repository.DeleteCode(code);
                 return true;
             }
             return false;

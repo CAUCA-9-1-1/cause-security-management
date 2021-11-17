@@ -1,50 +1,52 @@
 ﻿using Cause.SecurityManagement.Models;
-using Cause.SecurityManagement.Models.Configuration;
-using Microsoft.Extensions.Options;
+using Cause.SecurityManagement.Repositories;
 using System;
-using System.Linq;
 
 namespace Cause.SecurityManagement.Services
 {
     public class ExternalSystemAuthenticationService<TUser> 
-        : BaseAuthenticationService<TUser>, IExternalSystemAuthenticationService
+        : IExternalSystemAuthenticationService
         where TUser : User, new()
     {
+        private readonly IExternalSystemRepository repository;
+        private readonly ITokenReader tokenReader;
+        private readonly ITokenGenerator generator;
+
         public ExternalSystemAuthenticationService(
-            ISecurityContext<TUser> context,
-            IOptions<SecurityConfiguration> securityOptions) 
-            : base(context, securityOptions)
+            IExternalSystemRepository repository,
+            ITokenReader tokenReader,
+            ITokenGenerator generator)
         {
+            this.repository = repository;
+            this.tokenReader = tokenReader;
+            this.generator = generator;
         }
 
-        public string RefreshExternalSystemToken(string token, string refreshToken)
+        public string RefreshAccessToken(string token, string refreshToken)
         {
-            var externalSystemId = GetSidFromExpiredToken(token);
-            var externalSystemToken = context.ExternalSystemTokens
-                .FirstOrDefault(t => t.IdExternalSystem == externalSystemId && t.RefreshToken == refreshToken);
-            var externalSystem = context.ExternalSystems.Find(externalSystemId);
+            var externalSystemId = tokenReader.GetSidFromExpiredToken(token);
+            var externalSystemToken = repository.GetCurrentToken(externalSystemId, refreshToken);
+            var externalSystem = repository.GetById(externalSystemId);
 
-            ThrowExceptionWhenTokenIsNotValid(refreshToken, externalSystemToken);
+            tokenReader.ThrowExceptionWhenTokenIsNotValid(refreshToken, externalSystemToken);
 
-            var newAccessToken = GenerateAccessToken(externalSystem.Id, externalSystem.Name, SecurityRoles.ExternalSystem, GetAccessTokenLifeTimeInMinute());
+            var newAccessToken = generator.GenerateAccessToken(externalSystem.Id, externalSystem.Name, SecurityRoles.ExternalSystem);
             // ReSharper disable once PossibleNullReferenceException
             externalSystemToken.AccessToken = newAccessToken;
-            context.SaveChanges();
+            repository.SaveChanges();
 
             return newAccessToken;
         }
 
-        public (ExternalSystemToken token, ExternalSystem system) LoginForExternalSystem(string secretApiKey)
+        public (ExternalSystemToken token, ExternalSystem system) Login(string secretApiKey)
         {
-            var externalSystemFound = context.ExternalSystems
-                .SingleOrDefault(externalSystem => externalSystem.ApiKey == secretApiKey && externalSystem.IsActive);
+            var externalSystemFound = repository.GetByApiKey(secretApiKey);
             if (externalSystemFound != null)
             {
-                var accessToken = GenerateAccessToken(externalSystemFound.Id, externalSystemFound.Name, SecurityRoles.ExternalSystem, GetAccessTokenLifeTimeInMinute());
-                var refreshToken = GenerateRefreshToken();
-                var token = new ExternalSystemToken { AccessToken = accessToken, RefreshToken = refreshToken, ExpiresOn = DateTime.Now.AddMinutes(GetRefreshTokenLifeTimeInMinute()), IdExternalSystem = externalSystemFound.Id };
-                context.Add(token);
-                context.SaveChanges();
+                var accessToken = generator.GenerateAccessToken(externalSystemFound.Id, externalSystemFound.Name, SecurityRoles.ExternalSystem);
+                var refreshToken = generator.GenerateRefreshToken();
+                var token = new ExternalSystemToken { AccessToken = accessToken, RefreshToken = refreshToken, ExpiresOn = DateTime.Now.AddMinutes(generator.GetRefreshTokenLifeTimeInMinute()), IdExternalSystem = externalSystemFound.Id };
+                repository.AddToken(token);
                 return (token, externalSystemFound);
             }
 

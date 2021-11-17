@@ -3,7 +3,7 @@ using System.Text;
 
 namespace Cause.SecurityManagement.Services
 {
-	public class PasswordGenerator
+    public class PasswordGenerator
 	{
 		public string EncodePassword(string password, string applicationName)
 		{
@@ -16,7 +16,7 @@ namespace Cause.SecurityManagement.Services
 			return ByteToString(hmacPassword);
 		}
 
-		private string ByteToString(byte[] buff)
+		private static string ByteToString(byte[] buff)
 		{
 			string sbinary = "";
 

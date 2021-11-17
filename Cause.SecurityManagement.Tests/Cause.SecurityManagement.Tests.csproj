@@ -21,4 +21,9 @@
     <ProjectReference Include="..\Cause.SecurityManagement\Cause.SecurityManagement.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Controllers\" />
+    <Folder Include="Repositories\" />
+  </ItemGroup>
+
 </Project>

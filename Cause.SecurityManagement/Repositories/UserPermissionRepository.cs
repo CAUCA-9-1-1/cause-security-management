@@ -1,18 +1,21 @@
 ﻿using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Models.DataTransferObjects;
+using Cause.SecurityManagement.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Cause.SecurityManagement.Services
+namespace Cause.SecurityManagement.Repositories
 {
-    public class UserPermissionReader<TUser> : IUserPermissionReader
+    public class UserPermissionRepository<TUser> : IUserPermissionRepository
     where TUser : User, new()
     {
         private readonly ISecurityContext<TUser> context;
         private readonly ICurrentUserService currentUserService;
 
-        public UserPermissionReader(ISecurityContext<TUser> context, ICurrentUserService currentUserService)
+        public UserPermissionRepository(
+            ISecurityContext<TUser> context,
+            ICurrentUserService currentUserService)
         {
             this.context = context;
             this.currentUserService = currentUserService;

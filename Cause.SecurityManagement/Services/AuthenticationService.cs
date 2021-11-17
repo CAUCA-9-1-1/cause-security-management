@@ -1,32 +1,41 @@
 ﻿using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Models.Configuration;
 using Cause.SecurityManagement.Models.DataTransferObjects;
+using Cause.SecurityManagement.Repositories;
 using Microsoft.Extensions.Options;
 using System;
-using System.Linq;
 
 namespace Cause.SecurityManagement.Services
 {
 
     public class AuthenticationService<TUser> 
-        : BaseAuthenticationService<TUser>, IAuthenticationService
+        : IAuthenticationService
         where TUser : User, new()
     {
-        private readonly ICurrentUserService currentUserService;        
+        private readonly ICurrentUserService currentUserService;
+        private readonly IUserRepository<TUser> userRepository;
         private readonly IUserManagementService<TUser> userManagementService;
         private readonly IAuthenticationMultiFactorHandler<TUser> multiFactorHandler;
+        private readonly ITokenReader tokenReader;
+        private readonly ITokenGenerator generator;
+        private readonly SecurityConfiguration configuration;
 
         public AuthenticationService(
             ICurrentUserService currentUserService,
-            ISecurityContext<TUser> context,
+            IUserRepository<TUser> userRepository,
             IUserManagementService<TUser> userManagementService,
-            IOptions<SecurityConfiguration> securityOptions,
-            IAuthenticationMultiFactorHandler<TUser> multiFactorHandler)
-            : base(context, securityOptions)
+            IAuthenticationMultiFactorHandler<TUser> multiFactorHandler,
+            ITokenReader tokenReader,
+            ITokenGenerator generator,
+            IOptions<SecurityConfiguration> configuration)
         {
             this.currentUserService = currentUserService;
+            this.userRepository = userRepository;
             this.userManagementService = userManagementService;
             this.multiFactorHandler = multiFactorHandler;
+            this.tokenReader = tokenReader;
+            this.generator = generator;
+            this.configuration = configuration.Value;
         }
 
         public virtual (UserToken token, User user) Login(string userName, string password)
@@ -38,7 +47,7 @@ namespace Cause.SecurityManagement.Services
 
         protected virtual (TUser user, string role)? GetUserWithTemporaryPassword(string userName, string password)
         {
-            var tempUser = TryToGetUserWithTemporaryPassword(userName, password);
+            var tempUser = userRepository.GetUserWithTemporaryPassword(userName, password);
             if (tempUser != null && CanLogIn(tempUser))
             {
                 return (tempUser, SecurityRoles.UserPasswordSetup);
@@ -63,44 +72,36 @@ namespace Cause.SecurityManagement.Services
                 return (GenerateUserToken(userFound, roles), userFound);
             }
             throw new InvalidValidationCodeException($"Validation code {validationInformation.ValidationCode} is invalid for this user.");
-        }        
-
-        protected virtual UserToken GenerateUserToken(TUser user, string role)
-        {
-            var isTemporaryRole = SecurityRoles.IsTemporaryRole(role);
-            var tokenLifeTimeInMinute = isTemporaryRole ? GetTemporaryAccessTokenLifeTimeInMinute() : GetRefreshTokenLifeTimeInMinute();
-            return GenerateUserToken(user, role, tokenLifeTimeInMinute, !isTemporaryRole);
         }
 
-        protected virtual UserToken GenerateUserToken(TUser user, string role, int tokenLifeTimeInMinute, bool setRefreshToken = true)
+        public virtual UserToken GenerateUserRecoveryToken(Guid userId)
         {
-            var accessToken = GenerateAccessToken(user.Id, user.UserName, role, tokenLifeTimeInMinute);
-            var refreshToken = setRefreshToken ? GenerateRefreshToken() : "";
-            var token = new UserToken { AccessToken = accessToken, RefreshToken = refreshToken, ExpiresOn = DateTime.Now.AddMinutes(tokenLifeTimeInMinute), IdUser = user.Id };
-            context.Add(token);
-            context.SaveChanges();
-            return token;
+            var userFound = userRepository.GetUserById(userId);
+            if (userFound != null)
+            {
+                return GenerateUserToken(userFound, SecurityRoles.UserRecovery);
+            }
+            return null;
+        }
+
+        public virtual UserToken GenerateUserCreationToken(Guid userId)
+        {
+            var accessToken = generator.GenerateAccessToken(userId, "temporary", SecurityRoles.UserCreation);
+            return GenerateUserToken(userId, SecurityRoles.UserCreation, accessToken, "");
         }
 
         protected virtual (TUser user, string rolesToGive) GetUser(Guid idUser)
         {
-            var userFound = context.Users
-                .SingleOrDefault(user => user.Id == idUser && user.IsActive);
+            var userFound = userRepository.GetUserById(idUser);
             return (userFound, GetSecurityRoleForUser(userFound));
         }
 
         protected virtual (TUser user, string rolesToGive) GetUser(string userName, string password)
         {
-            var encodedPassword = new PasswordGenerator().EncodePassword(password, securityConfiguration.PackageName);
-            var userFound = context.Users
-                .SingleOrDefault(user => user.UserName == userName && user.Password.ToUpper() == encodedPassword && user.IsActive);
+            var encodedPassword = new PasswordGenerator().EncodePassword(password, configuration.PackageName);
+            var userFound = userRepository.GetUser(userName, encodedPassword);
             return (userFound, SecurityManagementOptions.MultiFactorAuthenticationIsActivated ? SecurityRoles.UserLoginWithMultiFactor : GetSecurityRoleForUser(userFound));
-        }
-
-        protected TUser TryToGetUserWithTemporaryPassword(string userName, string password)
-        {
-            return context.Users.FirstOrDefault(user => user.UserName == userName && user.Password == password && user.PasswordMustBeResetAfterLogin && user.IsActive);
-        }
+        }        
 
         private static string GetSecurityRoleForUser(TUser userFound)
         {
@@ -116,61 +117,38 @@ namespace Cause.SecurityManagement.Services
 
         protected virtual bool HasRequiredPermissionToLogIn(User user)
         {
-            return string.IsNullOrWhiteSpace(securityConfiguration.RequiredPermissionForLogin)
-                || userManagementService.HasPermission(user.Id, securityConfiguration.RequiredPermissionForLogin);
-        }
-
-        public virtual UserToken GenerateUserRecoveryToken(Guid userId)
-        {
-            var userFound = context.Users
-                .SingleOrDefault(user => user.Id == userId && user.IsActive);
-            if (userFound != null)
-            {
-                return GenerateUserToken(userFound, SecurityRoles.UserRecovery, GetTemporaryAccessTokenLifeTimeInMinute(), false);
-            }
-            return null;
-        }
-
-        public virtual UserToken GenerateUserCreationToken(Guid userId)
-        {            
-            var accessToken = GenerateAccessToken(userId, "temporary", SecurityRoles.UserCreation, GetTemporaryAccessTokenLifeTimeInMinute());
-            var token = new UserToken { AccessToken = accessToken, RefreshToken = "", ExpiresOn = DateTime.Now.AddMinutes(GetTemporaryAccessTokenLifeTimeInMinute()), IdUser = userId };
-            return token;
-        }
+            return string.IsNullOrWhiteSpace(configuration.RequiredPermissionForLogin)
+                || userManagementService.HasPermission(user.Id, configuration.RequiredPermissionForLogin);
+        }      
 
         public string RefreshUserToken(string token, string refreshToken)
 		{
-			var userId = GetSidFromExpiredToken(token);
-			var userToken = context.UserTokens
-                .FirstOrDefault(t => t.IdUser == userId && t.RefreshToken == refreshToken);
-		    var user = context.Users.Find(userId);
+			var userId = tokenReader.GetSidFromExpiredToken(token);
+            var userToken = userRepository.GetToken(userId, refreshToken);
+            var user = userRepository.GetUserById(userId);
 
-			ThrowExceptionWhenTokenIsNotValid(refreshToken, userToken);
+			tokenReader.ThrowExceptionWhenTokenIsNotValid(refreshToken, userToken);
 
-            var newAccessToken = GenerateAccessToken(user.Id, user.UserName, SecurityRoles.User, GetAccessTokenLifeTimeInMinute());
+            var newAccessToken = generator.GenerateAccessToken(user.Id, user.UserName, SecurityRoles.User);
             // ReSharper disable once PossibleNullReferenceException
             userToken.AccessToken = newAccessToken;
-			context.SaveChanges();
+            userRepository.SaveChanges();
 
 			return newAccessToken;
 		}
-      
-		public void EnsureAdminIsCreated()
-		{
-			if (!context.Users.Any(user => user.UserName == "admin"))
-			{
-				var user = new TUser
-				{
-					Email = "dev@cauca.ca",
-					FirstName = "Admin",
-					LastName = "Cauca",
-					UserName = "admin",
-                    IsActive = true,
-					Password = new PasswordGenerator().EncodePassword("admincauca", securityConfiguration.PackageName)
-				};
-				context.Add(user);
-				context.SaveChanges();
-			}
-		}        
+
+        protected virtual UserToken GenerateUserToken(TUser user, string role)
+        {
+            var accessToken = generator.GenerateAccessToken(user.Id, user.UserName, role);
+            var refreshToken = SecurityRoles.IsTemporaryRole(role) ? "" : generator.GenerateRefreshToken();
+            var token = GenerateUserToken(user.Id, role, accessToken, refreshToken);
+            userRepository.AddToken(token);
+            return token;
+        }
+
+        private UserToken GenerateUserToken(Guid userId, string role, string accessToken, string refreshToken)
+        {
+            return new UserToken { AccessToken = accessToken, RefreshToken = refreshToken, ExpiresOn = generator.GenerateAccessExpirationDateByRole(role), IdUser = userId };
+        }
     }
 }

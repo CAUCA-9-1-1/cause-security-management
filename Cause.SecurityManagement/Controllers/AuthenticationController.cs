@@ -1,4 +1,5 @@
 ﻿using Cause.SecurityManagement.Models.DataTransferObjects;
+using Cause.SecurityManagement.Repositories;
 using Cause.SecurityManagement.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,13 +10,13 @@ namespace Cause.SecurityManagement.Controllers
     [Route("api/[controller]")]
     public class AuthenticationController : Controller
     {
-        private readonly IUserPermissionReader permissionsReader;
+        private readonly IUserPermissionRepository permissionsReader;
         private readonly IAuthenticationService service;
         private readonly IExternalSystemAuthenticationService externalSystemAuthenticationService;
         private readonly IMobileVersionService mobileVersionService;
 
         public AuthenticationController(
-            IUserPermissionReader permissionsReader,
+            IUserPermissionRepository permissionsReader,
             IAuthenticationService service,
             IExternalSystemAuthenticationService externalSystemAuthenticationService,
             IMobileVersionService mobileVersionService)
@@ -88,13 +89,12 @@ namespace Cause.SecurityManagement.Controllers
             {
                 return BadRequest(new { ErrorMessage = exception.Message });
             }
-            return Unauthorized();
         }
 
         [Route("[Action]"), HttpPost, AllowAnonymous]
         public ActionResult<LoginResult> LogonForExternalSystem([FromBody] ExternalSystemLoginInformations login)
         {
-            var (token, system) = externalSystemAuthenticationService.LoginForExternalSystem(login.Apikey);
+            var (token, system) = externalSystemAuthenticationService.Login(login.Apikey);
             if (system == null || token == null)
                 return Unauthorized();
 
@@ -114,7 +114,7 @@ namespace Cause.SecurityManagement.Controllers
         {
             try
             {
-                var newAccessToken = externalSystemAuthenticationService.RefreshExternalSystemToken(tokens.AccessToken, tokens.RefreshToken);
+                var newAccessToken = externalSystemAuthenticationService.RefreshAccessToken(tokens.AccessToken, tokens.RefreshToken);
                 return Ok(new { AccessToken = newAccessToken, tokens.RefreshToken });
             }
             catch (SecurityTokenExpiredException)

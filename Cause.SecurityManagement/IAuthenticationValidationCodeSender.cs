@@ -1,7 +1,10 @@
-﻿namespace Cause.SecurityManagement
+﻿using Cause.SecurityManagement.Models;
+
+namespace Cause.SecurityManagement
 {
-    public interface IAuthenticationValidationCodeSender
+    public interface IAuthenticationValidationCodeSender<TUser>
+        where TUser : User, new()
     {
-        void SendCode(string email, string code);
+        void SendCode(TUser user, string code);
     }
 }
