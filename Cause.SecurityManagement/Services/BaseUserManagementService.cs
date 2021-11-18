@@ -67,6 +67,12 @@ namespace Cause.SecurityManagement.Services
 			return SecurityContext.Users.Any(c => c.UserName == user.UserName && c.Id != user.Id && c.IsActive);
 		}
 
+		public virtual bool EmailIsAlreadyInUse(TUser user)
+		{
+			return SecurityContext.Users
+				.Any(c => c.Email.ToLower() == user.Email.ToLower() && c.Id != user.Id && c.IsActive);
+		}
+
 		public virtual void UpdateUserGroup(User user)
         {
             if (user.Groups is null)

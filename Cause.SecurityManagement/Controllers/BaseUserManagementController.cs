@@ -109,5 +109,11 @@ namespace Cause.SecurityManagement.Controllers
         {
             return Ok(UserService.UserNameAlreadyUsed(user));
         }
+
+		[HttpPost, Route("EmailIsAlreadyInUse")]
+		public virtual ActionResult EmailIsAlreadyInUse([FromBody] TUser user)
+		{
+			return Ok(UserService.EmailIsAlreadyInUse(user));
+		}
 	}
 }

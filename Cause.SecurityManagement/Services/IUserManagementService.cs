@@ -11,6 +11,7 @@ namespace Cause.SecurityManagement.Services
         TUser GetUser(Guid userId);
         bool UpdateUser(TUser user);
         bool UserNameAlreadyUsed(TUser user);
+        bool EmailIsAlreadyInUse(TUser user);
         bool ChangePassword(Guid userId, string newPassword);
         bool DeactivateUser(Guid userId);
         List<UserGroup> GetGroups(Guid userId);
