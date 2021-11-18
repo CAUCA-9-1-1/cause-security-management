@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard1.2</TargetFramework>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <Version>1.4.0-beta1</Version>
+    <Version>1.5.0-beta2</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <AssemblyVersion>1.4.0</AssemblyVersion>
     <FileVersion>1.4.0</FileVersion>

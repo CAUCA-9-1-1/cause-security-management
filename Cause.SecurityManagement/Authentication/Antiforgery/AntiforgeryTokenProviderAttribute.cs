@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Cause.SecurityManagement.Antiforgery
+namespace Cause.SecurityManagement.Authentication.Antiforgery
 {
     public class AntiforgeryTokenProviderAttribute : ActionFilterAttribute
     {

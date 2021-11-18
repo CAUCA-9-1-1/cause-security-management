@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Hosting;
 using System;
 using Microsoft.Extensions.Hosting;
 
-namespace Cause.SecurityManagement.Antiforgery
+namespace Cause.SecurityManagement.Authentication.Antiforgery
 {
     public class AuthorizeOrAntiforgeryAttribute : ActionFilterAttribute
     {
@@ -32,7 +32,7 @@ namespace Cause.SecurityManagement.Antiforgery
             }
         }
 
-        private async Task<bool> HasAntiforgery(ActionExecutingContext filterContext)
+        private static async Task<bool> HasAntiforgery(ActionExecutingContext filterContext)
         {
             var antiforgery = filterContext.HttpContext.RequestServices.GetService<IAntiforgery>();
 
@@ -49,19 +49,18 @@ namespace Cause.SecurityManagement.Antiforgery
             }
         }
 
-        private bool IsAuthorize(ActionExecutingContext filterContext)
+        private static bool IsAuthorize(ActionExecutingContext filterContext)
         {
             if (filterContext.Controller is Controller controller)
             {
-                var userClaim =
-                    controller.User.Claims.FirstOrDefault(claim => claim.Type == JwtRegisteredClaimNames.Sid);
-                return (!(userClaim is null));
+                var userClaim = controller.User.Claims.FirstOrDefault(claim => claim.Type == JwtRegisteredClaimNames.Sid);
+                return userClaim is not null;
             }
 
             return false;
         }
 
-        private bool IsDev(ActionExecutingContext filterContext)
+        private static bool IsDev(ActionExecutingContext filterContext)
         {
             var env = filterContext.HttpContext.RequestServices.GetService<IWebHostEnvironment>();
             return env.IsDevelopment();

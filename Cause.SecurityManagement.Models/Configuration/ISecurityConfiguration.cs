@@ -3,6 +3,7 @@
 	public class SecurityConfiguration
     {
         internal static bool UseTwoFactorsAuthentication { get; set; }
+        public string CertificateIssuer { get; set; }
         public string Issuer { get; set; }
         public string PackageName { get; set; }
         public string SecretKey { get; set; }

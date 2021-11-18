@@ -26,6 +26,12 @@ namespace Cause.SecurityManagement.Repositories
                 .SingleOrDefault(externalSystem => externalSystem.ApiKey == apiKey && externalSystem.IsActive);
         }
 
+        public ExternalSystem GetByCertificateSubject(string certificateSubject)
+        {
+            return context.ExternalSystems
+                .SingleOrDefault(externalSystem => externalSystem.CertificateSubjectDn == certificateSubject && externalSystem.IsActive);
+        }
+
         public ExternalSystem GetById(Guid idExternalSystem)
         {
             return context.ExternalSystems
