@@ -7,6 +7,7 @@ namespace Cause.SecurityManagement.Repositories
     {
         ExternalSystem GetById(Guid idExternalSystem);
         ExternalSystem GetByApiKey(string apiKey);
+        ExternalSystem GetByCertificateSubject(string certificateSubject);
         ExternalSystemToken GetCurrentToken(Guid idExternalSystem, string refreshToken);
         void AddToken(ExternalSystemToken token);
         void SaveChanges();

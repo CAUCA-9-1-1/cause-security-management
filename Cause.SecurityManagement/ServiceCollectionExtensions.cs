@@ -1,6 +1,8 @@
-﻿using Cause.SecurityManagement.Models;
+﻿using Cause.SecurityManagement.Authentication.Certificate;
+using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Repositories;
 using Cause.SecurityManagement.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -21,8 +23,7 @@ namespace Cause.SecurityManagement
                 .AddScopedCustomServiceOrDefault<IUserManagementService<TUser>>(managementOptions.CustomUserManagementService, () => services.AddScoped<IUserManagementService<TUser>, UserManagementService<TUser>>())
                 .AddScopedCustomServiceOrDefault<IAuthenticationService>(managementOptions.CustomAuthenticationService, () => services.AddScoped<IAuthenticationService, AuthenticationService<TUser>>())
                 .AddScopedCustomServiceOrDefault<ICurrentUserService>(managementOptions.CustomCurrentUserService, () => services.AddScoped<ICurrentUserService, CurrentUserService>())
-                .AddScopedWhenImplementationIsKnown<IAuthenticationValidationCodeSender<TUser>>(managementOptions.ValidationCodeSender)
-                .AddScopedWhenImplementationIsKnown<IEmailForUserModificationSender>(managementOptions.EmailForUserModificationSender);
+                .AddScopedWhenImplementationIsKnown<IAuthenticationValidationCodeSender<TUser>>(managementOptions.ValidationCodeSender);
         }
 
         private static IServiceCollection AddBaseConfiguration<TUser>(this IServiceCollection services) where TUser : User, new()
@@ -41,22 +42,29 @@ namespace Cause.SecurityManagement
             services.AddScoped<IUserRepository<TUser>, UserRepository<TUser>>();
             services.AddScoped<IExternalSystemRepository, ExternalSystemRepository<TUser>>();
             services.AddScoped<IUserValidationCodeRepository, UserValidationCodeRepository<TUser>>();
+            services.AddScoped<ICertificateValidator, CertificateValidator>();
             return services;
         }
 
         public static IServiceCollection AddExternalSystemAndUserPolicies(this IServiceCollection services)
         {
-            services.AddAuthorization(c =>
+            services.AddAuthorization(options =>
             {
-                c.AddPolicy("defaultpolicy", b =>
+                options.AddPolicy("defaultpolicy", policy =>
                 {
-                    b.RequireAuthenticatedUser();
-                    b.RequireRole(SecurityRoles.User);
+                    policy.RequireAuthenticatedUser();
+                    policy.RequireRole(SecurityRoles.User);
                 });
-                c.AddPolicy("apipolicy", b =>
+                options.AddPolicy("apipolicy", policy =>
                 {
-                    b.RequireAuthenticatedUser();
-                    b.RequireRole(SecurityRoles.ExternalSystem);
+                    policy.RequireAuthenticatedUser();
+                    policy.RequireRole(SecurityRoles.ExternalSystem);
+                });
+                options.AddPolicy("apicertificatepolicy", policy =>
+                {
+                    policy.RequireAuthenticatedUser();
+                    policy.RequireRole(SecurityRoles.ExternalSystem);
+                    policy.AddAuthenticationSchemes(CertificateAuthenticationOptions.Name, JwtBearerDefaults.AuthenticationScheme);
                 });
             });
             return services;

@@ -7,7 +7,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Cause.SecurityManagement
+namespace Cause.SecurityManagement.Authentication
 {
     public static class TokenAuthenticationExtensions
     {

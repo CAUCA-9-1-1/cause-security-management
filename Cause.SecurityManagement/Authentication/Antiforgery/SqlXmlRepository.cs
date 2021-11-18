@@ -5,7 +5,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Xml.Linq;
 
-namespace Cause.SecurityManagement.Antiforgery
+namespace Cause.SecurityManagement.Authentication.Antiforgery
 {
     public class SqlXmlRepository<TUser> : IXmlRepository
         where TUser: User, new()
