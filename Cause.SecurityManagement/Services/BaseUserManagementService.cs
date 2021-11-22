@@ -11,12 +11,17 @@ namespace Cause.SecurityManagement.Services
 {
 	public class UserManagementService<TUser> : IUserManagementService<TUser> where TUser : User, new() 
 	{
-		protected ISecurityContext<TUser> SecurityContext;
-		protected SecurityConfiguration SecurityConfiguration;
+		private readonly IEmailForUserModificationSender emailSender;
+		protected readonly ISecurityContext<TUser> SecurityContext;        
+        protected readonly SecurityConfiguration SecurityConfiguration;
 
-		public UserManagementService(ISecurityContext<TUser> securityContext, IOptions<SecurityConfiguration> securityOptions)
+		public UserManagementService(
+			ISecurityContext<TUser> securityContext,
+			IOptions<SecurityConfiguration> securityOptions,
+			IEmailForUserModificationSender emailSender = null)
 		{
 			SecurityContext = securityContext;
+            this.emailSender = emailSender;
             SecurityConfiguration = securityOptions.Value;
         }
 
@@ -49,6 +54,7 @@ namespace Cause.SecurityManagement.Services
                 SecurityContext.Users.Add(user);
 
             SecurityContext.SaveChanges();
+			emailSender?.SendEmailForModifiedUser(user.Email);
 			return true;
 		}
 
@@ -138,7 +144,8 @@ namespace Cause.SecurityManagement.Services
             {
                 user.Password = new PasswordGenerator().EncodePassword(newPassword, SecurityConfiguration.PackageName);
                 SecurityContext.SaveChanges();
-                return true;
+				emailSender?.SendEmailForModifiedPassword(user.Email);
+				return true;
             }
             return false;
         }
