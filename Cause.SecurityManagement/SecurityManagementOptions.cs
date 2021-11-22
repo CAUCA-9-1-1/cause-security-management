@@ -1,5 +1,4 @@
-﻿using Cause.SecurityManagement.Models.Configuration;
-using Cause.SecurityManagement.Services;
+﻿using Cause.SecurityManagement.Services;
 using System;
 using System.Diagnostics.CodeAnalysis;
 
@@ -11,6 +10,7 @@ namespace Cause.SecurityManagement
         internal (Type serviceType, Type implementationType)? CustomUserManagementService { get; set; } = null;
         internal (Type serviceType, Type implementationType)? CustomCurrentUserService { get; set; } = null;
         internal Type ValidationCodeSender { get; set; } = null;
+        internal Type EmailForUserModificationSender { get; set; } = null;
         internal static bool MultiFactorAuthenticationIsActivated { get; set; }
 
         public SecurityManagementOptions()
@@ -43,6 +43,12 @@ namespace Cause.SecurityManagement
         {
             MultiFactorAuthenticationIsActivated = true;
             ValidationCodeSender = typeof(TImplementation);
+        }
+
+        public void SendEmailWhenUserAreBeingModified<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TImplementation>()
+            where TImplementation : IEmailForUserModificationSender
+        {
+            EmailForUserModificationSender = typeof(TImplementation);
         }
     }
 }
