@@ -1,4 +1,5 @@
 using Cause.SecurityManagement.Models;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
 
@@ -15,10 +16,21 @@ namespace Cause.SecurityManagement.Repositories
             this.context = context;
         }
 
-        public void DeleteExistingValidationCode(Guid idUser, ValidationCodeType type)
+        public UserValidationCode GetLastCode(Guid idUser)
+        {
+            var query =
+                from code in context.UserValidationCodes.AsNoTracking()
+                where code.IdUser == idUser
+                orderby code.ExpiresOn descending
+                select code;
+
+            return query.FirstOrDefault();
+        }
+
+        public void DeleteExistingValidationCode(Guid idUser)
         {
             var existingCode = context.UserValidationCodes
-                .Where(code => code.IdUser == idUser && code.Type == type).ToList();
+                .Where(code => code.IdUser == idUser).ToList();
             context.UserValidationCodes.RemoveRange(existingCode);
             context.SaveChanges();
         }
@@ -41,13 +53,5 @@ namespace Cause.SecurityManagement.Repositories
             context.UserValidationCodes.Remove(code);
             context.SaveChanges();
         }
-    }
-
-    public interface IUserValidationCodeRepository
-    {
-        void DeleteExistingValidationCode(Guid idUser, ValidationCodeType type);
-        void SaveNewValidationCode(UserValidationCode code);
-        UserValidationCode GetExistingValidCode(Guid idUser, string code, ValidationCodeType type);
-        void DeleteCode(UserValidationCode code);
     }
 }

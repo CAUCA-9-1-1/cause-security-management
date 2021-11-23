@@ -5,6 +5,7 @@ using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
 using System;
+using System.Threading.Tasks;
 
 namespace Cause.SecurityManagement.Tests.Services
 {
@@ -13,7 +14,7 @@ namespace Cause.SecurityManagement.Tests.Services
     public class AuthenticationMultiFactorHandlerTests
     {
         private readonly Guid someUserId = Guid.NewGuid();
-        private readonly User someUser = new();
+        private User someUser;
 
         private AuthenticationMultiFactorHandler<User> handler;
         private IUserValidationCodeRepository repository;
@@ -22,6 +23,7 @@ namespace Cause.SecurityManagement.Tests.Services
         [SetUp]
         public void SetUpTest()
         {
+            someUser = new User { Id = someUserId };
             repository = Substitute.For<IUserValidationCodeRepository>();
             sender = Substitute.For<IAuthenticationValidationCodeSender<User>>();
             handler = new AuthenticationMultiFactorHandler<User>(repository, sender);            
@@ -65,7 +67,7 @@ namespace Cause.SecurityManagement.Tests.Services
             options.UseMultiFactorAuthentication<IAuthenticationValidationCodeSender<User>>();
             handler.SendValidationCodeWhenNeeded(null);
 
-            repository.DidNotReceive().DeleteExistingValidationCode(Arg.Any<Guid>(), Arg.Any<ValidationCodeType>());
+            repository.DidNotReceive().DeleteExistingValidationCode(Arg.Any<Guid>());
             repository.DidNotReceive().SaveNewValidationCode(Arg.Any<UserValidationCode>());
             sender.DidNotReceive().SendCode(Arg.Any<User>(), Arg.Any<string>());
         }
@@ -76,7 +78,7 @@ namespace Cause.SecurityManagement.Tests.Services
             var _ = new SecurityManagementOptions();
             handler.SendValidationCodeWhenNeeded(someUser);
 
-            repository.DidNotReceive().DeleteExistingValidationCode(Arg.Any<Guid>(), Arg.Any<ValidationCodeType>());
+            repository.DidNotReceive().DeleteExistingValidationCode(Arg.Any<Guid>());
             repository.DidNotReceive().SaveNewValidationCode(Arg.Any<UserValidationCode>());
             sender.DidNotReceive().SendCode(Arg.Any<User>(), Arg.Any<string>());
         }
@@ -90,7 +92,7 @@ namespace Cause.SecurityManagement.Tests.Services
 
             handler.SendValidationCodeWhenNeeded(someUser);
 
-            repository.DidNotReceive().DeleteExistingValidationCode(Arg.Any<Guid>(), Arg.Any<ValidationCodeType>());
+            repository.DidNotReceive().DeleteExistingValidationCode(Arg.Any<Guid>());
             repository.DidNotReceive().SaveNewValidationCode(Arg.Any<UserValidationCode>());
             sender.DidNotReceive().SendCode(Arg.Any<User>(), Arg.Any<string>());
         }
@@ -102,9 +104,33 @@ namespace Cause.SecurityManagement.Tests.Services
             options.UseMultiFactorAuthentication<IAuthenticationValidationCodeSender<User>>();
             handler.SendValidationCodeWhenNeeded(someUser);
 
-            repository.Received(1).DeleteExistingValidationCode(Arg.Is(someUser.Id), Arg.Is(ValidationCodeType.MultiFactorLogin));
+            repository.Received(1).DeleteExistingValidationCode(Arg.Is(someUser.Id));
             repository.Received(1).SaveNewValidationCode(Arg.Is<UserValidationCode>(code => code.IdUser == someUser.Id));
             sender.Received(1).SendCode(Arg.Is(someUser), Arg.Any<string>());
+        }
+
+        [Test]
+        public void KnownUserWithExistingCode_WhenRequestingNewCode_ShouldDeactivateAllPreviousCodeAndSendNewOne()
+        {
+            var someCode = new UserValidationCode { IdUser = someUserId, Type = ValidationCodeType.MultiFactorLogin };
+            repository.GetLastCode(Arg.Is(someUserId)).Returns(someCode);
+
+            handler.SendNewValidationCode(someUser);
+
+            repository.Received(1).GetLastCode(Arg.Is(someUserId));
+            repository.Received(1).DeleteExistingValidationCode(Arg.Is(someUserId));
+            repository.Received(1).SaveNewValidationCode(Arg.Is<UserValidationCode>(code => code.IdUser == someUser.Id && code.Type == someCode.Type));
+            sender.Received(1).SendCode(Arg.Is(someUser), Arg.Any<string>());
+        }
+
+        [Test]
+        public void KnownUserWithoutExistingCode_WhenRequestingNewCode_ShouldThrowException()
+        {            
+            repository.GetLastCode(Arg.Is(someUserId)).Returns((UserValidationCode)null);
+
+            var action = () => handler.SendNewValidationCode(someUser);
+
+            action.Should().Throw<UserValidationCodeNotFoundException>();            
         }
     }
 }
