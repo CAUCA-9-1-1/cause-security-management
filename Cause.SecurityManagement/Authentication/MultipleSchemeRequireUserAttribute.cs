@@ -7,7 +7,7 @@ namespace Cause.SecurityManagement.Authentication
 {
     public class MultipleSchemeRequireUserAttribute : ActionFilterAttribute
     {
-        public override async void OnActionExecuting(ActionExecutingContext filterContext)
+        public override void OnActionExecuting(ActionExecutingContext filterContext)
         {
             var authorize = UserIsAuthenticated(filterContext.HttpContext.User);
 
