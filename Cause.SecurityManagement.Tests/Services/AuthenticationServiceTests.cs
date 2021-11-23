@@ -6,6 +6,7 @@ using FluentAssertions;
 using Microsoft.Extensions.Options;
 using NSubstitute;
 using NUnit.Framework;
+using System;
 
 namespace Cause.SecurityManagement.Tests.Services
 {
@@ -21,6 +22,7 @@ namespace Cause.SecurityManagement.Tests.Services
         private AuthenticationService<User> service;
         private SecurityManagementOptions options;
         private SecurityConfiguration configuration;
+        private readonly Guid someUserId = Guid.NewGuid();
 
         [SetUp]
         public void SetUpTest()
@@ -106,6 +108,18 @@ namespace Cause.SecurityManagement.Tests.Services
 
             userFound.PasswordMustBeResetAfterLogin.Should().Be(false);
             generator.Received(1).GenerateAccessToken(Arg.Is(someUser.Id), Arg.Is(someUser.UserName), Arg.Is(SecurityRoles.UserLoginWithMultiFactor));
+        }
+
+        [Test]
+        public void SomeUser_WhenRequestingNewActivationCode_ShouldAskHandlerToSendIt()
+        {
+            var someUser = new User();
+            currentUserService.GetUserId().Returns(someUserId);
+            repository.GetUserById(Arg.Is(someUserId)).Returns(someUser);
+
+            service.SendNewCode();
+
+            multiAuthHandler.Received(1).SendNewValidationCode(Arg.Is(someUser));
         }
     }
 }

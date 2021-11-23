@@ -67,6 +67,21 @@ namespace Cause.SecurityManagement.Controllers
             return Unauthorized();
         }
 
+        [Route("validationCode"), HttpGet, Authorize(Roles = SecurityRoles.UserLoginWithMultiFactor)]
+        public ActionResult SendNewCode()
+        {
+            try
+            {
+                service.SendNewCode();
+                return Ok();
+            }
+            catch (UserValidationCodeNotFoundException)
+            {
+                return Unauthorized();
+            }
+        }
+
+
         [Route("validationCode"), HttpPost, Authorize(Roles = SecurityRoles.UserLoginWithMultiFactor)]
         public ActionResult<LoginResult> VerifyCode([FromBody] ValidationInformation validationInformation)
         {

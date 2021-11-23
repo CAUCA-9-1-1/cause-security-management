@@ -137,6 +137,12 @@ namespace Cause.SecurityManagement.Services
 			return newAccessToken;
 		}
 
+        public void SendNewCode()
+        {
+            var user = userRepository.GetUserById(currentUserService.GetUserId());
+            multiFactorHandler.SendNewValidationCode(user);
+        }
+
         protected virtual UserToken GenerateUserToken(TUser user, string role)
         {
             var accessToken = generator.GenerateAccessToken(user.Id, user.UserName, role);

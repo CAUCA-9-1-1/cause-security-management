@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Cause.SecurityManagement.Mapping
 {
-	public class UserMapping<TUser> : BaseModelMapping<TUser>
+    public class UserMapping<TUser> : BaseModelMapping<TUser>
         where TUser: User, new()
 	{
 		protected override void MapProperties(EntityTypeBuilder<TUser> model)
@@ -24,6 +24,10 @@ namespace Cause.SecurityManagement.Mapping
 		    model.HasMany(m => m.Tokens)
 		        .WithOne()
 		        .HasForeignKey(m => m.IdUser);
+
+			model.HasMany(m => m.ValidationCodes)
+				.WithOne()
+				.HasForeignKey(m => m.IdUser);
 		}
 	}
 }

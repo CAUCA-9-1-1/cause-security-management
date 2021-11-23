@@ -22,7 +22,7 @@ namespace Cause.SecurityManagement.Services
         {
             if (MustSendValidationCode(user))
             {
-                repository.DeleteExistingValidationCode(user.Id, ValidationCodeType.MultiFactorLogin);
+                repository.DeleteExistingValidationCode(user.Id);
                 SendValidationCode(user, ValidationCodeType.MultiFactorLogin);
             }
         }
@@ -63,6 +63,20 @@ namespace Cause.SecurityManagement.Services
                 return true;
             }
             return false;
+        }
+
+        public void SendNewValidationCode(TUser user)
+        {
+            var existingCode = repository.GetLastCode(user.Id);
+            ThrowExceptionIfNoCodeHasBeenFound(existingCode);
+            repository.DeleteExistingValidationCode(user.Id);
+            SendValidationCode(user, existingCode.Type);
+        }
+
+        private static void ThrowExceptionIfNoCodeHasBeenFound(UserValidationCode existingCode)
+        {
+            if (existingCode == null)
+                throw new UserValidationCodeNotFoundException();
         }
     }
 }

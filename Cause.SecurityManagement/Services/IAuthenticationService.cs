@@ -11,5 +11,6 @@ namespace Cause.SecurityManagement.Services
         UserToken GenerateUserCreationToken(Guid userId);
         UserToken GenerateUserRecoveryToken(Guid userId);
         (UserToken token, User user) ValidateMultiFactorCode(ValidationInformation validationInformation);
+        void SendNewCode();
     }
 }

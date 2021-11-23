@@ -8,5 +8,6 @@ namespace Cause.SecurityManagement.Services
     {
         void SendValidationCodeWhenNeeded(TUser user);
         bool CodeIsValid(Guid idUser, string validationCode, ValidationCodeType type);
+        void SendNewValidationCode(TUser idUser);
     }
 }
