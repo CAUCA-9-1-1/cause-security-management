@@ -23,7 +23,8 @@ namespace Cause.SecurityManagement
                 .AddScopedCustomServiceOrDefault<IUserManagementService<TUser>>(managementOptions.CustomUserManagementService, () => services.AddScoped<IUserManagementService<TUser>, UserManagementService<TUser>>())
                 .AddScopedCustomServiceOrDefault<IAuthenticationService>(managementOptions.CustomAuthenticationService, () => services.AddScoped<IAuthenticationService, AuthenticationService<TUser>>())
                 .AddScopedCustomServiceOrDefault<ICurrentUserService>(managementOptions.CustomCurrentUserService, () => services.AddScoped<ICurrentUserService, CurrentUserService>())
-                .AddScopedWhenImplementationIsKnown<IAuthenticationValidationCodeSender<TUser>>(managementOptions.ValidationCodeSender);
+                .AddScopedWhenImplementationIsKnown<IAuthenticationValidationCodeSender<TUser>>(managementOptions.ValidationCodeSender)
+                .AddScopedWhenImplementationIsKnown<IEmailForUserModificationSender>(managementOptions.EmailForUserModificationSender);
         }
 
         private static IServiceCollection AddBaseConfiguration<TUser>(this IServiceCollection services) where TUser : User, new()
