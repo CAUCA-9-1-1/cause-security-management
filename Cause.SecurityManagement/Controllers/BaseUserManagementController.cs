@@ -113,7 +113,7 @@ namespace Cause.SecurityManagement.Controllers
 		[HttpPost, Route("EmailIsAlreadyInUse")]
 		public virtual ActionResult EmailIsAlreadyInUse([FromBody] TUser user)
 		{
-			return Ok(UserService.EmailIsAlreadyInUse(user));
+			return Ok(UserService.EmailIsAlreadyInUse(user.Email, user.Id));
 		}
 	}
 }
