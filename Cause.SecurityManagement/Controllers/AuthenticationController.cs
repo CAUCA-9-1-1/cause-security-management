@@ -4,6 +4,7 @@ using Cause.SecurityManagement.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using System.Threading.Tasks;
 
 namespace Cause.SecurityManagement.Controllers
 {
@@ -28,9 +29,9 @@ namespace Cause.SecurityManagement.Controllers
         }
 
         [Route("[Action]"), HttpPost, AllowAnonymous]
-        public ActionResult<LoginResult> Logon([FromBody] LoginInformations login)
+        public async Task<ActionResult<LoginResult>> Logon([FromBody] LoginInformations login)
         {            
-            var (token, user) = service.Login(login.UserName, login.Password);
+            var (token, user) = await service.LoginAsync(login.UserName, login.Password);
             if (user == null || token == null)
                 return Unauthorized();
 
@@ -41,7 +42,7 @@ namespace Cause.SecurityManagement.Controllers
                 AccessToken = token.AccessToken,
                 RefreshToken = token.RefreshToken,
                 MustChangePassword = user.PasswordMustBeResetAfterLogin,
-                MustVerifyCode = SecurityManagementOptions.MultiFactorAuthenticationIsActivated,
+                MustVerifyCode = service.MustValidateCode(user),
                 IdUser = user.Id,
                 Name = user.FirstName + " " + user.LastName,
             };
@@ -68,11 +69,11 @@ namespace Cause.SecurityManagement.Controllers
         }
 
         [Route("validationCode"), HttpGet, Authorize(Roles = SecurityRoles.UserLoginWithMultiFactor)]
-        public ActionResult SendNewCode()
+        public async Task<ActionResult> SendNewCodeAsync()
         {
             try
             {
-                service.SendNewCode();
+                await service.SendNewCodeAsync();
                 return Ok();
             }
             catch (UserValidationCodeNotFoundException)

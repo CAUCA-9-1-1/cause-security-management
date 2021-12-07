@@ -1,6 +1,7 @@
 ﻿using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Repositories;
 using System;
+using System.Threading.Tasks;
 
 namespace Cause.SecurityManagement.Services
 {
@@ -18,12 +19,12 @@ namespace Cause.SecurityManagement.Services
             this.sender = sender;
         }
 
-        public void SendValidationCodeWhenNeeded(TUser user)
+        public async Task SendValidationCodeWhenNeededAsync(TUser user)
         {
             if (MustSendValidationCode(user))
             {
                 repository.DeleteExistingValidationCode(user.Id);
-                SendValidationCode(user, ValidationCodeType.MultiFactorLogin);
+                await SendValidationCodeAsync(user, ValidationCodeType.MultiFactorLogin);
             }
         }
 
@@ -34,7 +35,7 @@ namespace Cause.SecurityManagement.Services
                 && SecurityManagementOptions.MultiFactorAuthenticationIsActivated;
         }        
 
-        private void SendValidationCode(TUser user, ValidationCodeType type)
+        private async Task SendValidationCodeAsync(TUser user, ValidationCodeType type)
         {
             var code = new UserValidationCode
             {
@@ -44,7 +45,7 @@ namespace Cause.SecurityManagement.Services
                 Type = type
             };
             repository.SaveNewValidationCode(code);
-            sender.SendCode(user, code.Code);
+            await sender.SendCodeAsync(user, code.Code);
         }
 
         private static string GenerateValidationCode()
@@ -65,12 +66,12 @@ namespace Cause.SecurityManagement.Services
             return false;
         }
 
-        public void SendNewValidationCode(TUser user)
+        public async Task SendNewValidationCodeAsync(TUser user)
         {
             var existingCode = repository.GetLastCode(user.Id);
             ThrowExceptionIfNoCodeHasBeenFound(existingCode);
             repository.DeleteExistingValidationCode(user.Id);
-            SendValidationCode(user, existingCode.Type);
+            await SendValidationCodeAsync(user, existingCode.Type);
         }
 
         private static void ThrowExceptionIfNoCodeHasBeenFound(UserValidationCode existingCode)

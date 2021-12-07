@@ -1,13 +1,14 @@
 ﻿using Cause.SecurityManagement.Models;
 using System;
+using System.Threading.Tasks;
 
 namespace Cause.SecurityManagement.Services
 {
     public interface IAuthenticationMultiFactorHandler<TUser>
         where TUser : User, new()
     {
-        void SendValidationCodeWhenNeeded(TUser user);
+        Task SendValidationCodeWhenNeededAsync(TUser user);
         bool CodeIsValid(Guid idUser, string validationCode, ValidationCodeType type);
-        void SendNewValidationCode(TUser idUser);
+        Task SendNewValidationCodeAsync(TUser idUser);
     }
 }

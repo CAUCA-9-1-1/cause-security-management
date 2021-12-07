@@ -5,6 +5,7 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using NSubstitute;
 using NUnit.Framework;
+using System.Threading.Tasks;
 
 namespace Cause.SecurityManagement.Tests.Controllers
 {
@@ -28,20 +29,20 @@ namespace Cause.SecurityManagement.Tests.Controllers
         }
 
         [Test]
-        public void SomeUser_WhenRequestingNewValidationCode_ShouldAskAuthenticationServiceToSendCode()
+        public async Task SomeUser_WhenRequestingNewValidationCode_ShouldAskAuthenticationServiceToSendCode()
         {
-            var result = controller.SendNewCode();
+            var result = await controller.SendNewCodeAsync();
 
             result.Should().BeOfType<OkResult>();
-            service.Received(1).SendNewCode();
+            await service.Received(1).SendNewCodeAsync();
         }
 
         [Test]
-        public void UserWithoutKnownValidationCode_WhenRequestingNewValidationCode_ShouldReturnError()
+        public async Task UserWithoutKnownValidationCode_WhenRequestingNewValidationCode_ShouldReturnError()
         {
-            service.When(mock => mock.SendNewCode()).Do((_) => throw new UserValidationCodeNotFoundException());
+            service.When(mock => mock.SendNewCodeAsync()).Do((_) => throw new UserValidationCodeNotFoundException());
 
-            var result = controller.SendNewCode();
+            var result = await controller.SendNewCodeAsync();
 
             result.Should().BeOfType<UnauthorizedResult>();
         }

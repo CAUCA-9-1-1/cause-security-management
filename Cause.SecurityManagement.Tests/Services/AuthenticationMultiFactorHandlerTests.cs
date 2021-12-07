@@ -61,76 +61,53 @@ namespace Cause.SecurityManagement.Tests.Services
         }
 
         [Test]
-        public void NotFoundUser_WhenSendingValidationCode_ShouldNotSendAnything()
+        public async Task NotFoundUser_WhenSendingValidationCode_ShouldNotSendAnything()
         {
             var options = new SecurityManagementOptions();
             options.UseMultiFactorAuthentication<IAuthenticationValidationCodeSender<User>>();
-            handler.SendValidationCodeWhenNeeded(null);
+            await handler.SendValidationCodeWhenNeededAsync(null);
 
             repository.DidNotReceive().DeleteExistingValidationCode(Arg.Any<Guid>());
             repository.DidNotReceive().SaveNewValidationCode(Arg.Any<UserValidationCode>());
-            sender.DidNotReceive().SendCode(Arg.Any<User>(), Arg.Any<string>());
+            await sender.DidNotReceive().SendCodeAsync(Arg.Any<User>(), Arg.Any<string>());
         }
 
         [Test]
-        public void MultiFactorNotActivated_WhenSendingValidationCode_ShouldNotSendAnything()
-        {
-            var _ = new SecurityManagementOptions();
-            handler.SendValidationCodeWhenNeeded(someUser);
-
-            repository.DidNotReceive().DeleteExistingValidationCode(Arg.Any<Guid>());
-            repository.DidNotReceive().SaveNewValidationCode(Arg.Any<UserValidationCode>());
-            sender.DidNotReceive().SendCode(Arg.Any<User>(), Arg.Any<string>());
-        }
-
-        [Test]
-        public void UserMustResetPassword_WhenSendingValidationCode_ShouldNotSendAnything()
+        public async Task ExistingUser_WhenSendingValidationCode_ShouldSendCode()
         {
             var options = new SecurityManagementOptions();
             options.UseMultiFactorAuthentication<IAuthenticationValidationCodeSender<User>>();
-            someUser.PasswordMustBeResetAfterLogin = true;
+            repository.GetLastCode(Arg.Is(someUser.Id)).Returns(new UserValidationCode());
 
-            handler.SendValidationCodeWhenNeeded(someUser);
-
-            repository.DidNotReceive().DeleteExistingValidationCode(Arg.Any<Guid>());
-            repository.DidNotReceive().SaveNewValidationCode(Arg.Any<UserValidationCode>());
-            sender.DidNotReceive().SendCode(Arg.Any<User>(), Arg.Any<string>());
-        }
-
-        [Test]
-        public void ExistingUser_WhenSendingValidationCode_ShouldSendCode()
-        {
-            var options = new SecurityManagementOptions();
-            options.UseMultiFactorAuthentication<IAuthenticationValidationCodeSender<User>>();
-            handler.SendValidationCodeWhenNeeded(someUser);
+            await handler.SendNewValidationCodeAsync(someUser);
 
             repository.Received(1).DeleteExistingValidationCode(Arg.Is(someUser.Id));
             repository.Received(1).SaveNewValidationCode(Arg.Is<UserValidationCode>(code => code.IdUser == someUser.Id));
-            sender.Received(1).SendCode(Arg.Is(someUser), Arg.Any<string>());
+            await sender.Received(1).SendCodeAsync(Arg.Is(someUser), Arg.Any<string>());
         }
 
         [Test]
-        public void KnownUserWithExistingCode_WhenRequestingNewCode_ShouldDeactivateAllPreviousCodeAndSendNewOne()
+        public async Task KnownUserWithExistingCode_WhenRequestingNewCode_ShouldDeactivateAllPreviousCodeAndSendNewOne()
         {
             var someCode = new UserValidationCode { IdUser = someUserId, Type = ValidationCodeType.MultiFactorLogin };
             repository.GetLastCode(Arg.Is(someUserId)).Returns(someCode);
 
-            handler.SendNewValidationCode(someUser);
+            await handler.SendNewValidationCodeAsync(someUser);
 
             repository.Received(1).GetLastCode(Arg.Is(someUserId));
             repository.Received(1).DeleteExistingValidationCode(Arg.Is(someUserId));
             repository.Received(1).SaveNewValidationCode(Arg.Is<UserValidationCode>(code => code.IdUser == someUser.Id && code.Type == someCode.Type));
-            sender.Received(1).SendCode(Arg.Is(someUser), Arg.Any<string>());
+            await sender.Received(1).SendCodeAsync(Arg.Is(someUser), Arg.Any<string>());
         }
 
         [Test]
-        public void KnownUserWithoutExistingCode_WhenRequestingNewCode_ShouldThrowException()
+        public async Task KnownUserWithoutExistingCode_WhenRequestingNewCode_ShouldThrowException()
         {            
             repository.GetLastCode(Arg.Is(someUserId)).Returns((UserValidationCode)null);
 
-            var action = () => handler.SendNewValidationCode(someUser);
+            var action = () => handler.SendNewValidationCodeAsync(someUser);
 
-            action.Should().Throw<UserValidationCodeNotFoundException>();            
+            await action.Should().ThrowAsync<UserValidationCodeNotFoundException>();            
         }
     }
 }

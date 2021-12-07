@@ -4,6 +4,7 @@ using Cause.SecurityManagement.Models.DataTransferObjects;
 using Cause.SecurityManagement.Repositories;
 using Microsoft.Extensions.Options;
 using System;
+using System.Threading.Tasks;
 
 namespace Cause.SecurityManagement.Services
 {
@@ -38,11 +39,11 @@ namespace Cause.SecurityManagement.Services
             this.configuration = configuration.Value;
         }
 
-        public virtual (UserToken token, User user) Login(string userName, string password)
+        public virtual async Task<(UserToken token, User user)> LoginAsync(string userName, string password)
         {
             var (userFound, roles) = GetUserWithTemporaryPassword(userName, password)
                 ?? GetUser(userName, password);
-            return GenerateTokenIfUserCanLogIn(userFound, roles);
+            return await GenerateTokenIfUserCanLogInAsync(userFound, roles);
         }
 
         protected virtual (TUser user, string role)? GetUserWithTemporaryPassword(string userName, string password)
@@ -55,12 +56,12 @@ namespace Cause.SecurityManagement.Services
             return null;
         }
 
-        protected virtual (UserToken token, TUser user) GenerateTokenIfUserCanLogIn(TUser userFound, string role)
+        protected virtual async Task<(UserToken token, TUser user)> GenerateTokenIfUserCanLogInAsync(TUser userFound, string role)
         {
             var user = CanLogIn(userFound) ?
                 (GenerateUserToken(userFound, role), userFound) :
                 (null, null);
-            multiFactorHandler.SendValidationCodeWhenNeeded(user.userFound);            
+            await multiFactorHandler.SendValidationCodeWhenNeededAsync(user.userFound);            
             return user;
         }     
 
@@ -100,7 +101,7 @@ namespace Cause.SecurityManagement.Services
         {
             var encodedPassword = new PasswordGenerator().EncodePassword(password, configuration.PackageName);
             var userFound = userRepository.GetUser(userName, encodedPassword);
-            return (userFound, SecurityManagementOptions.MultiFactorAuthenticationIsActivated ? SecurityRoles.UserLoginWithMultiFactor : GetSecurityRoleForUser(userFound));
+            return (userFound, MustValidateCode(userFound) ? SecurityRoles.UserLoginWithMultiFactor : GetSecurityRoleForUser(userFound));
         }        
 
         private static string GetSecurityRoleForUser(TUser userFound)
@@ -108,6 +109,11 @@ namespace Cause.SecurityManagement.Services
             return userFound?.PasswordMustBeResetAfterLogin == true ? 
                 SecurityRoles.UserPasswordSetup : 
                 SecurityRoles.User;
+        }
+
+        public virtual bool MustValidateCode(User user)
+        {
+            return SecurityManagementOptions.MultiFactorAuthenticationIsActivated;
         }
 
         protected virtual bool CanLogIn(User user)
@@ -137,10 +143,10 @@ namespace Cause.SecurityManagement.Services
 			return newAccessToken;
 		}
 
-        public void SendNewCode()
+        public async Task SendNewCodeAsync()
         {
             var user = userRepository.GetUserById(currentUserService.GetUserId());
-            multiFactorHandler.SendNewValidationCode(user);
+            await multiFactorHandler.SendNewValidationCodeAsync(user);
         }
 
         protected virtual UserToken GenerateUserToken(TUser user, string role)

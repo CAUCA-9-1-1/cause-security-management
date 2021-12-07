@@ -17,5 +17,6 @@ namespace Cause.SecurityManagement.Models
 		public ICollection<UserPermission> Permissions { get; set; } = new List<UserPermission>();
         public ICollection<UserToken> Tokens { get; set; }
 		public ICollection<UserValidationCode> ValidationCodes { get; set; }
+		public ICollection<UserDisconnectionLog> DisconnectionLogs { get; set; }
 	}
 }

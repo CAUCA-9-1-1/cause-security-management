@@ -7,6 +7,7 @@ using Microsoft.Extensions.Options;
 using NSubstitute;
 using NUnit.Framework;
 using System;
+using System.Threading.Tasks;
 
 namespace Cause.SecurityManagement.Tests.Services
 {
@@ -39,14 +40,14 @@ namespace Cause.SecurityManagement.Tests.Services
         }
 
         [Test]
-        public void SomeUnknownUser_WhenLoggingIn_ShouldNotBeSuccessful()
+        public async Task SomeUnknownUser_WhenLoggingIn_ShouldNotBeSuccessful()
         {
             var someUserName = "asdlkfj";
             var somePassword = "aclkvjb";
             repository.GetUserWithTemporaryPassword(Arg.Is(someUserName), Arg.Is(somePassword)).Returns((User)null);
             repository.GetUser(Arg.Is(someUserName), Arg.Is(somePassword)).Returns((User)null);
 
-            var (token, system) = service.Login(someUserName, somePassword);
+            var (token, system) = await service.LoginAsync(someUserName, somePassword);
 
             token.Should().BeNull();
             system.Should().BeNull();
@@ -54,7 +55,7 @@ namespace Cause.SecurityManagement.Tests.Services
         }
 
         [Test]
-        public void SomeRecognizedUserWithTemporaryPassword_WhenLoggingIn_ShouldReturnCredentialsWithPasswordSetupRole()
+        public async Task SomeRecognizedUserWithTemporaryPassword_WhenLoggingIn_ShouldReturnCredentialsWithPasswordSetupRole()
         {
             var someUserName = "asdlkfj";
             var somePassword = "aclkvjb";
@@ -65,14 +66,14 @@ namespace Cause.SecurityManagement.Tests.Services
             generator.GenerateAccessToken(Arg.Is(someUser.Id), Arg.Is(someUser.UserName), Arg.Is(SecurityRoles.UserPasswordSetup)).Returns(someAccessToken);
             generator.GenerateRefreshToken().Returns(someRefreshToken);
 
-            var (_, userFound) = service.Login(someUserName, somePassword);
+            var (_, userFound) = await service.LoginAsync(someUserName, somePassword);
 
             userFound.PasswordMustBeResetAfterLogin.Should().Be(true);
             generator.Received(1).GenerateAccessToken(Arg.Is(someUser.Id), Arg.Is(someUser.UserName), Arg.Is(SecurityRoles.UserPasswordSetup));
         }
 
         [Test]
-        public void SomeRecognizedUser_WhenLoggingIn_ShouldReturnCredentialsWithRegularRole()
+        public async Task SomeRecognizedUser_WhenLoggingIn_ShouldReturnCredentialsWithRegularRole()
         {
             var someUserName = "asdlkfj";
             var somePassword = "aclkvjb";
@@ -84,14 +85,14 @@ namespace Cause.SecurityManagement.Tests.Services
             generator.GenerateAccessToken(Arg.Is(someUser.Id), Arg.Is(someUser.UserName), Arg.Is(SecurityRoles.User)).Returns(someAccessToken);
             generator.GenerateRefreshToken().Returns(someRefreshToken);
 
-            var (_, userFound) = service.Login(someUserName, somePassword);
+            var (_, userFound) = await service.LoginAsync(someUserName, somePassword);
 
             userFound.PasswordMustBeResetAfterLogin.Should().Be(false);
             generator.Received(1).GenerateAccessToken(Arg.Is(someUser.Id), Arg.Is(someUser.UserName), Arg.Is(SecurityRoles.User));
         }
 
         [Test]
-        public void MultiFactorActivated_WhenLoggingIn_ShouldReturnCredentialsWithMultiAuthRole()
+        public async Task MultiFactorActivated_WhenLoggingIn_ShouldReturnCredentialsWithMultiAuthRole()
         {
             options.UseMultiFactorAuthentication<IAuthenticationValidationCodeSender<User>>();
             var someUserName = "asdlkfj";
@@ -104,22 +105,22 @@ namespace Cause.SecurityManagement.Tests.Services
             generator.GenerateAccessToken(Arg.Is(someUser.Id), Arg.Is(someUser.UserName), Arg.Is(SecurityRoles.User)).Returns(someAccessToken);
             generator.GenerateRefreshToken().Returns(someRefreshToken);
 
-            var (_, userFound) = service.Login(someUserName, somePassword);
+            var (_, userFound) = await service.LoginAsync(someUserName, somePassword);
 
             userFound.PasswordMustBeResetAfterLogin.Should().Be(false);
             generator.Received(1).GenerateAccessToken(Arg.Is(someUser.Id), Arg.Is(someUser.UserName), Arg.Is(SecurityRoles.UserLoginWithMultiFactor));
         }
 
         [Test]
-        public void SomeUser_WhenRequestingNewActivationCode_ShouldAskHandlerToSendIt()
+        public async Task SomeUser_WhenRequestingNewActivationCode_ShouldAskHandlerToSendIt()
         {
             var someUser = new User();
             currentUserService.GetUserId().Returns(someUserId);
             repository.GetUserById(Arg.Is(someUserId)).Returns(someUser);
 
-            service.SendNewCode();
+            await service.SendNewCodeAsync();
 
-            multiAuthHandler.Received(1).SendNewValidationCode(Arg.Is(someUser));
+            await multiAuthHandler.Received(1).SendNewValidationCodeAsync(Arg.Is(someUser));
         }
     }
 }
