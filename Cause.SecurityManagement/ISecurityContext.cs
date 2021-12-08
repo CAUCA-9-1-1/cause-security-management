@@ -12,7 +12,6 @@ namespace Cause.SecurityManagement
 	    DbSet<UserPermission> UserPermissions { get; set; }
 	    DbSet<UserToken> UserTokens { get; set; }
         DbSet<UserValidationCode> UserValidationCodes { get; set; }
-        DbSet<UserDisconnectionLog> UserDisconnectionLogs { get; set;}
         DbSet<ExternalSystem> ExternalSystems { get; set; }
         DbSet<ExternalSystemToken> ExternalSystemTokens { get; set; }
         DbSet<Group> Groups { get; set; }

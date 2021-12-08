@@ -11,12 +11,4 @@ namespace Cause.SecurityManagement.Mapping
 			model.Property(m => m.RefreshToken).HasMaxLength(100).IsRequired();
 		}
 	}
-
-    public class UserDisconnectionLogMapping : BaseModelMapping<UserDisconnectionLog>
-    {
-        protected override void MapProperties(EntityTypeBuilder<UserDisconnectionLog> model)
-        {
-			model.Property(m => m.Description).HasMaxLength(500).IsRequired();
-        }
-    }
 }
