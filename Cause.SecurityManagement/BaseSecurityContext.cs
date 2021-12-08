@@ -22,7 +22,7 @@ namespace Cause.SecurityManagement
 		public DbSet<UserPermission> UserPermissions { get; set; }
         public DbSet<DataProtectionElement> DataProtectionXmlElements { get; set; }
         public DbSet<ExternalSystem> ExternalSystems { get; set; }
-        public DbSet<ExternalSystemToken> ExternalSystemTokens { get; set; }        
+        public DbSet<ExternalSystemToken> ExternalSystemTokens { get; set; }
 
         protected BaseSecurityContext(DbContextOptions options) : base(options)
         {

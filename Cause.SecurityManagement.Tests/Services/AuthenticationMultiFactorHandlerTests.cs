@@ -105,7 +105,7 @@ namespace Cause.SecurityManagement.Tests.Services
         {            
             repository.GetLastCode(Arg.Is(someUserId)).Returns((UserValidationCode)null);
 
-            var action = () => handler.SendNewValidationCodeAsync(someUser);
+            Func<Task> action = () => handler.SendNewValidationCodeAsync(someUser);
 
             await action.Should().ThrowAsync<UserValidationCodeNotFoundException>();            
         }
