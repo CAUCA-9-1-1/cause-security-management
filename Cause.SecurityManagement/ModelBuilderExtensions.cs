@@ -15,6 +15,7 @@ namespace Cause.SecurityManagement
             new UserGroupMapping().Map(modelBuilder);            
             new UserPermissionMapping().Map(modelBuilder);
             new UserTokenMapping().Map(modelBuilder);
+            new UserValidationCodeMapping().Map(modelBuilder);
             new DataProtectionElementMapping().Map(modelBuilder);
             new ExternalSystemMapping().Map(modelBuilder);
             new ExternalSystemTokenMapping().Map(modelBuilder);
