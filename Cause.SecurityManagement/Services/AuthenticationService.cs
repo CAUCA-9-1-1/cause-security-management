@@ -125,23 +125,23 @@ namespace Cause.SecurityManagement.Services
         {
             return string.IsNullOrWhiteSpace(configuration.RequiredPermissionForLogin)
                 || userManagementService.HasPermission(user.Id, configuration.RequiredPermissionForLogin);
-        }      
+        }
 
         public string RefreshUserToken(string token, string refreshToken)
-		{
-			var userId = tokenReader.GetSidFromExpiredToken(token);
+        {
+            var userId = tokenReader.GetSidFromExpiredToken(token);
             var userToken = userRepository.GetToken(userId, refreshToken);
             var user = userRepository.GetUserById(userId);
 
-			tokenReader.ThrowExceptionWhenTokenIsNotValid(refreshToken, userToken);
+            tokenReader.ThrowExceptionWhenTokenIsNotValid(refreshToken, userToken);
 
             var newAccessToken = generator.GenerateAccessToken(user.Id, user.UserName, SecurityRoles.User);
             // ReSharper disable once PossibleNullReferenceException
             userToken.AccessToken = newAccessToken;
             userRepository.SaveChanges();
 
-			return newAccessToken;
-		}
+            return newAccessToken;
+        }
 
         public async Task SendNewCodeAsync()
         {

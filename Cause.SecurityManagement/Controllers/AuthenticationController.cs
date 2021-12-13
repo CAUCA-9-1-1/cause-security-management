@@ -3,6 +3,7 @@ using Cause.SecurityManagement.Repositories;
 using Cause.SecurityManagement.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using System.Threading.Tasks;
 
@@ -15,17 +16,20 @@ namespace Cause.SecurityManagement.Controllers
         private readonly IAuthenticationService service;
         private readonly IExternalSystemAuthenticationService externalSystemAuthenticationService;
         private readonly IMobileVersionService mobileVersionService;
+        private readonly ILogger<AuthenticationController> logger;
 
         public AuthenticationController(
             IUserPermissionRepository permissionsReader,
             IAuthenticationService service,
             IExternalSystemAuthenticationService externalSystemAuthenticationService,
-            IMobileVersionService mobileVersionService)
+            IMobileVersionService mobileVersionService,
+            ILogger<AuthenticationController> logger)
         {
             this.permissionsReader = permissionsReader;
             this.service = service;
             this.externalSystemAuthenticationService = externalSystemAuthenticationService;
             this.mobileVersionService = mobileVersionService;
+            this.logger = logger;
         }
 
         [Route("[Action]"), HttpPost, AllowAnonymous]
@@ -56,6 +60,11 @@ namespace Cause.SecurityManagement.Controllers
                 var newAccessToken = service.RefreshUserToken(tokens.AccessToken, tokens.RefreshToken);
                 return Ok(new {AccessToken = newAccessToken, tokens.RefreshToken});
             }
+            catch (InvalidTokenException exception)
+            {
+                logger.LogError(exception, $"Could not refresh token.  Refresh token: '{tokens.RefreshToken}'.  Access token: '{tokens?.AccessToken}'");
+                HttpContext.Response.Headers.Add("Token-Invalid", "true");
+            }
             catch (SecurityTokenExpiredException)
             {
                 HttpContext.Response.Headers.Add("Refresh-Token-Expired", "true");
@@ -81,7 +90,6 @@ namespace Cause.SecurityManagement.Controllers
                 return Unauthorized();
             }
         }
-
 
         [Route("validationCode"), HttpPost, Authorize(Roles = SecurityRoles.UserLoginWithMultiFactor)]
         public ActionResult<LoginResult> VerifyCode([FromBody] ValidationInformation validationInformation)

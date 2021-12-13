@@ -3,6 +3,7 @@ using Cause.SecurityManagement.Repositories;
 using Cause.SecurityManagement.Services;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
 using System.Threading.Tasks;
@@ -16,6 +17,7 @@ namespace Cause.SecurityManagement.Tests.Controllers
         private IAuthenticationService service;
         private IExternalSystemAuthenticationService externalSystemAuthenticationService;
         private IMobileVersionService mobileVersionService;
+        private ILogger<AuthenticationController> logger;
         private AuthenticationController controller;        
 
         [SetUp]
@@ -25,7 +27,8 @@ namespace Cause.SecurityManagement.Tests.Controllers
             service = Substitute.For<IAuthenticationService>();
             externalSystemAuthenticationService = Substitute.For<IExternalSystemAuthenticationService>();
             mobileVersionService = Substitute.For<IMobileVersionService>();
-            controller = new AuthenticationController(permissionsReader, service, externalSystemAuthenticationService, mobileVersionService);
+            logger = Substitute.For<ILogger<AuthenticationController>>();
+            controller = new AuthenticationController(permissionsReader, service, externalSystemAuthenticationService, mobileVersionService, logger);
         }
 
         [Test]

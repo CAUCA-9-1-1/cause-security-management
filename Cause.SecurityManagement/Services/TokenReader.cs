@@ -42,15 +42,22 @@ namespace Cause.SecurityManagement.Services
 
         private ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
         {
-            TokenValidationParameters tokenValidationParameters = GenerateTokenValidationParameters();
+            try
+            {
+                TokenValidationParameters tokenValidationParameters = GenerateTokenValidationParameters();
 
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out var securityToken);
-            if (securityToken is not JwtSecurityToken jwtSecurityToken
-                || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
-                throw new SecurityTokenException("Invalid token");
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out var securityToken);
+                if (securityToken is not JwtSecurityToken jwtSecurityToken
+                    || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+                    throw new SecurityTokenException("Invalid token");
 
-            return principal;
+                return principal;
+            }
+            catch (ArgumentException exception)
+            {
+                throw new InvalidTokenException(token, exception);
+            }
         }
 
         private TokenValidationParameters GenerateTokenValidationParameters()
