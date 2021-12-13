@@ -62,7 +62,7 @@ namespace Cause.SecurityManagement.Controllers
             }
             catch (InvalidTokenException exception)
             {
-                logger.LogError(exception, $"Could not refresh token.  Refresh token: '{tokens.RefreshToken}'.  Access token: '{tokens?.AccessToken}'");
+                logger.LogError(exception, $"Could not refresh user's acess token.  Refresh token: '{tokens.RefreshToken}'.  Access token: '{tokens?.AccessToken}'");
                 HttpContext.Response.Headers.Add("Token-Invalid", "true");
             }
             catch (SecurityTokenExpiredException)
@@ -140,6 +140,11 @@ namespace Cause.SecurityManagement.Controllers
             {
                 var newAccessToken = externalSystemAuthenticationService.RefreshAccessToken(tokens.AccessToken, tokens.RefreshToken);
                 return Ok(new { AccessToken = newAccessToken, tokens.RefreshToken });
+            }
+            catch (InvalidTokenException exception)
+            {
+                logger.LogError(exception, $"Could not refresh external system's acess token.  Refresh token: '{tokens.RefreshToken}'.  Access token: '{tokens?.AccessToken}'");
+                HttpContext.Response.Headers.Add("Token-Invalid", "true");
             }
             catch (SecurityTokenExpiredException)
             {
