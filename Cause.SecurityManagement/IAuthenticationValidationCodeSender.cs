@@ -1,4 +1,5 @@
 ﻿using Cause.SecurityManagement.Models;
+using System;
 using System.Threading.Tasks;
 
 namespace Cause.SecurityManagement
@@ -6,6 +7,6 @@ namespace Cause.SecurityManagement
     public interface IAuthenticationValidationCodeSender<TUser>
         where TUser : User, new()
     {
-        Task SendCodeAsync(TUser user, string code);
+        Task SendCodeAsync(TUser user, string code, DateTime expiration);
     }
 }

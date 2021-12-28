@@ -45,7 +45,7 @@ namespace Cause.SecurityManagement.Services
                 Type = type
             };
             repository.SaveNewValidationCode(code);
-            await sender.SendCodeAsync(user, code.Code);
+            await sender.SendCodeAsync(user, code.Code, code.ExpiresOn);
         }
 
         private static string GenerateValidationCode()

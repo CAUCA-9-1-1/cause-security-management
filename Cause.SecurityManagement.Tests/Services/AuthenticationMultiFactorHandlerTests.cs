@@ -69,7 +69,7 @@ namespace Cause.SecurityManagement.Tests.Services
 
             repository.DidNotReceive().DeleteExistingValidationCode(Arg.Any<Guid>());
             repository.DidNotReceive().SaveNewValidationCode(Arg.Any<UserValidationCode>());
-            await sender.DidNotReceive().SendCodeAsync(Arg.Any<User>(), Arg.Any<string>());
+            await sender.DidNotReceive().SendCodeAsync(Arg.Any<User>(), Arg.Any<string>(), Arg.Any<DateTime>());
         }
 
         [Test]
@@ -83,7 +83,7 @@ namespace Cause.SecurityManagement.Tests.Services
 
             repository.Received(1).DeleteExistingValidationCode(Arg.Is(someUser.Id));
             repository.Received(1).SaveNewValidationCode(Arg.Is<UserValidationCode>(code => code.IdUser == someUser.Id));
-            await sender.Received(1).SendCodeAsync(Arg.Is(someUser), Arg.Any<string>());
+            await sender.Received(1).SendCodeAsync(Arg.Is(someUser), Arg.Any<string>(), Arg.Any<DateTime>());
         }
 
         [Test]
@@ -97,7 +97,7 @@ namespace Cause.SecurityManagement.Tests.Services
             repository.Received(1).GetLastCode(Arg.Is(someUserId));
             repository.Received(1).DeleteExistingValidationCode(Arg.Is(someUserId));
             repository.Received(1).SaveNewValidationCode(Arg.Is<UserValidationCode>(code => code.IdUser == someUser.Id && code.Type == someCode.Type));
-            await sender.Received(1).SendCodeAsync(Arg.Is(someUser), Arg.Any<string>());
+            await sender.Received(1).SendCodeAsync(Arg.Is(someUser), Arg.Any<string>(), Arg.Any<DateTime>());
         }
 
         [Test]
