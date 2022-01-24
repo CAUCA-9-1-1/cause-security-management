@@ -7,6 +7,6 @@ namespace Cause.SecurityManagement.Services
         string GenerateAccessToken(Guid entityId, string entityName, string role);
         string GenerateRefreshToken();
         int GetRefreshTokenLifeTimeInMinute();
-        DateTime GenerateAccessExpirationDateByRole(string role);
+        DateTime GenerateRefreshTokenExpirationDate();
     }
 }

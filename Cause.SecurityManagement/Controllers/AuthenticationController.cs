@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using System;
 using System.Threading.Tasks;
 
 namespace Cause.SecurityManagement.Controllers
@@ -65,13 +66,19 @@ namespace Cause.SecurityManagement.Controllers
                 logger.LogError(exception, $"Could not refresh user's acess token.  Refresh token: '{tokens.RefreshToken}'.  Access token: '{tokens?.AccessToken}'");
                 HttpContext.Response.Headers.Add("Token-Invalid", "true");
             }
-            catch (SecurityTokenExpiredException)
+            catch (SecurityTokenExpiredException exception)
             {
                 HttpContext.Response.Headers.Add("Refresh-Token-Expired", "true");
+                logger.LogError(exception, $"Could not refresh external system's acess token - SecurityTokenExpiredException.  Refresh token: '{tokens.RefreshToken}'.  Access token: '{tokens?.AccessToken}'");
             }
-            catch (SecurityTokenException)
+            catch (SecurityTokenException exception)
             {
                 HttpContext.Response.Headers.Add("Token-Invalid", "true");
+                logger.LogError(exception, $"Could not refresh external system's acess token - SecurityTokenException.  Refresh token: '{tokens.RefreshToken}'.  Access token: '{tokens?.AccessToken}'");
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(exception, $"Could not refresh external system's acess token - general exception.  Refresh token: '{tokens.RefreshToken}'.  Access token: '{tokens?.AccessToken}'");
             }
 
             return Unauthorized();
@@ -150,9 +157,14 @@ namespace Cause.SecurityManagement.Controllers
             {
                 HttpContext.Response.Headers.Add("Refresh-Token-Expired", "true");
             }
-            catch (SecurityTokenException)
+            catch (SecurityTokenException exception)
             {
                 HttpContext.Response.Headers.Add("Token-Invalid", "true");
+                logger.LogError(exception, $"Could not refresh external system's acess token - SecurityTokenException.  Refresh token: '{tokens.RefreshToken}'.  Access token: '{tokens?.AccessToken}'");
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(exception, $"Could not refresh external system's acess token - general exception.  Refresh token: '{tokens.RefreshToken}'.  Access token: '{tokens?.AccessToken}'");
             }
 
             return Unauthorized();

@@ -132,6 +132,8 @@ namespace Cause.SecurityManagement.Services
             var userId = tokenReader.GetSidFromExpiredToken(token);
             var userToken = userRepository.GetToken(userId, refreshToken);
             var user = userRepository.GetUserById(userId);
+            if (user == null)
+                throw new Exception($"User from id='{userId}' (from refreshToken='{refreshToken}') not found.");
 
             tokenReader.ThrowExceptionWhenTokenIsNotValid(refreshToken, userToken);
 
@@ -160,7 +162,7 @@ namespace Cause.SecurityManagement.Services
 
         private UserToken GenerateUserToken(Guid userId, string role, string accessToken, string refreshToken)
         {
-            return new UserToken { AccessToken = accessToken, RefreshToken = refreshToken, ExpiresOn = generator.GenerateAccessExpirationDateByRole(role), IdUser = userId };
+            return new UserToken { AccessToken = accessToken, RefreshToken = refreshToken, ExpiresOn = generator.GenerateRefreshTokenExpirationDate(), IdUser = userId };
         }
     }
 }

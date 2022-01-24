@@ -43,10 +43,14 @@ namespace Cause.SecurityManagement.Services
             return GenerateAccessToken(claims, lifeTimeInMinute);
         }
 
-        public DateTime GenerateAccessExpirationDateByRole(string role)
+        public DateTime GenerateRefreshTokenExpirationDate()
         {
-            var lifeTimeInMinute = SecurityRoles.IsTemporaryRole(role) ? GetTemporaryAccessTokenLifeTimeInMinute() : GetAccessTokenLifeTimeInMinute();
-            return DateTime.Now.AddMinutes(lifeTimeInMinute);
+            var lifeTimeInMinute = GetRefreshTokenLifeTimeInMinute();
+            if (configuration.RefreshTokenCanExpire)
+            {
+                return DateTime.Now.AddMinutes(lifeTimeInMinute);
+            }
+            return DateTime.MaxValue;
         }
 
         protected string GenerateAccessToken(Claim[] claims, int lifeTimeInMinute)
