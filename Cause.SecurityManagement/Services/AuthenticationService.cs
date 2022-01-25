@@ -132,9 +132,8 @@ namespace Cause.SecurityManagement.Services
             var userId = tokenReader.GetSidFromExpiredToken(token);
             var userToken = userRepository.GetToken(userId, refreshToken);
             var user = userRepository.GetUserById(userId);
-            if (user == null)
-                throw new Exception($"User from id='{userId}' (from refreshToken='{refreshToken}') not found.");
 
+            ThrowExceptionIfUserHasNotBeenFound(token, refreshToken, userId, user);
             tokenReader.ThrowExceptionWhenTokenIsNotValid(refreshToken, userToken);
 
             var newAccessToken = generator.GenerateAccessToken(user.Id, user.UserName, SecurityRoles.User);
@@ -143,6 +142,12 @@ namespace Cause.SecurityManagement.Services
             userRepository.SaveChanges();
 
             return newAccessToken;
+        }
+
+        private static void ThrowExceptionIfUserHasNotBeenFound(string token, string refreshToken, Guid userId, TUser user)
+        {
+            if (user == null)
+                throw new InvalidTokenUserException(token, refreshToken, userId.ToString());
         }
 
         public async Task SendNewCodeAsync()
