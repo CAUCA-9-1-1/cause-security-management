@@ -46,7 +46,7 @@ namespace Cause.SecurityManagement.Services
 
             UpdateUserGroup(user);
             UpdateUserPermission(user);
-            UpdatePassword(user);
+            UpdatePassword(user, true);
 
             if (SecurityContext.Users.AsNoTracking().Any(u => u.Id == user.Id))
                 SecurityContext.Users.Update(user);
@@ -58,14 +58,20 @@ namespace Cause.SecurityManagement.Services
 			return true;
 		}
 
-        public virtual void UpdatePassword(TUser user)
+        public virtual void UpdatePassword(TUser user, bool userMustResetPasswordWhenPasswordIsChanged)
         {
-            if (!string.IsNullOrWhiteSpace(user.Password))
-                user.Password = new PasswordGenerator().EncodePassword(user.Password, SecurityConfiguration.PackageName);
+			if (!string.IsNullOrWhiteSpace(user.Password))
+			{
+				if (userMustResetPasswordWhenPasswordIsChanged)
+				{
+					user.PasswordMustBeResetAfterLogin = true;
+				}
+				user.Password = new PasswordGenerator().EncodePassword(user.Password, SecurityConfiguration.PackageName);
+			}
 			else
 				user.Password = SecurityContext.Users.AsNoTracking()
-                    .Where(u => u.Id == user.Id)
-                    .Select(u => u.Password).First();
+					.Where(u => u.Id == user.Id)
+					.Select(u => u.Password).First();
 		}
 
         public virtual bool UserNameAlreadyUsed(TUser user)
@@ -137,12 +143,13 @@ namespace Cause.SecurityManagement.Services
             });
         }
 
-        public virtual bool ChangePassword(Guid userId, string newPassword)
+        public virtual bool ChangePassword(Guid userId, string newPassword, bool userMustResetPasswwordAtNextLogin)
         {
             var user = SecurityContext.Users.Find(userId);
             if (user != null)
             {
                 user.Password = new PasswordGenerator().EncodePassword(newPassword, SecurityConfiguration.PackageName);
+				user.PasswordMustBeResetAfterLogin = userMustResetPasswwordAtNextLogin;
                 SecurityContext.SaveChanges();
 				emailSender?.SendEmailForModifiedPassword(user.Email);
 				return true;

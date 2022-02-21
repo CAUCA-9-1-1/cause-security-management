@@ -93,7 +93,7 @@ namespace Cause.SecurityManagement.Controllers
 		{
 			if (userPassword.PasswordConfirmation != userPassword.Password)
 				return BadRequest("Password confirmation is different from password.");
-			if (UserService.ChangePassword(userPassword.Id, userPassword.Password))
+			if (UserService.ChangePassword(userPassword.Id, userPassword.Password, false))
 				return NoContent();
 			return NotFound();
 		}
