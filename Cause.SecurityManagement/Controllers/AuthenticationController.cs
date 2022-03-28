@@ -34,9 +34,11 @@ namespace Cause.SecurityManagement.Controllers
         }
 
         [Route("[Action]"), HttpPost, AllowAnonymous]
+        [ProducesResponseType(typeof(LoginResult), 200)]
+        [ProducesResponseType(typeof(UnauthorizedResult), 401)]
         public async Task<ActionResult<LoginResult>> Logon([FromBody] LoginInformations login)
         {            
-            var (token, user) = await service.LoginAsync(login.UserName, login.Password);
+            var (token, user) = await service.LoginAsync(login?.UserName, login?.Password);
             if (user == null || token == null)
                 return Unauthorized();
 
@@ -124,9 +126,11 @@ namespace Cause.SecurityManagement.Controllers
         }
 
         [Route("[Action]"), HttpPost, AllowAnonymous]
+        [ProducesResponseType(typeof(LoginResult), 200)]
+        [ProducesResponseType(typeof(UnauthorizedResult), 401)]
         public ActionResult<LoginResult> LogonForExternalSystem([FromBody] ExternalSystemLoginInformations login)
         {
-            var (token, system) = externalSystemAuthenticationService.Login(login.Apikey);
+            var (token, system) = externalSystemAuthenticationService.Login(login?.Apikey);
             if (system == null || token == null)
                 return Unauthorized();
 
