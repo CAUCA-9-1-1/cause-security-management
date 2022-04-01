@@ -1,4 +1,4 @@
-﻿namespace Cause.SecurityManagement.Models
+﻿namespace Cause.SecurityManagement.Models.ValidationCode
 {
     public enum ValidationCodeType
     {

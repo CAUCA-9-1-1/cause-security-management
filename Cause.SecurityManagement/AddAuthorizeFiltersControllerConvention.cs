@@ -1,4 +1,5 @@
 ﻿using Cause.SecurityManagement.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.AspNetCore.Mvc.Authorization;
 
@@ -17,7 +18,7 @@ namespace Cause.SecurityManagement
             {
                 controller.Filters.Add(new AuthorizeFilter("apipolicy"));
             }
-            else
+            else if (!controller.ControllerType.IsDefined(typeof(AuthorizeAttribute), false))
             {
                 controller.Filters.Add(new AuthorizeFilter("defaultpolicy"));
             }

@@ -47,7 +47,7 @@ namespace Cause.SecurityManagement
             return services;
         }
 
-        public static IServiceCollection AddExternalSystemAndUserPolicies(this IServiceCollection services)
+        public static IServiceCollection AddBasicPoliciesForCertificateLogon(this IServiceCollection services)
         {
             services.AddAuthorization(options =>
             {

@@ -1,4 +1,5 @@
 ﻿using Cause.SecurityManagement.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Cause.SecurityManagement.Mapping
@@ -13,6 +14,7 @@ namespace Cause.SecurityManagement.Mapping
 			model.Property(m => m.UserName).HasMaxLength(100).IsRequired();
 			model.Property(m => m.Password).HasMaxLength(100).IsRequired();
 			model.Property(m => m.Email).HasMaxLength(100).IsRequired();
+			model.Property(m => m.TwoFactorAuthenticatorEnabled).HasDefaultValue(true);
 			model.HasMany(m => m.Groups)
 				.WithOne()
 				.HasForeignKey(m => m.IdUser);

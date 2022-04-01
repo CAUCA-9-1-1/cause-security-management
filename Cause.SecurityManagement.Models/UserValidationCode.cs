@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Cause.SecurityManagement.Models.ValidationCode;
+using System;
 
 namespace Cause.SecurityManagement.Models
 {
