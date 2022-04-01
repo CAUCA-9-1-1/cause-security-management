@@ -1,6 +1,7 @@
 ﻿using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Models.Configuration;
 using Cause.SecurityManagement.Models.DataTransferObjects;
+using Cause.SecurityManagement.Models.ValidationCode;
 using Cause.SecurityManagement.Repositories;
 using Microsoft.Extensions.Options;
 using System;
@@ -63,7 +64,7 @@ namespace Cause.SecurityManagement.Services
                 (null, null);
             await multiFactorHandler.SendValidationCodeWhenNeededAsync(user.userFound);            
             return user;
-        }     
+        }
 
         public (UserToken token, User user) ValidateMultiFactorCode(ValidationInformation validationInformation)
         {
@@ -113,7 +114,7 @@ namespace Cause.SecurityManagement.Services
 
         public virtual bool MustValidateCode(User user)
         {
-            return SecurityManagementOptions.MultiFactorAuthenticationIsActivated;
+            return SecurityManagementOptions.MultiFactorAuthenticationIsActivated && user.TwoFactorAuthenticatorEnabled;
         }
 
         protected virtual bool CanLogIn(User user)

@@ -12,6 +12,7 @@ namespace Cause.SecurityManagement.Models
 
         public bool IsActive { get; set; } = true;
 		public bool PasswordMustBeResetAfterLogin { get; set; }
+		public bool TwoFactorAuthenticatorEnabled { get; set; } = true;
 
 		public ICollection<UserGroup> Groups { get; set; } = new List<UserGroup>();
 		public ICollection<UserPermission> Permissions { get; set; } = new List<UserPermission>();

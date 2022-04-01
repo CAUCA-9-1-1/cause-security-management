@@ -13,10 +13,5 @@ namespace Cause.SecurityManagement
                 .Build();
             options.Filters.Add(new UseDefaultAuthorizationWhenNotSpecifiedFilter(policy));
         }
-
-        /*public static void AskForAuthorizationUsingUserAndExternalSystemPolicies(MvcOptions options)
-        {
-            options.Conventions.Add(new AddAuthorizeFiltersControllerConvention());
-        }*/
     }
 }

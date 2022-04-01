@@ -1,4 +1,5 @@
 using Cause.SecurityManagement.Models;
+using Cause.SecurityManagement.Models.ValidationCode;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
