@@ -33,6 +33,7 @@ namespace Cause.SecurityManagement.Services
         {
             return userFound != null
                 && !userFound.PasswordMustBeResetAfterLogin
+                && userFound.TwoFactorAuthenticatorEnabled
                 && SecurityManagementOptions.MultiFactorAuthenticationIsActivated;
         }        
 
