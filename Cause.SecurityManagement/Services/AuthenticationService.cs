@@ -102,8 +102,18 @@ namespace Cause.SecurityManagement.Services
         {
             var encodedPassword = new PasswordGenerator().EncodePassword(password, configuration.PackageName);
             var userFound = userRepository.GetUser(userName, encodedPassword);
-            return (userFound, MustValidateCode(userFound) ? SecurityRoles.UserLoginWithMultiFactor : GetSecurityRoleForUser(userFound));
-        }        
+            return (userFound, GetRoleFromUser(userFound));
+        }
+
+        private string GetRoleFromUser(TUser userFound)
+        {
+            if (userFound.PasswordMustBeResetAfterLogin)
+                return SecurityRoles.UserPasswordSetup;
+
+            return MustValidateCode(userFound)
+                ? SecurityRoles.UserLoginWithMultiFactor
+                : GetSecurityRoleForUser(userFound);
+        }
 
         private static string GetSecurityRoleForUser(TUser userFound)
         {
