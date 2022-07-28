@@ -102,12 +102,14 @@ namespace Cause.SecurityManagement.Services
         {
             var encodedPassword = new PasswordGenerator().EncodePassword(password, configuration.PackageName);
             var userFound = userRepository.GetUser(userName, encodedPassword);
+            if (userFound == null)
+                return (null, null);
             return (userFound, GetRoleFromUser(userFound));
         }
 
         private string GetRoleFromUser(TUser userFound)
         {
-            if (userFound.PasswordMustBeResetAfterLogin)
+            if (userFound.PasswordMustBeResetAfterLogin == true)
                 return SecurityRoles.UserPasswordSetup;
 
             return MustValidateCode(userFound)
@@ -117,7 +119,7 @@ namespace Cause.SecurityManagement.Services
 
         private static string GetSecurityRoleForUser(TUser userFound)
         {
-            return userFound?.PasswordMustBeResetAfterLogin == true ? 
+            return userFound.PasswordMustBeResetAfterLogin == true ? 
                 SecurityRoles.UserPasswordSetup : 
                 SecurityRoles.User;
         }
