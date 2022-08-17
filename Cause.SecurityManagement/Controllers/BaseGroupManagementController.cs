@@ -17,13 +17,13 @@ namespace Cause.SecurityManagement.Controllers
 		}
 
 		[HttpGet]
-		public ActionResult<List<Group>> GetGroups()
+		public virtual ActionResult<List<Group>> GetGroups()
 		{
 			return GroupService.GetActiveGroups();
 		}
 
 		[HttpGet, Route("{groupId:guid}")]
-		public ActionResult<Group> GetUser(Guid groupId)
+		public virtual ActionResult<Group> GetUser(Guid groupId)
 		{
 			var group = GroupService.GetGroup(groupId);
 			if (group == null)
@@ -32,7 +32,7 @@ namespace Cause.SecurityManagement.Controllers
 		}
 
 		[HttpPost]
-		public ActionResult SaveGroup(Group group)
+		public virtual ActionResult SaveGroup(Group group)
 		{
 			var groupUpdated = GroupService.UpdateGroup(group);
 			if (groupUpdated)
@@ -41,7 +41,7 @@ namespace Cause.SecurityManagement.Controllers
 		}
 
 		[HttpDelete, Route("{groupId:guid}")]
-		public ActionResult DeleteGroup(Guid groupId)
+		public virtual ActionResult DeleteGroup(Guid groupId)
 		{
 			if (GroupService.DeactivateGroup(groupId))
 				return NoContent();
@@ -49,20 +49,20 @@ namespace Cause.SecurityManagement.Controllers
 		}
 
 		[HttpGet, Route("{groupId:guid}/users")]
-		public ActionResult<List<UserGroup>> GetUsers(Guid groupId)
+		public virtual ActionResult<List<UserGroup>> GetUsers(Guid groupId)
 		{
 			return GroupService.GetUsers(groupId);
 		}
 
 		[HttpPost, Route("permission")]
-		public ActionResult SavePermission(GroupPermission permission)
+		public virtual ActionResult SavePermission(GroupPermission permission)
 		{
             GroupService.UpdatePermission(permission);
 			return NoContent();
 		}
 
 		[HttpDelete, Route("permissions/{groupPermissionId:guid}")]
-		public ActionResult RemovePermission(Guid groupPermissionId)
+		public virtual ActionResult RemovePermission(Guid groupPermissionId)
 		{
 			if (GroupService.RemovePermission(groupPermissionId))
 				return NoContent();
@@ -70,7 +70,7 @@ namespace Cause.SecurityManagement.Controllers
 		}
 
 		[HttpPost, Route("GroupNameAlreadyExist")]
-		public ActionResult GroupNameAlreadyExist([FromBody]Group group)
+		public virtual ActionResult GroupNameAlreadyExist([FromBody]Group group)
 		{
 			return Ok(GroupService.GroupNameAlreadyUsed(group));
 		}
