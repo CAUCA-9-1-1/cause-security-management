@@ -14,5 +14,6 @@
         public int? TemporaryAccessTokenLifeTimeInMinutes { get; set; }
         public bool RefreshTokenCanExpire { get; set; } = true;
         public string RequiredPermissionForLogin { get; set; }
+        public string RequiredPermissionForAllGroupsAccess { get; set; } = null;
     }
 }

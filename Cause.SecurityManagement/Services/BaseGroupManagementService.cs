@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Cause.SecurityManagement.Models.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace Cause.SecurityManagement.Services
 {
@@ -10,19 +12,44 @@ namespace Cause.SecurityManagement.Services
         where TUser : User, new()
     {
 		protected ISecurityContext<TUser> SecurityContext;
+        private readonly ICurrentUserService currentUserService;
+        private readonly IUserManagementService<TUser> userManagementService;
+        private readonly SecurityConfiguration configuration;
 
-		public BaseGroupManagementService(ISecurityContext<TUser> securityContext)
+		public BaseGroupManagementService(
+            ISecurityContext<TUser> securityContext,
+            ICurrentUserService currentUserService,
+            IUserManagementService<TUser> userManagementService,
+            IOptions<SecurityConfiguration> configuration)
 		{
-			SecurityContext = securityContext;
+            SecurityContext = securityContext;
+            this.currentUserService = currentUserService; 
+            this.userManagementService = userManagementService;
+            this.configuration = configuration.Value;
 		}
+
+        protected virtual bool HasRequiredPermissionForAllGroupsAccess()
+        {
+            return string.IsNullOrWhiteSpace(configuration.RequiredPermissionForAllGroupsAccess)
+                   || userManagementService.HasPermission(currentUserService.GetUserId(), configuration.RequiredPermissionForAllGroupsAccess);
+        }
 
 		public List<Group> GetActiveGroups()
 		{
-			return SecurityContext.Groups
+            var groups = SecurityContext.Groups
                 .Include(g => g.Users)
                 .Include(g => g.Permissions)
                 .ToList();
-		}
+
+            if (!HasRequiredPermissionForAllGroupsAccess())
+            {
+                return groups
+                    .Where( group => group.AssignableByAllUsers)
+                    .ToList();
+            }
+
+            return groups;
+        }
 
 		public Group GetGroup(Guid groupId)
 		{
