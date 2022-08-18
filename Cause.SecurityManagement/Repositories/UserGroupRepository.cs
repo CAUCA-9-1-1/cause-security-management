@@ -8,49 +8,49 @@ namespace Cause.SecurityManagement.Repositories
     public class UserGroupRepository<TUser> : IUserGroupRepository
         where TUser : User, new()
     {
-        private readonly ISecurityContext<TUser> securityContext;
+        private readonly ISecurityContext<TUser> context;
 
         public UserGroupRepository(
-            ISecurityContext<TUser> securityContext)
+            ISecurityContext<TUser> context)
         {
-            this.securityContext = securityContext;
+            this.context = context;
         }
 
         public IQueryable<UserGroup> GetForGroup(Guid groupId)
         {
-            return securityContext.UserGroups.AsNoTracking().Where(uc => uc.IdGroup == groupId);
+            return context.UserGroups.AsNoTracking().Where(uc => uc.IdGroup == groupId);
         }
         public IQueryable<UserGroup> GetForUser(Guid userId)
         {
-            return securityContext.UserGroups.AsNoTracking().Where(uc => uc.IdUser == userId);
+            return context.UserGroups.AsNoTracking().Where(uc => uc.IdUser == userId);
         }
 
         public UserGroup Get(Guid userGroupId)
         {
-            return securityContext.UserGroups.Find(userGroupId);
+            return context.UserGroups.Find(userGroupId);
         }
 
         public bool Any(Guid userGroupId)
         {
-            return securityContext.UserGroups.AsNoTracking().Any(g => g.Id == userGroupId);
+            return context.UserGroups.AsNoTracking().Any(g => g.Id == userGroupId);
         }
 
         public void Add(UserGroup userGroup)
         {
-            securityContext.UserGroups.Add(userGroup);
+            context.UserGroups.Add(userGroup);
         }
 
         public void Remove(UserGroup userGroup)
         {
-            securityContext.UserGroups.Remove(userGroup);
+            context.UserGroups.Remove(userGroup);
         }
         public void Update(UserGroup userGroup)
         {
-            securityContext.UserGroups.Update(userGroup);
+            context.UserGroups.Update(userGroup);
         }
         public void SaveChanges()
         {
-            securityContext.SaveChanges();
+            context.SaveChanges();
         }
 
     }

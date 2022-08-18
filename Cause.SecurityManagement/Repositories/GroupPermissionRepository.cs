@@ -8,22 +8,22 @@ namespace Cause.SecurityManagement.Repositories
     public class GroupPermissionRepository<TUser> : IGroupPermissionRepository
         where TUser : User, new()
     {
-        private readonly ISecurityContext<TUser> securityContext;
+        private readonly ISecurityContext<TUser> context;
 
         public GroupPermissionRepository(
-            ISecurityContext<TUser> securityContext)
+            ISecurityContext<TUser> context)
         {
-            this.securityContext = securityContext;
+            this.context = context;
         }
         public IQueryable<GroupPermission> GetForGroup(Guid groupId)
         {
-            return securityContext.GroupPermissions.AsNoTracking().Where(uc => uc.IdGroup == groupId);
+            return context.GroupPermissions.AsNoTracking().Where(uc => uc.IdGroup == groupId);
         }
 
         public IQueryable<GroupPermission> GetForUser(Guid userId)
         {
             return
-                from userGroup in securityContext.UserGroups
+                from userGroup in context.UserGroups
                 where userGroup.IdUser == userId
                 from groupPermission in userGroup.Group.Permissions
                 select groupPermission;
@@ -31,31 +31,31 @@ namespace Cause.SecurityManagement.Repositories
 
         public GroupPermission Get(Guid groupPermissinId)
         {
-            return securityContext.GroupPermissions.Find(groupPermissinId);
+            return context.GroupPermissions.Find(groupPermissinId);
         }
 
         public bool Any(Guid groupPermissionId)
         {
-            return securityContext.GroupPermissions.AsNoTracking().Any(g => g.Id == groupPermissionId);
+            return context.GroupPermissions.AsNoTracking().Any(g => g.Id == groupPermissionId);
         }
 
         public void Add(GroupPermission groupPermission)
         {
-            securityContext.GroupPermissions.Add(groupPermission);
+            context.GroupPermissions.Add(groupPermission);
         }
 
         public void Remove(GroupPermission groupPermission)
         {
-            securityContext.GroupPermissions.Remove(groupPermission);
+            context.GroupPermissions.Remove(groupPermission);
         }
         public void Update(GroupPermission groupPermission)
         {
-            securityContext.GroupPermissions.Update(groupPermission);
+            context.GroupPermissions.Update(groupPermission);
         }
 
         public void SaveChanges()
         {
-            securityContext.SaveChanges();
+            context.SaveChanges();
         }
     }
 }
