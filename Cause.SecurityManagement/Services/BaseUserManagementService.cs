@@ -1,6 +1,5 @@
 ﻿using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Models.DataTransferObjects;
-using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,40 +12,37 @@ namespace Cause.SecurityManagement.Services
 	public class UserManagementService<TUser> : IUserManagementService<TUser> where TUser : User, new() 
 	{
 		private readonly IEmailForUserModificationSender emailSender;
-		protected readonly ISecurityContext<TUser> SecurityContext;
         private readonly IUserGroupRepository userGroupRepository;
 		private readonly IUserPermissionRepository userPermissionRepository;
         private readonly IGroupPermissionRepository groupPermissionRepository;
+        private readonly IUserRepository<TUser> userRepository;
 		protected readonly SecurityConfiguration SecurityConfiguration;
 
 		public UserManagementService(
-			ISecurityContext<TUser> securityContext,
 			IOptions<SecurityConfiguration> securityOptions,
             IUserGroupRepository userGroupRepository,
             IUserPermissionRepository userPermissionRepository,
             IGroupPermissionRepository groupPermissionRepository,
+			IUserRepository<TUser> userRepository,
 			IEmailForUserModificationSender emailSender = null)
 		{
-			SecurityContext = securityContext;
             this.emailSender = emailSender;
             this.userGroupRepository = userGroupRepository;
             this.userPermissionRepository = userPermissionRepository;
 			this.groupPermissionRepository = groupPermissionRepository;
-            SecurityConfiguration = securityOptions.Value;
+            this.userRepository = userRepository;
+
+			SecurityConfiguration = securityOptions.Value;
         }
 
 		public virtual List<TUser> GetActiveUsers()
-		{
-			return SecurityContext.Users
-				.Where(u => u.IsActive)
-                .Include(u => u.Groups)
-                .Include(u => u.Permissions)
-                .ToList();
+        {
+            return userRepository.GetActiveUsers().ToList();
 		}
 
 		public virtual TUser GetUser(Guid userId)
 		{
-		    return SecurityContext.Users.Find(userId);
+		    return userRepository.Get(userId);
 		}
 
 		public virtual bool UpdateUser(TUser user)
@@ -58,42 +54,41 @@ namespace Cause.SecurityManagement.Services
             UpdateUserPermission(user);
             UpdatePassword(user, true);
 
-            if (SecurityContext.Users.AsNoTracking().Any(u => u.Id == user.Id))
-                SecurityContext.Users.Update(user);
+            if (userRepository.Any(user.Id))
+                userRepository.Update(user);
             else
-                SecurityContext.Users.Add(user);
+                userRepository.Add(user);
 
-            SecurityContext.SaveChanges();
+            userRepository.SaveChanges();
 			emailSender?.SendEmailForModifiedUser(user.Email);
 			return true;
 		}
 
         public virtual void UpdatePassword(TUser user, bool userMustResetPasswordWhenPasswordIsChanged)
         {
-			if (!string.IsNullOrWhiteSpace(user.Password))
-			{
-				if (userMustResetPasswordWhenPasswordIsChanged)
-				{
-					user.PasswordMustBeResetAfterLogin = true;
-				}
-				user.Password = new PasswordGenerator().EncodePassword(user.Password, SecurityConfiguration.PackageName);
-			}
-			else
-				user.Password = SecurityContext.Users.AsNoTracking()
-					.Where(u => u.Id == user.Id)
-					.Select(u => u.Password).First();
+            if (!string.IsNullOrWhiteSpace(user.Password))
+            {
+                if (userMustResetPasswordWhenPasswordIsChanged)
+                {
+                    user.PasswordMustBeResetAfterLogin = true;
+                }
+
+                user.Password =
+                    new PasswordGenerator().EncodePassword(user.Password, SecurityConfiguration.PackageName);
+            }
+            else
+                user.Password = userRepository.GetPassword(user.Id);
 		}
 
         public virtual bool UserNameAlreadyUsed(TUser user)
 		{
-			return SecurityContext.Users.Any(c => c.UserName == user.UserName && c.Id != user.Id && c.IsActive);
+			return userRepository.UserNameAlreadyUsed(user);
 		}
 
 		public virtual bool EmailIsAlreadyInUse(string email, Guid idUserToIgnore)
-		{
-			return SecurityContext.Users
-				.Any(c => c.Email.ToLower() == email.ToLower() && c.Id != idUserToIgnore && c.IsActive);
-		}
+        {
+            return userRepository.EmailIsAlreadyInUse(email, idUserToIgnore);
+        }
 
 		public virtual void UpdateUserGroup(User user)
         {
@@ -155,12 +150,12 @@ namespace Cause.SecurityManagement.Services
 
         public virtual bool ChangePassword(Guid userId, string newPassword, bool userMustResetPasswwordAtNextLogin)
         {
-            var user = SecurityContext.Users.Find(userId);
+            var user = userRepository.Get(userId);
             if (user != null)
             {
                 user.Password = new PasswordGenerator().EncodePassword(newPassword, SecurityConfiguration.PackageName);
 				user.PasswordMustBeResetAfterLogin = userMustResetPasswwordAtNextLogin;
-                SecurityContext.SaveChanges();
+                userRepository.SaveChanges();
 				emailSender?.SendEmailForModifiedPassword(user.Email);
 				return true;
             }
@@ -169,11 +164,11 @@ namespace Cause.SecurityManagement.Services
 
         public virtual bool DeactivateUser(Guid userId)
 		{
-			var user = SecurityContext.Users.Find(userId);
+			var user = userRepository.Get(userId);
 			if (user != null)
 			{
 				user.IsActive = false;
-				SecurityContext.SaveChanges();
+                userRepository.SaveChanges();
 				return true;
 			}
 
