@@ -1,32 +1,39 @@
 ﻿using Cause.SecurityManagement.Models;
-using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Cause.SecurityManagement.Models.Configuration;
+using Cause.SecurityManagement.Repositories;
 using Microsoft.Extensions.Options;
 
 namespace Cause.SecurityManagement.Services
 {
-	public class BaseGroupManagementService<TUser> : IGroupManagementService
+    public class BaseGroupManagementService<TUser> : IGroupManagementService
         where TUser : User, new()
     {
-		protected ISecurityContext<TUser> SecurityContext;
         private readonly ICurrentUserService currentUserService;
         private readonly IUserManagementService<TUser> userManagementService;
         private readonly SecurityConfiguration configuration;
+        private readonly IGroupRepository groupRepository;
+        private readonly IUserGroupRepository userGroupRepository;
+        private readonly IGroupPermissionRepository groupPermissionRepository;
 
-		public BaseGroupManagementService(
-            ISecurityContext<TUser> securityContext,
+        public BaseGroupManagementService(
             ICurrentUserService currentUserService,
             IUserManagementService<TUser> userManagementService,
-            IOptions<SecurityConfiguration> configuration)
-		{
-            SecurityContext = securityContext;
-            this.currentUserService = currentUserService; 
+            IOptions<SecurityConfiguration> configuration,
+            IGroupRepository groupRepository,
+            IUserGroupRepository userGroupRepository,
+            IGroupPermissionRepository groupPermissionRepository
+        )
+        {
+            this.currentUserService = currentUserService;
             this.userManagementService = userManagementService;
             this.configuration = configuration.Value;
-		}
+            this.groupRepository = groupRepository;
+            this.userGroupRepository = userGroupRepository;
+            this.groupPermissionRepository = groupPermissionRepository;
+        }
 
         protected virtual bool HasRequiredPermissionForAllGroupsAccess()
         {
@@ -34,73 +41,75 @@ namespace Cause.SecurityManagement.Services
                    || userManagementService.HasPermission(currentUserService.GetUserId(), configuration.RequiredPermissionForAllGroupsAccess);
         }
 
-		public List<Group> GetActiveGroups()
-		{
-            var groups = SecurityContext.Groups
-                .Include(g => g.Users)
-                .Include(g => g.Permissions)
-                .ToList();
+        public List<Group> GetActiveGroups()
+        {
+            var groups = groupRepository.GetActiveGroups();
 
             if (!HasRequiredPermissionForAllGroupsAccess())
             {
                 return groups
-                    .Where( group => group.AssignableByAllUsers)
+                    .Where(group => group.AssignableByAllUsers)
                     .ToList();
             }
 
             return groups;
         }
 
-		public Group GetGroup(Guid groupId)
-		{
-			return SecurityContext.Groups.Find(groupId);
-		}
+        public Group GetGroup(Guid groupId)
+        {
+            return groupRepository.Get(groupId);
+        }
 
-		public bool UpdateGroup(Group group)
-		{
-			if (GroupNameAlreadyUsed(group))
-				return false;
+        public bool UpdateGroup(Group group)
+        {
+            if (GroupNameAlreadyUsed(group))
+                return false;
 
             UpdateGroupUser(group);
             UpdateGroupPermission(group);
 
-            if (SecurityContext.Groups.AsNoTracking().Any(g => g.Id == group.Id))
-                SecurityContext.Groups.Update(group);
+            AddOrUpdateGroup(group);
+            return true;
+        }
+
+        private void AddOrUpdateGroup(Group group)
+        {
+            if (groupRepository.Any(group.Id))
+                groupRepository.Update(group);
             else
-                SecurityContext.Groups.Add(group);
+                groupRepository.Add(group);
 
-            SecurityContext.SaveChanges();
-			return true;
-		}
+            groupRepository.SaveChanges();
+        }
 
-		public bool GroupNameAlreadyUsed(Group group)
-		{
-			return SecurityContext.Groups.Any(c => c.Name == group.Name && c.Id != group.Id);
-		}
+        public bool GroupNameAlreadyUsed(Group group)
+        {
+            return groupRepository.GroupNameAlreadyUsed(group);
+        }
 
-		private void UpdateGroupUser(Group group)
+        private void UpdateGroupUser(Group group)
         {
             if (group.Users == null)
-	            return;
+                return;
 
             var groupUsers = group.Users.ToList();
-            var dbGroupUsers = SecurityContext.UserGroups.AsNoTracking().Where(uc => uc.IdGroup == group.Id).ToList();
+            var dbGroupUsers = userGroupRepository.GetForGroup(group.Id).ToList();
 
             dbGroupUsers.ForEach(groupUser =>
             {
                 if (groupUsers.Any(g => g.Id == groupUser.Id) == false)
                 {
-                    SecurityContext.UserGroups.Remove(groupUser);
+                    userGroupRepository.Remove(groupUser);
                 }
             });
 
             groupUsers.ForEach(groupUser =>
             {
-                var isExistRecord = SecurityContext.UserGroups.AsNoTracking().Any(g => g.Id == groupUser.Id);
+                var isExistRecord = userGroupRepository.Any(groupUser.Id);
 
                 if (!isExistRecord)
                 {
-                    SecurityContext.UserGroups.Add(groupUser);
+                    userGroupRepository.Add(groupUser);
                 }
             });
         }
@@ -113,88 +122,86 @@ namespace Cause.SecurityManagement.Services
             }
 
             var groupPermissions = group.Permissions.ToList();
-            var dbGroupPermissions = SecurityContext.GroupPermissions.AsNoTracking().Where(uc => uc.IdGroup == group.Id).ToList();
+            var dbGroupPermissions = groupPermissionRepository.GetForGroup(group.Id).ToList();
 
             dbGroupPermissions.ForEach(groupPermission =>
             {
                 if (groupPermissions.Any(g => g.Id == groupPermission.Id) == false)
                 {
-                    SecurityContext.GroupPermissions.Remove(groupPermission);
+                    groupPermissionRepository.Remove(groupPermission);
                 }
             });
 
             groupPermissions.ForEach(groupPermission =>
             {
-                var isExistRecord = SecurityContext.GroupPermissions.AsNoTracking().Any(g => g.Id == groupPermission.Id);
+                var isExistRecord = groupPermissionRepository.Any(groupPermission.Id);
 
                 if (!isExistRecord)
                 {
-                    SecurityContext.GroupPermissions.Add(groupPermission);
+                    groupPermissionRepository.Add(groupPermission);
                 }
             });
         }
 
         public bool DeactivateGroup(Guid groupId)
-		{
-			var group = SecurityContext.Groups.Find(groupId);
-			if (group != null)
-			{
-                SecurityContext.Groups.Remove(group);
-                SecurityContext.SaveChanges();
-				return true;
-			}
+        {
+            var group = groupRepository.Get(groupId);
+            if (group != null)
+            {
+                groupRepository.Remove(group);
+                groupRepository.SaveChanges();
+                return true;
+            }
 
-			return false;
-		}
+            return false;
+        }
 
-		public List<UserGroup> GetUsers(Guid groupId)
-		{
-			return SecurityContext.UserGroups
-				.Where(group => group.IdGroup == groupId)
-				.ToList();
-		}
+        public List<UserGroup> GetUsers(Guid groupId)
+        {
+            return userGroupRepository.GetForGroup(groupId).ToList();
+        }
 
-		public bool AddUser(UserGroup user)
-		{
-			SecurityContext.Add(user);
-			SecurityContext.SaveChanges();
-			return true;
-		}
+        public bool AddUser(UserGroup userGroup)
+        {
+            userGroupRepository.Add(userGroup);
+            userGroupRepository.SaveChanges();
+            return true;
+        }
 
-		public bool RemoveUser(Guid userGroupId)
-		{
-			var group = SecurityContext.UserGroups.Find(userGroupId);
-			if (group != null)
-			{
-				SecurityContext.UserGroups.Remove(group);
-				SecurityContext.SaveChanges();
-				return true;
-			}
+        public bool RemoveUser(Guid userGroupId)
+        {
+            var userGroup = userGroupRepository.Get(userGroupId);
+            if (userGroup != null)
+            {
+                userGroupRepository.Remove(userGroup);
+                userGroupRepository.SaveChanges();
+                return true;
+            }
 
-			return false;
-		}
+            return false;
+        }
 
-		public bool UpdatePermission(GroupPermission permission)
-		{
-			if (SecurityContext.GroupPermissions.Any(u => u.Id == permission.Id))
-				SecurityContext.GroupPermissions.Update(permission);
-			else
-				SecurityContext.GroupPermissions.Add(permission);
-			SecurityContext.SaveChanges();
-			return true;
-		}
+        public bool UpdatePermission(GroupPermission permission)
+        {
+            if (groupPermissionRepository.Any(permission.Id))
+                groupPermissionRepository.Update(permission);
+            else
+                groupPermissionRepository.Add(permission);
+            groupPermissionRepository.SaveChanges();
+            return true;
+        }
 
-		public bool RemovePermission(Guid groupPermissionId)
-		{
-			var permission = SecurityContext.GroupPermissions.Find(groupPermissionId);
-			if (permission != null)
-			{
-				SecurityContext.GroupPermissions.Remove(permission);
-				SecurityContext.SaveChanges();
-				return true;
-			}
+        public bool RemovePermission(Guid groupPermissionId)
+        {
+            var permission = groupPermissionRepository.Get(groupPermissionId);
+            if (permission != null)
+            {
+                groupPermissionRepository.Remove(permission);
+                groupPermissionRepository.SaveChanges();
+                return true;
+            }
 
-			return false;
-		}
-	}
+            return false;
+        }
+    }
 }
