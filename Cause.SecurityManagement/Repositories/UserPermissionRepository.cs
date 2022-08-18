@@ -1,4 +1,5 @@
-﻿using Cause.SecurityManagement.Models;
+﻿using System;
+using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Models.DataTransferObjects;
 using Cause.SecurityManagement.Services;
 using Microsoft.EntityFrameworkCore;
@@ -49,6 +50,40 @@ namespace Cause.SecurityManagement.Repositories
                 .ToList();
 
             return restrictedPermissions.Concat(allowedPermissions).Distinct().ToList();
+        }
+
+        public IQueryable<UserPermission> GetForUser(Guid userId)
+        {
+            return context.UserPermissions.AsNoTracking().Where(uc => uc.IdUser == userId);
+        }
+
+        public UserPermission Get(Guid userPermissionId)
+        {
+            return context.UserPermissions.Find(userPermissionId);
+        }
+
+        public bool Any(Guid userPermissionId)
+        {
+            return context.UserPermissions.AsNoTracking().Any(g => g.Id == userPermissionId);
+        }
+
+        public void Add(UserPermission userPermission)
+        {
+            context.UserPermissions.Add(userPermission);
+        }
+
+        public void Remove(UserPermission userPermission)
+        {
+            context.UserPermissions.Remove(userPermission);
+        }
+        public void Update(UserPermission userPermission)
+        {
+            context.UserPermissions.Update(userPermission);
+        }
+
+        public void SaveChanges()
+        {
+            context.SaveChanges();
         }
     }
 }
