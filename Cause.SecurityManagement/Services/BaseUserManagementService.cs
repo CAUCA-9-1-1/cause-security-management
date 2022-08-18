@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Cause.SecurityManagement.Models.Configuration;
+using Cause.SecurityManagement.Repositories;
 using Microsoft.Extensions.Options;
 
 namespace Cause.SecurityManagement.Services
@@ -12,16 +13,19 @@ namespace Cause.SecurityManagement.Services
 	public class UserManagementService<TUser> : IUserManagementService<TUser> where TUser : User, new() 
 	{
 		private readonly IEmailForUserModificationSender emailSender;
-		protected readonly ISecurityContext<TUser> SecurityContext;        
-        protected readonly SecurityConfiguration SecurityConfiguration;
+		protected readonly ISecurityContext<TUser> SecurityContext;
+        private readonly IUserPermissionRepository userPermissionRepository;
+		protected readonly SecurityConfiguration SecurityConfiguration;
 
 		public UserManagementService(
 			ISecurityContext<TUser> securityContext,
 			IOptions<SecurityConfiguration> securityOptions,
+            IUserPermissionRepository userPermissionRepository,
 			IEmailForUserModificationSender emailSender = null)
 		{
 			SecurityContext = securityContext;
             this.emailSender = emailSender;
+			this.userPermissionRepository = userPermissionRepository;
             SecurityConfiguration = securityOptions.Value;
         }
 
@@ -122,23 +126,23 @@ namespace Cause.SecurityManagement.Services
             }
 
             var userPermissions = user.Permissions.ToList();
-            var dbUserPermissions = SecurityContext.UserPermissions.AsNoTracking().Where(up => up.IdUser == user.Id).ToList();
+            var dbUserPermissions = userPermissionRepository.GetForUser(user.Id).ToList();
 
             dbUserPermissions.ForEach(userPermission =>
             {
                 if (userPermissions.Any(p => p.Id == userPermission.Id) == false)
                 {
-                    SecurityContext.UserPermissions.Remove(userPermission);
+                    userPermissionRepository.Remove(userPermission);
                 }
             });
 
             userPermissions.ForEach(userPermission =>
             {
-                var isExistRecord = SecurityContext.UserPermissions.AsNoTracking().Any(p => p.Id == userPermission.Id);
+                var isExistRecord = userPermissionRepository.Any(userPermission.Id);
 
                 if (!isExistRecord)
                 {
-                    SecurityContext.UserPermissions.Add(userPermission);
+                    userPermissionRepository.Add(userPermission);
                 }
             });
         }
@@ -199,21 +203,21 @@ namespace Cause.SecurityManagement.Services
 
 		public virtual bool UpdatePermission(UserPermission permission)
 		{
-			if (SecurityContext.UserPermissions.Any(u => u.Id == permission.Id))
-				SecurityContext.UserPermissions.Update(permission);
+			if (userPermissionRepository.Any(permission.Id))
+                userPermissionRepository.Update(permission);
 			else
-				SecurityContext.UserPermissions.Add(permission);
-			SecurityContext.SaveChanges();
+                userPermissionRepository.Add(permission);
+            userPermissionRepository.SaveChanges();
 			return true;
 		}
 
 		public virtual bool RemovePermission(Guid userPermissionId)
 		{
-			var permission = SecurityContext.UserPermissions.Find(userPermissionId);
+			var permission = userPermissionRepository.Get(userPermissionId);
 			if (permission != null)
 			{
-				SecurityContext.UserPermissions.Remove(permission);
-				SecurityContext.SaveChanges();
+                userPermissionRepository.Remove(permission);
+                userPermissionRepository.SaveChanges();
 				return true;
 			}
 
@@ -240,7 +244,7 @@ namespace Cause.SecurityManagement.Services
 
 		private List<UserMergedPermission> GetUserPermissions(Guid userId)
 		{
-			var userPermissions = SecurityContext.UserPermissions.Where(c => c.IdUser == userId)
+			var userPermissions = userPermissionRepository.GetForUser(userId)
 				.Select(g => new UserMergedPermission { Access = g.IsAllowed, FeatureName = g.Permission.Tag })
 				.ToList();
 			return userPermissions;
