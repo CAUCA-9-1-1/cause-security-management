@@ -36,7 +36,7 @@ namespace Cause.SecurityManagement
             services.AddScoped<ITokenGenerator, TokenGenerator>();
             services.AddScoped<ITokenReader, TokenReader>();
             services.AddScoped<IExternalSystemAuthenticationService, ExternalSystemAuthenticationService<TUser>>();
-            services.AddScoped<IGroupManagementService, BaseGroupManagementService<TUser>>();
+            services.AddScoped<IGroupManagementService, BaseGroupManagementService>();
             services.AddScoped<IPermissionManagementService, BasePermissionManagementService<TUser>>();
             services.AddScoped<IAdministratorUserGenerator, AdministratorUserGenerator<TUser>>();
             services.AddScoped<IUserPermissionRepository, UserPermissionRepository<TUser>>();
@@ -44,6 +44,7 @@ namespace Cause.SecurityManagement
             services.AddScoped<IGroupRepository, GroupRepository<TUser>>();
             services.AddScoped<IUserGroupRepository, UserGroupRepository<TUser>>();
             services.AddScoped<IGroupPermissionRepository, GroupPermissionRepository<TUser>>();
+            services.AddScoped<IUserGroupPermissionService, UserGroupPermissionService<TUser>>();
             services.AddScoped<IExternalSystemRepository, ExternalSystemRepository<TUser>>();
             services.AddScoped<IUserValidationCodeRepository, UserValidationCodeRepository<TUser>>();
             services.AddScoped<ICertificateValidator, CertificateValidator>();

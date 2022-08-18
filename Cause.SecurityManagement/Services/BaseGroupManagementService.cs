@@ -2,57 +2,37 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Cause.SecurityManagement.Models.Configuration;
 using Cause.SecurityManagement.Repositories;
-using Microsoft.Extensions.Options;
 
 namespace Cause.SecurityManagement.Services
 {
-    public class BaseGroupManagementService<TUser> : IGroupManagementService
-        where TUser : User, new()
+    public class BaseGroupManagementService : IGroupManagementService
     {
-        private readonly ICurrentUserService currentUserService;
-        private readonly IUserManagementService<TUser> userManagementService;
-        private readonly SecurityConfiguration configuration;
         private readonly IGroupRepository groupRepository;
         private readonly IUserGroupRepository userGroupRepository;
         private readonly IGroupPermissionRepository groupPermissionRepository;
+        private readonly IUserGroupPermissionService userGroupPermissionService;
 
         public BaseGroupManagementService(
-            ICurrentUserService currentUserService,
-            IUserManagementService<TUser> userManagementService,
-            IOptions<SecurityConfiguration> configuration,
             IGroupRepository groupRepository,
             IUserGroupRepository userGroupRepository,
-            IGroupPermissionRepository groupPermissionRepository
+            IGroupPermissionRepository groupPermissionRepository,
+            IUserGroupPermissionService userGroupPermissionService
         )
         {
-            this.currentUserService = currentUserService;
-            this.userManagementService = userManagementService;
-            this.configuration = configuration.Value;
             this.groupRepository = groupRepository;
             this.userGroupRepository = userGroupRepository;
             this.groupPermissionRepository = groupPermissionRepository;
-        }
-
-        private bool HasRequiredPermissionForAllGroupsAccess()
-        {
-            return string.IsNullOrWhiteSpace(configuration.RequiredPermissionForAllGroupsAccess)
-                   || userManagementService.HasPermission(currentUserService.GetUserId(), configuration.RequiredPermissionForAllGroupsAccess);
+            this.userGroupPermissionService = userGroupPermissionService;
         }
 
         public List<Group> GetActiveGroups()
         {
             var groups = groupRepository.GetActiveGroups();
 
-            if (!HasRequiredPermissionForAllGroupsAccess())
-            {
-                return groups
-                    .Where(group => group.AssignableByAllUsers)
-                    .ToList();
-            }
-
-            return groups;
+            return groups
+                .Where(group => userGroupPermissionService.CurrentUserHasRequiredPermissionForGroupsAccess(group))
+                .ToList();
         }
 
         public Group GetGroup(Guid groupId)
