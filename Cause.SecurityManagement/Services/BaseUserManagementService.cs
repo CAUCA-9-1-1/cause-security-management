@@ -14,18 +14,24 @@ namespace Cause.SecurityManagement.Services
 	{
 		private readonly IEmailForUserModificationSender emailSender;
 		protected readonly ISecurityContext<TUser> SecurityContext;
-        private readonly IUserPermissionRepository userPermissionRepository;
+        private readonly IUserGroupRepository userGroupRepository;
+		private readonly IUserPermissionRepository userPermissionRepository;
+        private readonly IGroupPermissionRepository groupPermissionRepository;
 		protected readonly SecurityConfiguration SecurityConfiguration;
 
 		public UserManagementService(
 			ISecurityContext<TUser> securityContext,
 			IOptions<SecurityConfiguration> securityOptions,
+            IUserGroupRepository userGroupRepository,
             IUserPermissionRepository userPermissionRepository,
+            IGroupPermissionRepository groupPermissionRepository,
 			IEmailForUserModificationSender emailSender = null)
 		{
 			SecurityContext = securityContext;
             this.emailSender = emailSender;
-			this.userPermissionRepository = userPermissionRepository;
+            this.userGroupRepository = userGroupRepository;
+            this.userPermissionRepository = userPermissionRepository;
+			this.groupPermissionRepository = groupPermissionRepository;
             SecurityConfiguration = securityOptions.Value;
         }
 
@@ -97,23 +103,23 @@ namespace Cause.SecurityManagement.Services
             }
 
             var userGroups = user.Groups.ToList();
-            var dbUserGroups = SecurityContext.UserGroups.AsNoTracking().Where(ug => ug.IdUser == user.Id).ToList();
+            var dbUserGroups = userGroupRepository.GetForUser(user.Id).ToList();
 
             dbUserGroups.ForEach(userGroup =>
             {
                 if (userGroups.Any(g => g.Id == userGroup.Id) == false)
                 {
-                    SecurityContext.UserGroups.Remove(userGroup);
+                    userGroupRepository.Remove(userGroup);
                 }
             });
 
             userGroups.ForEach(userGroup =>
             {
-                var isExistRecord = SecurityContext.UserGroups.AsNoTracking().Any(g => g.Id == userGroup.Id);
+                var isExistRecord = userGroupRepository.Any(userGroup.Id);
 
                 if (!isExistRecord)
                 {
-                    SecurityContext.UserGroups.Add(userGroup);
+                    userGroupRepository.Add(userGroup);
                 }
             });
         }
@@ -175,26 +181,24 @@ namespace Cause.SecurityManagement.Services
 		}
 
 		public virtual List<UserGroup> GetGroups(Guid userId)
-		{
-			return SecurityContext.UserGroups
-				.Where(group => group.IdUser == userId)
-				.ToList();
+        {
+            return userGroupRepository.GetForUser(userId).ToList();
 		}
 
-		public virtual bool AddGroup(UserGroup group)
+		public virtual bool AddGroup(UserGroup userGroup)
 		{
-			SecurityContext.Add(group);
-			SecurityContext.SaveChanges();
+			userGroupRepository.Add(userGroup);
+            userGroupRepository.SaveChanges();
 			return true;
 		}
 
 		public virtual bool RemoveGroup(Guid userGroupId)
 		{
-			var group = SecurityContext.UserGroups.Find(userGroupId);
-			if (group != null)
+			var userGroup = userGroupRepository.Get(userGroupId);
+			if (userGroup != null)
 			{
-				SecurityContext.UserGroups.Remove(group);
-				SecurityContext.SaveChanges();
+				userGroupRepository.Remove(userGroup);
+                userGroupRepository.SaveChanges();
 				return true;
 			}
 
@@ -232,13 +236,9 @@ namespace Cause.SecurityManagement.Services
 		}
 
 		private List<UserMergedPermission> GetUserGroupsPermission(Guid userId)
-		{
-			var userGroups = (
-					from userGroup in SecurityContext.UserGroups
-					where userGroup.IdUser == userId
-					from groupPermission in userGroup.Group.Permissions
-					select groupPermission)
-				.Select(g => new UserMergedPermission { Access = g.IsAllowed, FeatureName = g.Permission.Tag }).ToList();
+        {
+			var userGroups = groupPermissionRepository.GetForUser(userId)
+                .Select(g => new UserMergedPermission { Access = g.IsAllowed, FeatureName = g.Permission.Tag }).ToList();
 			return userGroups;
 		}
 

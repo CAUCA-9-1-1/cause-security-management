@@ -20,6 +20,10 @@ namespace Cause.SecurityManagement.Repositories
         {
             return securityContext.UserGroups.AsNoTracking().Where(uc => uc.IdGroup == groupId);
         }
+        public IQueryable<UserGroup> GetForUser(Guid userId)
+        {
+            return securityContext.UserGroups.AsNoTracking().Where(uc => uc.IdUser == userId);
+        }
 
         public UserGroup Get(Guid userGroupId)
         {
