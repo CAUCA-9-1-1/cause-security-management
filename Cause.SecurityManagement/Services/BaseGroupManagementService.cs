@@ -35,7 +35,7 @@ namespace Cause.SecurityManagement.Services
             this.groupPermissionRepository = groupPermissionRepository;
         }
 
-        protected virtual bool HasRequiredPermissionForAllGroupsAccess()
+        private bool HasRequiredPermissionForAllGroupsAccess()
         {
             return string.IsNullOrWhiteSpace(configuration.RequiredPermissionForAllGroupsAccess)
                    || userManagementService.HasPermission(currentUserService.GetUserId(), configuration.RequiredPermissionForAllGroupsAccess);
