@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Cause.SecurityManagement.Models.Configuration;
 using Cause.SecurityManagement.Repositories;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 namespace Cause.SecurityManagement.Services
@@ -131,7 +130,7 @@ namespace Cause.SecurityManagement.Services
             }
 
             var userPermissions = user.Permissions.ToList();
-            var dbUserPermissions = userPermissionRepository.GetForUser(user.Id).AsNoTracking().ToList();
+            var dbUserPermissions = userPermissionRepository.GetForUser(user.Id);
 
             dbUserPermissions.ForEach(userPermission =>
             {

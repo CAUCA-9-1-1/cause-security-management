@@ -24,10 +24,10 @@ namespace Cause.SecurityManagement.Repositories
 
         public List<AuthenticationUserPermission> GetActiveUserPermissions()
         {
-            var idGroups = context.UserGroups
+            var idGroups = context.UserGroups.AsNoTracking()
                 .Where(ug => ug.IdUser == currentUserService.GetUserId())
                 .Select(ug => ug.IdGroup).ToList();
-            var restrictedPermissions = context.GroupPermissions
+            var restrictedPermissions = context.GroupPermissions.AsNoTracking()
                 .Where(g => idGroups.Contains(g.IdGroup) && g.IsAllowed == false)
                 .Include(g => g.Permission)
                 .Select(p => new AuthenticationUserPermission
@@ -37,7 +37,7 @@ namespace Cause.SecurityManagement.Repositories
                     IsAllowed = p.IsAllowed,
                 })
                 .ToList();
-            var allowedPermissions = context.GroupPermissions
+            var allowedPermissions = context.GroupPermissions.AsNoTracking()
                 .Where(g => idGroups.Contains(g.IdGroup) && g.IsAllowed && !restrictedPermissions
                                 .Select(p => p.IdModulePermission).Contains(g.IdModulePermission))
                 .Include(g => g.Permission)
@@ -52,9 +52,9 @@ namespace Cause.SecurityManagement.Repositories
             return restrictedPermissions.Concat(allowedPermissions).Distinct().ToList();
         }
 
-        public IQueryable<UserPermission> GetForUser(Guid userId)
+        public List<UserPermission> GetForUser(Guid userId)
         {
-            return context.UserPermissions.AsNoTracking().Where(uc => uc.IdUser == userId);
+            return context.UserPermissions.AsNoTracking().Where(uc => uc.IdUser == userId).ToList();
         }
 
         public UserPermission Get(Guid userPermissionId)

@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using Cause.SecurityManagement.Models;
+﻿using Cause.SecurityManagement.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
