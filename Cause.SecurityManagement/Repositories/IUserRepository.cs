@@ -1,6 +1,8 @@
 ﻿using Cause.SecurityManagement.Models;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace Cause.SecurityManagement.Repositories
 {
@@ -22,5 +24,6 @@ namespace Cause.SecurityManagement.Repositories
         void Remove(TUser user);
         void Update(TUser user);
         void SaveChanges();
+        List<EntityEntry> GetModifieEntities();
     }
 }
