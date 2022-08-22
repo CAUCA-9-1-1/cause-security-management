@@ -48,6 +48,7 @@ namespace Cause.SecurityManagement
             services.AddScoped<IUserPermissionService, UserPermissionService>();
             services.AddScoped<IExternalSystemRepository, ExternalSystemRepository<TUser>>();
             services.AddScoped<IUserValidationCodeRepository, UserValidationCodeRepository<TUser>>();
+            services.AddScoped<IScopedDbContextProvider<TUser>, ScopedDbContextProvider<TUser>>();
             services.AddScoped<ICertificateValidator, CertificateValidator>();
             return services;
         }

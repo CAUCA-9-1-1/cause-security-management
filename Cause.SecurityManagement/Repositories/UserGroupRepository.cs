@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using Cause.SecurityManagement.Models;
+using Cause.SecurityManagement.Services;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace Cause.SecurityManagement.Repositories
 {
@@ -13,9 +13,9 @@ namespace Cause.SecurityManagement.Repositories
         private readonly ISecurityContext<TUser> context;
 
         public UserGroupRepository(
-            ISecurityContext<TUser> context)
+            IScopedDbContextProvider<TUser> contextProvider)
         {
-            this.context = context;
+            context = contextProvider.GetContext();
         }
 
         public List<UserGroup> GetForGroup(Guid groupId)

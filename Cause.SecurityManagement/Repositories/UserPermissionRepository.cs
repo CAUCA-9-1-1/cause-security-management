@@ -15,10 +15,10 @@ namespace Cause.SecurityManagement.Repositories
         private readonly ICurrentUserService currentUserService;
 
         public UserPermissionRepository(
-            ISecurityContext<TUser> context,
+            IScopedDbContextProvider<TUser> contextProvider,
             ICurrentUserService currentUserService)
         {
-            this.context = context;
+            context = contextProvider.GetContext();
             this.currentUserService = currentUserService;
         }
 

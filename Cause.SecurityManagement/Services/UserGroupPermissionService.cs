@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Models.Configuration;
-using Cause.SecurityManagement.Models.DataTransferObjects;
 using Cause.SecurityManagement.Repositories;
 using Microsoft.Extensions.Options;
 

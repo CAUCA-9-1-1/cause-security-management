@@ -1,6 +1,7 @@
 ﻿using Cause.SecurityManagement.Models;
 using System;
 using System.Linq;
+using Cause.SecurityManagement.Services;
 
 namespace Cause.SecurityManagement.Repositories
 {
@@ -9,9 +10,9 @@ namespace Cause.SecurityManagement.Repositories
     {
         private readonly ISecurityContext<TUser> context;
 
-        public ExternalSystemRepository(ISecurityContext<TUser> context)
+        public ExternalSystemRepository(IScopedDbContextProvider<TUser> contextProvider)
         {
-            this.context = context;
+            this.context = contextProvider.GetContext();
         }
 
         public void AddToken(ExternalSystemToken token)
