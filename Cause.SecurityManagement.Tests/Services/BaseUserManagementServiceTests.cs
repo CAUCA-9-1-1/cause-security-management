@@ -24,9 +24,9 @@ namespace Cause.SecurityManagement.Tests.Services
         private IOptions<SecurityConfiguration> configuration;
         private IUserGroupRepository userGroupRepository;
         private IUserPermissionRepository userPermissionRepository;
-        private IGroupPermissionRepository groupPermissionRepository;
         private IUserRepository<TUser> userRepository;
         private IUserGroupPermissionService userGroupPermissionService;
+        private IUserPermissionService userPermissionService;
         private IEmailForUserModificationSender emailSender;
 
         private readonly SecurityConfiguration securityConfiguration = new();
@@ -36,7 +36,7 @@ namespace Cause.SecurityManagement.Tests.Services
         private readonly UserGroup userGroupNotAssignableByAllUsers = CreateUserGroup(Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"), false);
 
 
-        private static Dictionary<UserGroup, bool> userGroupsAssignableByAllUsers = new();
+        private static readonly Dictionary<UserGroup, bool> UserGroupsAssignableByAllUsers = new();
 
         [SetUp]
         public void SetUp()
@@ -44,11 +44,11 @@ namespace Cause.SecurityManagement.Tests.Services
             configuration = Options.Create(securityConfiguration);
             userGroupRepository = Substitute.For<IUserGroupRepository>();
             userPermissionRepository = Substitute.For<IUserPermissionRepository>();
-            groupPermissionRepository = Substitute.For<IGroupPermissionRepository>();
             userRepository = Substitute.For<IUserRepository<TUser>>();
             userGroupPermissionService = Substitute.For<IUserGroupPermissionService>();
+            userPermissionService = Substitute.For<IUserPermissionService>();
             emailSender = Substitute.For<IEmailForUserModificationSender>();
-            userManagementService = new UserManagementService<TUser>(configuration, userGroupRepository, userPermissionRepository, groupPermissionRepository, userRepository, userGroupPermissionService, emailSender);
+            userManagementService = new UserManagementService<TUser>(configuration, userGroupRepository, userPermissionRepository, userRepository, userGroupPermissionService, userPermissionService, emailSender);
         }
 
         [Test]
@@ -71,7 +71,7 @@ namespace Cause.SecurityManagement.Tests.Services
             {
                 userGroupPermissionService
                     .CurrentUserHasRequiredPermissionForGroupsAccess(Arg.Is<Guid>(userGroup.IdGroup))
-                    .Returns(userGroupsAssignableByAllUsers[userGroup] );
+                    .Returns(UserGroupsAssignableByAllUsers[userGroup] );
             });
             userGroupRepository.GetForUser(Arg.Any<Guid>()).Returns(userGroups.AsQueryable());
         }
@@ -79,7 +79,7 @@ namespace Cause.SecurityManagement.Tests.Services
         private static UserGroup CreateUserGroup(Guid groupId, bool assignableByAllUsers)
         {
             var userGroup = new UserGroup { IdGroup = groupId  };
-            userGroupsAssignableByAllUsers[userGroup] = assignableByAllUsers;
+            UserGroupsAssignableByAllUsers[userGroup] = assignableByAllUsers;
             return userGroup;
         }
 

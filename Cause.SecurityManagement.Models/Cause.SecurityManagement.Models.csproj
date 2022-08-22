@@ -3,10 +3,10 @@
   <PropertyGroup>
     <TargetFramework>netstandard1.2</TargetFramework>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <Version>1.6.2</Version>
+    <Version>1.6.3</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <AssemblyVersion>1.6.2</AssemblyVersion>
-    <FileVersion>1.6.2</FileVersion>
+    <AssemblyVersion>1.6.3</AssemblyVersion>
+    <FileVersion>1.6.3</FileVersion>
     <Authors>Fred Catellier</Authors>
     <Description>Base models for the Cause.SecurityManagement's library.</Description>
     <Copyright>CAUCA 9-1-1 2022</Copyright>

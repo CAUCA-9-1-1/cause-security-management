@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Cause.SecurityManagement.Models.Configuration;
 using Cause.SecurityManagement.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 namespace Cause.SecurityManagement.Services
@@ -14,26 +15,26 @@ namespace Cause.SecurityManagement.Services
         private readonly IEmailForUserModificationSender emailSender;
         private readonly IUserGroupRepository userGroupRepository;
 		private readonly IUserPermissionRepository userPermissionRepository;
-        private readonly IGroupPermissionRepository groupPermissionRepository;
         private readonly IUserRepository<TUser> userRepository;
         private readonly IUserGroupPermissionService userGroupPermissionService;
-		protected readonly SecurityConfiguration SecurityConfiguration;
+        private readonly IUserPermissionService userPermissionService;
+        protected readonly SecurityConfiguration SecurityConfiguration;
 
         public UserManagementService(
             IOptions<SecurityConfiguration> securityOptions,
             IUserGroupRepository userGroupRepository,
             IUserPermissionRepository userPermissionRepository,
-            IGroupPermissionRepository groupPermissionRepository,
 			IUserRepository<TUser> userRepository,
             IUserGroupPermissionService userGroupPermissionService,
+            IUserPermissionService userPermissionService,
             IEmailForUserModificationSender emailSender = null)
 		{
             this.emailSender = emailSender;
             this.userGroupRepository = userGroupRepository;
             this.userPermissionRepository = userPermissionRepository;
-			this.groupPermissionRepository = groupPermissionRepository;
             this.userRepository = userRepository;
             this.userGroupPermissionService = userGroupPermissionService;
+            this.userPermissionService = userPermissionService;
 
             SecurityConfiguration = securityOptions.Value;
         }
@@ -53,14 +54,14 @@ namespace Cause.SecurityManagement.Services
 			if (UserNameAlreadyUsed(user))
 				return false;
 
-            UpdateUserGroup(user);
-            UpdateUserPermission(user);
-            UpdatePassword(user, true);
-
             if (userRepository.Any(user.Id))
                 userRepository.Update(user);
             else
                 userRepository.Add(user);
+
+            UpdateUserGroup(user);
+            UpdateUserPermission(user);
+            UpdatePassword(user, true);
 
             userRepository.SaveChanges();
 			emailSender?.SendEmailForModifiedUser(user.Email);
@@ -101,7 +102,7 @@ namespace Cause.SecurityManagement.Services
             }
 
             var userGroups = user.Groups.ToList();
-            var dbUserGroups = userGroupRepository.GetForUser(user.Id).ToList();
+            var dbUserGroups = userGroupRepository.GetForUser(user.Id);
 
             dbUserGroups.ForEach(userGroup =>
             {
@@ -130,7 +131,7 @@ namespace Cause.SecurityManagement.Services
             }
 
             var userPermissions = user.Permissions.ToList();
-            var dbUserPermissions = userPermissionRepository.GetForUser(user.Id).ToList();
+            var dbUserPermissions = userPermissionRepository.GetForUser(user.Id).AsNoTracking().ToList();
 
             dbUserPermissions.ForEach(userPermission =>
             {
@@ -180,7 +181,7 @@ namespace Cause.SecurityManagement.Services
 
 		public virtual List<UserGroup> GetGroups(Guid userId)
         {
-            return userGroupRepository.GetForUser(userId).ToList();
+            return userGroupRepository.GetForUser(userId);
 		}
 
 		public virtual bool AddGroup(UserGroup userGroup)
@@ -227,30 +228,13 @@ namespace Cause.SecurityManagement.Services
 		}
 
 		public virtual List<UserMergedPermission> GetPermissionsForUser(Guid userId)
-		{
-			var userPermissions = GetUserPermissions(userId);
-			var groupPermissions = GetUserGroupsPermission(userId);
-			return new PermissionMergeTool().MergeUserAndGroupPermissions(groupPermissions, userPermissions);
-		}
-
-		private List<UserMergedPermission> GetUserGroupsPermission(Guid userId)
         {
-			var userGroups = groupPermissionRepository.GetForUser(userId)
-                .Select(g => new UserMergedPermission { Access = g.IsAllowed, FeatureName = g.Permission.Tag }).ToList();
-			return userGroups;
-		}
-
-		private List<UserMergedPermission> GetUserPermissions(Guid userId)
-		{
-			var userPermissions = userPermissionRepository.GetForUser(userId)
-				.Select(g => new UserMergedPermission { Access = g.IsAllowed, FeatureName = g.Permission.Tag })
-				.ToList();
-			return userPermissions;
+            return userPermissionService.GetPermissionsForUser(userId);
 		}
 
         public bool HasPermission(Guid userId, string permissionTag)
         {
-			return GetPermissionsForUser(userId).Any(permission => permission.FeatureName == permissionTag && permission.Access);
+            return userPermissionService.HasPermission(userId, permissionTag);
 		}
     }
 }
