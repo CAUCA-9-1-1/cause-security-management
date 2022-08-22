@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using Cause.SecurityManagement.Models;
+using Cause.SecurityManagement.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace Cause.SecurityManagement.Repositories
@@ -12,9 +12,9 @@ namespace Cause.SecurityManagement.Repositories
         private readonly ISecurityContext<TUser> context;
 
         public GroupPermissionRepository(
-            ISecurityContext<TUser> context)
+            IScopedDbContextProvider<TUser> contextProvider)
         {
-            this.context = context;
+            this.context = contextProvider.GetContext();
         }
         public IQueryable<GroupPermission> GetForGroup(Guid groupId)
         {

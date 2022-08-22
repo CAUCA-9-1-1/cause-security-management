@@ -3,6 +3,7 @@ using Cause.SecurityManagement.Models.ValidationCode;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
+using Cause.SecurityManagement.Services;
 
 namespace Cause.SecurityManagement.Repositories
 {
@@ -12,9 +13,9 @@ namespace Cause.SecurityManagement.Repositories
     {
         private readonly ISecurityContext<TUser> context;
 
-        public UserValidationCodeRepository(ISecurityContext<TUser> context)
+        public UserValidationCodeRepository(IScopedDbContextProvider<TUser> contextProvider)
         {
-            this.context = context;
+            context = contextProvider.GetContext();
         }
 
         public UserValidationCode GetLastCode(Guid idUser)

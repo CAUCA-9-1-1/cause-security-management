@@ -2,6 +2,7 @@ using Cause.SecurityManagement.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Cause.SecurityManagement.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
@@ -12,9 +13,9 @@ namespace Cause.SecurityManagement.Repositories
     {
         private readonly ISecurityContext<TUser> context;
 
-        public UserRepository(ISecurityContext<TUser> context)
+        public UserRepository(IScopedDbContextProvider<TUser> contextProvider)
         {
-            this.context = context;
+            context = contextProvider.GetContext();
         }
 
         public IQueryable<TUser> GetActiveUsers()
