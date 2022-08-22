@@ -73,7 +73,7 @@ namespace Cause.SecurityManagement.Services
                 return;
 
             var groupUsers = group.Users.ToList();
-            var dbGroupUsers = userGroupRepository.GetForGroup(group.Id).ToList();
+            var dbGroupUsers = userGroupRepository.GetForGroup(group.Id);
 
             dbGroupUsers.ForEach(groupUser =>
             {
@@ -138,7 +138,7 @@ namespace Cause.SecurityManagement.Services
 
         public List<UserGroup> GetUsers(Guid groupId)
         {
-            return userGroupRepository.GetForGroup(groupId).ToList();
+            return userGroupRepository.GetForGroup(groupId);
         }
 
         public bool AddUser(UserGroup userGroup)

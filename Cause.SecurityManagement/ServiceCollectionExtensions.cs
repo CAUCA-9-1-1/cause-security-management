@@ -44,7 +44,8 @@ namespace Cause.SecurityManagement
             services.AddScoped<IGroupRepository, GroupRepository<TUser>>();
             services.AddScoped<IUserGroupRepository, UserGroupRepository<TUser>>();
             services.AddScoped<IGroupPermissionRepository, GroupPermissionRepository<TUser>>();
-            services.AddScoped<IUserGroupPermissionService, UserGroupPermissionService<TUser>>();
+            services.AddScoped<IUserGroupPermissionService, UserGroupPermissionService>();
+            services.AddScoped<IUserPermissionService, UserPermissionService>();
             services.AddScoped<IExternalSystemRepository, ExternalSystemRepository<TUser>>();
             services.AddScoped<IUserValidationCodeRepository, UserValidationCodeRepository<TUser>>();
             services.AddScoped<ICertificateValidator, CertificateValidator>();

@@ -1,4 +1,5 @@
-﻿using Cause.SecurityManagement.Models;
+﻿using System.Collections.Generic;
+using Cause.SecurityManagement.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
@@ -21,6 +22,7 @@ namespace Cause.SecurityManagement
         DbSet<DataProtectionElement> DataProtectionXmlElements { get; set; }
 
         EntityEntry<TEntity> Add<TEntity>(TEntity entity) where TEntity : class;
+
 		int SaveChanges();
     }
 }

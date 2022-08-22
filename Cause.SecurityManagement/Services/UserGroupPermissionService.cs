@@ -1,34 +1,37 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Models.Configuration;
+using Cause.SecurityManagement.Models.DataTransferObjects;
 using Cause.SecurityManagement.Repositories;
 using Microsoft.Extensions.Options;
 
 namespace Cause.SecurityManagement.Services
 {
-    public class UserGroupPermissionService<TUser> : IUserGroupPermissionService
+    public class UserGroupPermissionService : IUserGroupPermissionService
     {
         private readonly ICurrentUserService currentUserService;
-        private readonly IUserManagementService<TUser> userManagementService;
         private readonly IGroupRepository groupRepository;
+        private readonly IUserPermissionService userPermissionService;
         private readonly SecurityConfiguration configuration;
 
         public UserGroupPermissionService(
             ICurrentUserService currentUserService,
-            IUserManagementService<TUser> userManagementService,
             IGroupRepository groupRepository,
+            IUserPermissionService userPermissionService,
             IOptions<SecurityConfiguration> configuration)
         {
             this.currentUserService = currentUserService;
-            this.userManagementService = userManagementService;
             this.groupRepository = groupRepository;
+            this.userPermissionService = userPermissionService;
             this.configuration = configuration.Value;
         }
 
         public bool CurrentUserHasRequiredPermissionForAllGroupsAccess()
         {
             return string.IsNullOrWhiteSpace(configuration.RequiredPermissionForAllGroupsAccess)
-                   || userManagementService.HasPermission(currentUserService.GetUserId(), configuration.RequiredPermissionForAllGroupsAccess);
+                   || userPermissionService.HasPermission(currentUserService.GetUserId(), configuration.RequiredPermissionForAllGroupsAccess);
         }
 
         public bool CurrentUserHasRequiredPermissionForGroupsAccess(Guid groupId)

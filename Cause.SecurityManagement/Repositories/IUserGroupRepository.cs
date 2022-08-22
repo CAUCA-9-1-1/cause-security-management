@@ -1,13 +1,13 @@
 ﻿using System;
-using System.Linq;
+using System.Collections.Generic;
 using Cause.SecurityManagement.Models;
 
 namespace Cause.SecurityManagement.Repositories
 {
     public interface IUserGroupRepository
     {
-        IQueryable<UserGroup> GetForGroup(Guid groupId);
-        IQueryable<UserGroup> GetForUser(Guid userId);
+        List<UserGroup> GetForGroup(Guid groupId);
+        List<UserGroup> GetForUser(Guid userId);
         UserGroup Get(Guid userGroupId);
         bool Any(Guid userGroupId);
         void Add(UserGroup userGroup);

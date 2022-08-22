@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Cause.SecurityManagement.Models;
 using Microsoft.EntityFrameworkCore;
@@ -16,13 +17,13 @@ namespace Cause.SecurityManagement.Repositories
             this.context = context;
         }
 
-        public IQueryable<UserGroup> GetForGroup(Guid groupId)
+        public List<UserGroup> GetForGroup(Guid groupId)
         {
-            return context.UserGroups.AsNoTracking().Where(uc => uc.IdGroup == groupId);
+            return context.UserGroups.AsNoTracking().Where(uc => uc.IdGroup == groupId).ToList();
         }
-        public IQueryable<UserGroup> GetForUser(Guid userId)
+        public List<UserGroup> GetForUser(Guid userId)
         {
-            return context.UserGroups.AsNoTracking().Where(uc => uc.IdUser == userId);
+            return context.UserGroups.AsNoTracking().Where(uc => uc.IdUser == userId).ToList();
         }
 
         public UserGroup Get(Guid userGroupId)
