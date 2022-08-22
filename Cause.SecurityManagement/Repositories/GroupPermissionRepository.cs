@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Cause.SecurityManagement.Models;
 using Microsoft.EntityFrameworkCore;
@@ -15,18 +16,19 @@ namespace Cause.SecurityManagement.Repositories
         {
             this.context = context;
         }
-        public IQueryable<GroupPermission> GetForGroup(Guid groupId)
+        public List<GroupPermission> GetForGroup(Guid groupId)
         {
-            return context.GroupPermissions.AsNoTracking().Where(uc => uc.IdGroup == groupId);
+            return context.GroupPermissions.AsNoTracking().Where(uc => uc.IdGroup == groupId).ToList();
         }
 
-        public IQueryable<GroupPermission> GetForUser(Guid userId)
+        public List<GroupPermission> GetForUser(Guid userId)
         {
-            return
+            var query =
                 from userGroup in context.UserGroups
                 where userGroup.IdUser == userId
                 from groupPermission in userGroup.Group.Permissions
                 select groupPermission;
+            return query.ToList();
         }
 
         public GroupPermission Get(Guid groupPermissinId)

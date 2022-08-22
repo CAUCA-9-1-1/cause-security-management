@@ -1,6 +1,4 @@
 using System.Collections.ObjectModel;
-using System.ComponentModel;
-using NSubstitute.ReceivedExtensions;
 
 namespace Cause.SecurityManagement.Tests.Services
 {
@@ -73,7 +71,7 @@ namespace Cause.SecurityManagement.Tests.Services
                     .CurrentUserHasRequiredPermissionForGroupsAccess(Arg.Is<Guid>(userGroup.IdGroup))
                     .Returns(UserGroupsAssignableByAllUsers[userGroup] );
             });
-            userGroupRepository.GetForUser(Arg.Any<Guid>()).Returns(userGroups.AsQueryable());
+            userGroupRepository.GetForUser(Arg.Any<Guid>()).Returns(userGroups);
         }
 
         private static UserGroup CreateUserGroup(Guid groupId, bool assignableByAllUsers)
