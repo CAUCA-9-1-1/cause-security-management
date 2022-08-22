@@ -1,7 +1,10 @@
-﻿using Cause.Core.DataLayerExtensions;
+﻿using System.Collections.Generic;
+using System.Linq;
+using Cause.Core.DataLayerExtensions;
 using Cause.SecurityManagement.Mapping;
 using Cause.SecurityManagement.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace Cause.SecurityManagement
 {
@@ -48,5 +51,10 @@ namespace Cause.SecurityManagement
             new ExternalSystemMapping().Map(modelBuilder);
             new ExternalSystemTokenMapping().Map(modelBuilder);
         }
-	}
+
+        public List<EntityEntry> GetModifieObjects()
+        {
+            return this.ChangeTracker.Entries().ToList();
+        }
+    }
 }

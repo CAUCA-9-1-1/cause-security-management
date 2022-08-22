@@ -1,7 +1,9 @@
 using Cause.SecurityManagement.Models;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace Cause.SecurityManagement.Repositories
 {
@@ -100,5 +102,10 @@ namespace Cause.SecurityManagement.Repositories
         {
             context.SaveChanges();
         }
+        public List<EntityEntry> GetModifieEntities()
+        {
+            return context.GetModifieObjects();
+        }
+
     }
 }

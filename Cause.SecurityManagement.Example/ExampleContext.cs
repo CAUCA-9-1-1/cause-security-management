@@ -1,5 +1,8 @@
-﻿using Cause.SecurityManagement.Models;
+﻿using System.Collections.Generic;
+using System.Linq;
+using Cause.SecurityManagement.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace Cause.SecurityManagement.Example
 {
@@ -28,5 +31,10 @@ namespace Cause.SecurityManagement.Example
             modelBuilder.AddSecurityMapping();
             base.OnModelCreating(modelBuilder);
         }
+        public List<EntityEntry> GetModifieObjects()
+        {
+            return this.ChangeTracker.Entries().ToList();
+        }
+
     }
 }

@@ -16,19 +16,21 @@ namespace Cause.SecurityManagement.Repositories
         {
             this.context = context;
         }
-        public List<GroupPermission> GetForGroup(Guid groupId)
+        public IQueryable<GroupPermission> GetForGroup(Guid groupId)
         {
-            return context.GroupPermissions.AsNoTracking().Where(uc => uc.IdGroup == groupId).ToList();
+            return context.GroupPermissions
+                .Include( gp => gp.Group)
+                .AsNoTracking()
+                .Where(gp => gp.IdGroup == groupId);
         }
 
-        public List<GroupPermission> GetForUser(Guid userId)
+        public IQueryable<GroupPermission> GetForUser(Guid userId)
         {
-            var query =
+            return
                 from userGroup in context.UserGroups
                 where userGroup.IdUser == userId
                 from groupPermission in userGroup.Group.Permissions
                 select groupPermission;
-            return query.ToList();
         }
 
         public GroupPermission Get(Guid groupPermissinId)

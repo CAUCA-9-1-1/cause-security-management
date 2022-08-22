@@ -1,4 +1,5 @@
-﻿using Cause.SecurityManagement.Models;
+﻿using System.Collections.Generic;
+using Cause.SecurityManagement.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
@@ -23,5 +24,6 @@ namespace Cause.SecurityManagement
         EntityEntry<TEntity> Add<TEntity>(TEntity entity) where TEntity : class;
 
 		int SaveChanges();
+        List<EntityEntry> GetModifieObjects();
     }
 }
