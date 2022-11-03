@@ -9,11 +9,11 @@ namespace Cause.SecurityManagement.Repositories
     {
         List<AuthenticationUserPermission> GetActiveUserPermissions();
         List<UserPermission> GetForUser(Guid userId);
-        UserPermission Get(Guid groupPermissinId);
-        bool Any(Guid groupPermissionId);
-        void Add(UserPermission groupPermission);
-        void Remove(UserPermission groupPermission);
-        void Update(UserPermission groupPermission);
+        UserPermission Get(Guid userPermissionId);
+        bool Any(Guid userPermissionId);
+        void Add(UserPermission userPermission);
+        void Remove(UserPermission userPermission);
+        void Update(UserPermission userPermission);
         void SaveChanges();
 
     }

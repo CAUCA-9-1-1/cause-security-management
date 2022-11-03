@@ -54,7 +54,10 @@ namespace Cause.SecurityManagement.Repositories
 
         public List<UserPermission> GetForUser(Guid userId)
         {
-            return context.UserPermissions.AsNoTracking().Where(uc => uc.IdUser == userId).ToList();
+            return context.UserPermissions.AsNoTracking()
+                .Where(uc => uc.IdUser == userId)
+                .Include(uc => uc.Permission)
+                .ToList();
         }
 
         public UserPermission Get(Guid userPermissionId)
