@@ -49,6 +49,8 @@ namespace Cause.SecurityManagement.Controllers
 
         private static LoginInformations GetLoginFromHeader(string authorizationHeader)
         {
+            if (string.IsNullOrWhiteSpace(authorizationHeader))
+                return null;
             var decodedHeader = Uri.UnescapeDataString(Encoding.Default.GetString(Convert.FromBase64String(authorizationHeader)));
             var login = JsonSerializer.Deserialize<LoginInformations>(decodedHeader, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             return login;
