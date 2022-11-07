@@ -5,6 +5,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using System;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Cause.SecurityManagement.Controllers
@@ -32,11 +35,27 @@ namespace Cause.SecurityManagement.Controllers
             this.logger = logger;
         }
 
+
         [Route("[Action]"), HttpPost, AllowAnonymous]
         [ProducesResponseType(typeof(LoginResult), 200)]
         [ProducesResponseType(typeof(UnauthorizedResult), 401)]
-        public async Task<ActionResult<LoginResult>> Logon([FromBody] LoginInformations login)
-        {            
+        public async Task<ActionResult<LoginResult>> Logon([FromHeader(Name = "auth")] string authorizationHeader, [FromBody] LoginInformations loginInformations)
+        {
+            var login = GetLoginFromHeader(authorizationHeader) ?? loginInformations;
+            if (login == null)
+                return Unauthorized();
+            return await Logon(login);
+        }
+
+        private static LoginInformations GetLoginFromHeader(string authorizationHeader)
+        {
+            var decodedHeader = Uri.UnescapeDataString(Encoding.Default.GetString(Convert.FromBase64String(authorizationHeader)));
+            var login = JsonSerializer.Deserialize<LoginInformations>(decodedHeader, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            return login;
+        }
+
+        private async Task<ActionResult<LoginResult>> Logon(LoginInformations login)
+        {
             var (token, user) = await service.LoginAsync(login?.UserName, login?.Password);
             if (user == null || token == null)
                 return Unauthorized();
@@ -44,8 +63,8 @@ namespace Cause.SecurityManagement.Controllers
             return new LoginResult
             {
                 AuthorizationType = "Bearer",
-                ExpiredOn = token.ExpiresOn,
                 AccessToken = token.AccessToken,
+                ExpiredOn = token.ExpiresOn,
                 RefreshToken = token.RefreshToken,
                 MustChangePassword = user.PasswordMustBeResetAfterLogin,
                 MustVerifyCode = service.MustValidateCode(user),
@@ -64,23 +83,23 @@ namespace Cause.SecurityManagement.Controllers
             }
             catch (InvalidTokenException exception)
             {
-                logger.LogWarning(exception, $"Could not refresh user's acess token.  Refresh token: '{tokens.RefreshToken}'.  Access token: '{tokens?.AccessToken}'");
+                logger.LogWarning(exception, $"Could not refresh user's acess token.  Refresh token: '{tokens?.RefreshToken}'.  Access token: '{tokens?.AccessToken}'");
                 HttpContext.Response.Headers.Add("Token-Invalid", "true");
             }
             catch (SecurityTokenExpiredException exception)
             {
                 HttpContext.Response.Headers.Add("Refresh-Token-Expired", "true");
-                logger.LogWarning(exception, $"Could not refresh external system's acess token - SecurityTokenExpiredException.  Refresh token: '{tokens.RefreshToken}'.  Access token: '{tokens?.AccessToken}'");
+                logger.LogWarning(exception, $"Could not refresh external system's acess token - SecurityTokenExpiredException.  Refresh token: '{tokens?.RefreshToken}'.  Access token: '{tokens?.AccessToken}'");
             }
             catch (SecurityTokenException exception)
             {
                 HttpContext.Response.Headers.Add("Token-Invalid", "true");
-                logger.LogWarning(exception, $"Could not refresh external system's acess token - SecurityTokenException.  Refresh token: '{tokens.RefreshToken}'.  Access token: '{tokens?.AccessToken}'");
+                logger.LogWarning(exception, $"Could not refresh external system's acess token - SecurityTokenException.  Refresh token: '{tokens?.RefreshToken}'.  Access token: '{tokens?.AccessToken}'");
             }
             catch (InvalidTokenUserException exception)
             {
                 HttpContext.Response.Headers.Add("Token-Invalid", "true");
-                logger.LogWarning(exception, $"Could not refresh external system's acess token - InvalidTokenUserException.  Refresh token: '{tokens.RefreshToken}'.  Access token: '{tokens?.AccessToken}'");
+                logger.LogWarning(exception, $"Could not refresh external system's acess token - InvalidTokenUserException.  Refresh token: '{tokens?.RefreshToken}'.  Access token: '{tokens?.AccessToken}'");
             }
 
             return Unauthorized();
@@ -154,7 +173,7 @@ namespace Cause.SecurityManagement.Controllers
             }
             catch (InvalidTokenException exception)
             {
-                logger.LogWarning(exception, $"Could not refresh external system's acess token.  Refresh token: '{tokens.RefreshToken}'.  Access token: '{tokens?.AccessToken}'");
+                logger.LogWarning(exception, $"Could not refresh external system's acess token.  Refresh token: '{tokens?.RefreshToken}'.  Access token: '{tokens?.AccessToken}'");
                 HttpContext.Response.Headers.Add("Token-Invalid", "true");
             }
             catch (SecurityTokenExpiredException)
@@ -164,7 +183,7 @@ namespace Cause.SecurityManagement.Controllers
             catch (SecurityTokenException exception)
             {
                 HttpContext.Response.Headers.Add("Token-Invalid", "true");
-                logger.LogWarning(exception, $"Could not refresh external system's acess token - SecurityTokenException.  Refresh token: '{tokens.RefreshToken}'.  Access token: '{tokens?.AccessToken}'");
+                logger.LogWarning(exception, $"Could not refresh external system's acess token - SecurityTokenException.  Refresh token: '{tokens?.RefreshToken}'.  Access token: '{tokens?.AccessToken}'");
             }            
 
             return Unauthorized();
