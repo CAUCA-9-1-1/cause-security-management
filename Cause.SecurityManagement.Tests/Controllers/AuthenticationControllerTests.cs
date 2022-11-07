@@ -1,4 +1,7 @@
-﻿using Cause.SecurityManagement.Controllers;
+﻿using System;
+using System.Text;
+using System.Text.Json;
+using Cause.SecurityManagement.Controllers;
 using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Models.DataTransferObjects;
 using Cause.SecurityManagement.Repositories;
@@ -66,7 +69,7 @@ namespace Cause.SecurityManagement.Tests.Controllers
         [Test]
         public async Task WithoutLoginInformation_WhenLogon_ShouldReturnUnauthorize()
         {
-            var result = await controller.Logon(null);
+            var result = await controller.Logon(null, null);
 
             result.Should().BeOfType<ActionResult<LoginResult>>();
             result.Result.Should().BeOfType<UnauthorizedResult>();
@@ -76,7 +79,7 @@ namespace Cause.SecurityManagement.Tests.Controllers
         [Test]
         public async Task WithInvalidInformation_WhenLogon_ShouldReturnUnauthorize()
         {
-            var result = await controller.Logon(loginInformations);
+            var result = await controller.Logon(null, loginInformations);
 
             result.Should().BeOfType<ActionResult<LoginResult>>();
             result.Result.Should().BeOfType<UnauthorizedResult>();
@@ -88,8 +91,23 @@ namespace Cause.SecurityManagement.Tests.Controllers
         {
             SetupValidUserLogin();
 
-            var result = await controller.Logon(loginInformations);
+            var result = await controller.Logon(null, loginInformations);
 
+            await authenticationService.Received(1).LoginAsync(Arg.Is(loginInformations.UserName), Arg.Is(loginInformations.Password));
+            result.Should().BeOfType<ActionResult<LoginResult>>();
+            result.Result.Should().Be(null);
+            result.Value.Should().BeOfType<LoginResult>();
+        }
+
+        [Test]
+        public async Task WithoutHeaderAuthorization_WhenLogonThroughHeader_ShouldBeAccepted()
+        {
+            SetupValidUserLogin();
+            var loginInformationHeader = Convert.ToBase64String(Encoding.Default.GetBytes(Uri.EscapeDataString(JsonSerializer.Serialize(loginInformations))));
+
+            var result = await controller.Logon(loginInformationHeader, null);
+
+            await authenticationService.Received(1).LoginAsync(Arg.Is(loginInformations.UserName), Arg.Is(loginInformations.Password));
             result.Should().BeOfType<ActionResult<LoginResult>>();
             result.Result.Should().Be(null);
             result.Value.Should().BeOfType<LoginResult>();
@@ -101,7 +119,7 @@ namespace Cause.SecurityManagement.Tests.Controllers
             SetAuthorizationHeader("Bearer aToken");
             SetupValidUserLogin();
 
-            var result = await controller.Logon(loginInformations);
+            var result = await controller.Logon(null, loginInformations);
 
             result.Should().BeOfType<ActionResult<LoginResult>>();
             result.Result.Should().Be(null);
@@ -114,7 +132,7 @@ namespace Cause.SecurityManagement.Tests.Controllers
             SetAuthorizationHeader("aToken");
             SetupValidUserLogin();
 
-            var result = await controller.Logon(loginInformations);
+            var result = await controller.Logon(null, loginInformations);
 
             result.Should().BeOfType<ActionResult<LoginResult>>();
             result.Result.Should().Be(null);
