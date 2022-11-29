@@ -7,11 +7,11 @@ namespace Cause.SecurityManagement.Mapping
 	public abstract class BaseModelMapping<T> : EntityMappingConfiguration<T>
 		where T : BaseModel
 	{
-		public override void Map(EntityTypeBuilder<T> model)
+		public override void Map(EntityTypeBuilder<T> builder)
 		{
-			model.HasKey(m => m.Id);
-            model.Property(m => m.Id).ValueGeneratedNever();
-			MapProperties(model);
+			builder.HasKey(m => m.Id);
+            builder.Property(m => m.Id).ValueGeneratedNever();
+			MapProperties(builder);
 		}
 
 		protected abstract void MapProperties(EntityTypeBuilder<T> model);
