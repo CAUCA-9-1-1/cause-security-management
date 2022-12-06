@@ -7,6 +7,6 @@ namespace Cause.SecurityManagement
     public interface IAuthenticationValidationCodeSender<TUser>
         where TUser : User, new()
     {
-        Task SendCodeAsync(TUser user, string code, DateTime expiration);
+        Task SendCodeAsync(TUser user, string code, DateTime expiration, string language = "fr");
     }
 }
