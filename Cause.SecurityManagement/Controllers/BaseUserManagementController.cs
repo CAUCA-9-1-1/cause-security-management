@@ -45,7 +45,7 @@ namespace Cause.SecurityManagement.Controllers
 		}
 
 		[HttpDelete, Route("{userId:guid}")]
-		public ActionResult DeleteUser(Guid userId)
+		public virtual ActionResult DeleteUser(Guid userId)
 		{
 			if (UserService.DeactivateUser(userId))
 				return NoContent();
