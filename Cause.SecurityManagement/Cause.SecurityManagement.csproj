@@ -14,11 +14,11 @@
     <Description>Security Management for Asp.Net Core projects.</Description>
     <Copyright>CAUCA 9-1-1 (c) 2022</Copyright>
     <PackageTags>Cause Security Management AspNetCore Api Client Cauca</PackageTags>
-    <Version>6.0.17</Version>
+    <Version>6.0.19</Version>
     <PackageReleaseNotes>Bump to DotNet6.</PackageReleaseNotes>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <AssemblyVersion>6.0.14.0</AssemblyVersion>
-    <FileVersion>6.0.14.0</FileVersion>
+    <AssemblyVersion>6.0.19.0</AssemblyVersion>
+    <FileVersion>6.0.19.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>

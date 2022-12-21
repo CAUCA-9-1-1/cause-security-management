@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 
 namespace Cause.SecurityManagement.Services
 {
-
     public class AuthenticationService<TUser> 
         : IAuthenticationService
         where TUser : User, new()
@@ -101,22 +100,26 @@ namespace Cause.SecurityManagement.Services
         {
             var encodedPassword = new PasswordGenerator().EncodePassword(password, configuration.PackageName);
             var userFound = userRepository.GetUser(userName, encodedPassword);
-            return GetRoleForUser(userFound);
+            if (userFound == null)
+                return (null, null);
+            return (userFound, GetRoleFromUser(userFound));
         }
 
-        private (TUser userFound, string) GetRoleForUser(TUser userFound)
+        private string GetRoleFromUser(TUser userFound)
         {
-            return (userFound, GetSecurityRoleForUser(userFound));
-        }
-
-        private string GetSecurityRoleForUser(TUser userFound)
-        {
-            if (userFound?.PasswordMustBeResetAfterLogin == true)
+            if (userFound.PasswordMustBeResetAfterLogin)
                 return SecurityRoles.UserPasswordSetup;
-            else if (MustValidateCode(userFound))
-                return SecurityRoles.UserLoginWithMultiFactor;
-            else
-                return SecurityRoles.User;
+
+            return MustValidateCode(userFound)
+                ? SecurityRoles.UserLoginWithMultiFactor
+                : GetSecurityRoleForUser(userFound);
+        }
+
+        private static string GetSecurityRoleForUser(TUser userFound)
+        {
+            return userFound.PasswordMustBeResetAfterLogin ?
+                SecurityRoles.UserPasswordSetup :
+                SecurityRoles.User;
         }
 
         public virtual bool MustValidateCode(User user)
