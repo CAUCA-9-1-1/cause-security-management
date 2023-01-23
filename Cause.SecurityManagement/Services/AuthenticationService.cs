@@ -62,7 +62,7 @@ namespace Cause.SecurityManagement.Services
             var user = CanLogIn(userFound) ?
                 (GenerateUserToken(userFound, role), userFound) :
                 (null, null);
-            await multiFactorHandler.SendValidationCodeWhenNeededAsync(user.userFound);            
+            await multiFactorHandler.SendValidationCodeWhenNeededAsync(user.userFound);
             return user;
         }
 

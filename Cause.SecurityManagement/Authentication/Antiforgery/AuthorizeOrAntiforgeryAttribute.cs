@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
-using System.Linq;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Antiforgery;
 using System.Threading.Tasks;
@@ -11,7 +10,7 @@ using Microsoft.Extensions.Hosting;
 
 namespace Cause.SecurityManagement.Authentication.Antiforgery
 {
-    public class AuthorizeOrAntiforgeryAttribute : ActionFilterAttribute
+    public class AuthorizeOrAntiforgeryAttribute : BaseAntiforgery
     {
         public override async void OnActionExecuting(ActionExecutingContext filterContext)
         {
@@ -38,8 +37,12 @@ namespace Cause.SecurityManagement.Authentication.Antiforgery
 
             try
             {
-                await antiforgery.ValidateRequestAsync(filterContext.HttpContext);
+                if (RequestIsFromMobile(filterContext.HttpContext.Request) && !string.IsNullOrEmpty(filterContext.HttpContext.Request.Headers["X-CSRF-Cookie"]))
+                {
+                    return !string.IsNullOrEmpty(filterContext.HttpContext.Request.Headers["X-CSRF-Token"]);
+                }
 
+                await antiforgery.ValidateRequestAsync(filterContext.HttpContext);
                 return true;
             }
             catch (AntiforgeryValidationException e)
@@ -53,8 +56,7 @@ namespace Cause.SecurityManagement.Authentication.Antiforgery
         {
             if (filterContext.Controller is Controller controller)
             {
-                var userClaim = controller.User.Claims.FirstOrDefault(claim => claim.Type == JwtRegisteredClaimNames.Sid);
-                return userClaim is not null;
+                return controller.User.HasClaim(claim => claim.Type == JwtRegisteredClaimNames.Sid);
             }
 
             return false;
