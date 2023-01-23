@@ -6,15 +6,15 @@
     <ApplicationIcon />
     <OutputType>Library</OutputType>
     <StartupObject />
-    <Authors>Fred Catellier-Poulin, Michael Jolin, Yannick Jacques, Claudine Gagnon</Authors>
+    <Authors>Fred Catellier-Poulin, Michael Jolin, Claudine Gagnon</Authors>
     <Company>CAUCA 9-1-1</Company>
     <RepositoryUrl>https://github.com/CAUCA-9-1-1/cause-security-management</RepositoryUrl>
     <PackageProjectUrl>https://github.com/CAUCA-9-1-1/cause-security-management</PackageProjectUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Description>Security Management for Asp.Net Core projects.</Description>
-    <Copyright>CAUCA 9-1-1 (c) 2022</Copyright>
+    <Copyright>CAUCA 9-1-1 (c) 2023</Copyright>
     <PackageTags>Cause Security Management AspNetCore Api Client Cauca</PackageTags>
-    <Version>7.0.1</Version>
+    <Version>7.0.2</Version>
     <PackageReleaseNotes>Support login via headers.</PackageReleaseNotes>
     <Configurations>Debug;Release;NuGet</Configurations>
     <AssemblyVersion>7.0.0</AssemblyVersion>

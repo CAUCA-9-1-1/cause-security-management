@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Cause.SecurityManagement.Authentication.Antiforgery
 {
-    public class AntiforgeryTokenProviderAttribute : ActionFilterAttribute
+    public class AntiforgeryTokenProviderAttribute : BaseAntiforgery
     {
         public override void OnActionExecuting(ActionExecutingContext filterContext)
         {
@@ -12,6 +12,11 @@ namespace Cause.SecurityManagement.Authentication.Antiforgery
             var tokens = antiforgery.GetAndStoreTokens(filterContext.HttpContext);
 
             filterContext.HttpContext.Response.Headers.Add("X-CSRF-Token", tokens.RequestToken);
+
+            if (RequestIsFromMobile(filterContext.HttpContext.Request))
+            {
+                filterContext.HttpContext.Response.Headers.Add("X-CSRF-Cookie", tokens.CookieToken);
+            }
         }
     }
 }

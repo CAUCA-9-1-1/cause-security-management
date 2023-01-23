@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using NUnit.Framework;
 
-namespace Cause.SecurityManagement.Tests
+namespace Cause.SecurityManagement.Tests.Authentication.Certificate
 {
 	public class CertificateValidatorTests
     {
