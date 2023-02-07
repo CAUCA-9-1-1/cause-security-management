@@ -1,7 +1,7 @@
-﻿using Cause.SecurityManagement.Models;
+﻿using Cause.SecurityManagement.Authentication.MultiFactor;
+using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Models.ValidationCode;
 using Cause.SecurityManagement.Repositories;
-using Cause.SecurityManagement.Services;
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
@@ -27,11 +27,11 @@ namespace Cause.SecurityManagement.Tests.Services
             someUser = new User { Id = someUserId };
             repository = Substitute.For<IUserValidationCodeRepository>();
             sender = Substitute.For<IAuthenticationValidationCodeSender<User>>();
-            handler = new AuthenticationMultiFactorHandler<User>(repository, sender);            
+            handler = new AuthenticationMultiFactorHandler<User>(repository, sender);
         }
 
         [Test]
-        public void ValidCode_WhenCheckingValidity_ShouldBeConsideredValid()
+        public async Task ValidCode_WhenCheckingValidity_ShouldBeConsideredValid()
         {
             var someCode = "2349903";
             var someValidationType = ValidationCodeType.MultiFactorLogin;
@@ -39,7 +39,7 @@ namespace Cause.SecurityManagement.Tests.Services
             repository.GetExistingValidCode(Arg.Is(someUserId), Arg.Is(someCode), Arg.Is(someValidationType))
                 .Returns(someValidationCode);
 
-            var result = handler.CodeIsValid(someUserId, someCode, someValidationType);
+            var result = await handler.CodeIsValidAsync(someUser, someCode, someValidationType);
 
             repository.Received(1).GetExistingValidCode(Arg.Is(someUserId), Arg.Is(someCode), Arg.Is(someValidationType));
             repository.Received(1).DeleteCode(Arg.Is(someValidationCode));
@@ -47,14 +47,14 @@ namespace Cause.SecurityManagement.Tests.Services
         }
 
         [Test]
-        public void InvalidCode_WhenCheckingValidity_ShouldBeConsideredInvalid()
+        public async Task InvalidCode_WhenCheckingValidity_ShouldBeConsideredInvalid()
         {
             var someCode = "2349903";
             var someValidationType = ValidationCodeType.MultiFactorLogin;
             repository.GetExistingValidCode(Arg.Is(someUserId), Arg.Is(someCode), Arg.Is(someValidationType))
                 .Returns((UserValidationCode)null);
 
-            var result = handler.CodeIsValid(someUserId, someCode, someValidationType);
+            var result = await handler.CodeIsValidAsync(someUser, someCode, someValidationType);
 
             repository.Received(1).GetExistingValidCode(Arg.Is(someUserId), Arg.Is(someCode), Arg.Is(someValidationType));
             repository.DidNotReceive().DeleteCode(Arg.Any<UserValidationCode>());

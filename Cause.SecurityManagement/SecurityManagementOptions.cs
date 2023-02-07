@@ -10,6 +10,7 @@ namespace Cause.SecurityManagement
         internal (Type serviceType, Type implementationType)? CustomUserManagementService { get; set; } = null;
         internal (Type serviceType, Type implementationType)? CustomCurrentUserService { get; set; } = null;
         internal Type ValidationCodeSender { get; set; } = null;
+        internal Type ValidationCodeValidator { get; set; } = null;
         internal Type EmailForUserModificationSender { get; set; } = null;
         internal static bool MultiFactorAuthenticationIsActivated { get; set; }
 
@@ -17,7 +18,7 @@ namespace Cause.SecurityManagement
         {
             MultiFactorAuthenticationIsActivated = false;
         }
-              
+
         public void SetCustomUserManagementService<TUser, TService, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TImplementation>()
             where TService : IUserManagementService<TUser>
             where TImplementation : class, TService
@@ -43,6 +44,17 @@ namespace Cause.SecurityManagement
         {
             MultiFactorAuthenticationIsActivated = true;
             ValidationCodeSender = typeof(TImplementation);
+            ValidationCodeValidator = null;
+        }
+
+        public void UseMultiFactorAuthentication<
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TSenderImplementation,
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TCheckerImplementation
+        >()
+        {
+            MultiFactorAuthenticationIsActivated = true;
+            ValidationCodeSender = typeof(TSenderImplementation);
+            ValidationCodeValidator = typeof(TCheckerImplementation);
         }
 
         public void SendEmailWhenUserAreBeingModified<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TImplementation>()

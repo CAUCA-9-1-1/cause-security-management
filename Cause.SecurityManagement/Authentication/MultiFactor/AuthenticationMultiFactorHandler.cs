@@ -4,28 +4,34 @@ using Cause.SecurityManagement.Repositories;
 using System;
 using System.Threading.Tasks;
 
-namespace Cause.SecurityManagement.Services
+namespace Cause.SecurityManagement.Authentication.MultiFactor
 {
     public class AuthenticationMultiFactorHandler<TUser> : IAuthenticationMultiFactorHandler<TUser>
         where TUser : User, new()
     {
         private readonly IUserValidationCodeRepository repository;
         private readonly IAuthenticationValidationCodeSender<TUser> sender;
+        private readonly IAuthenticationValidationCodeValidator<TUser> validator;
 
         public AuthenticationMultiFactorHandler(
             IUserValidationCodeRepository repository,
-            IAuthenticationValidationCodeSender<TUser> sender = null)
+            IAuthenticationValidationCodeSender<TUser> sender = null,
+            IAuthenticationValidationCodeValidator<TUser> validator = null)
         {
             this.repository = repository;
             this.sender = sender;
+            this.validator = validator;
         }
 
         public async Task SendValidationCodeWhenNeededAsync(TUser user)
         {
             if (MustSendValidationCode(user))
             {
-                repository.DeleteExistingValidationCode(user.Id);
-                await SendValidationCodeAsync(user, ValidationCodeType.MultiFactorLogin);
+                if (!await SendWithExternalSenderWhenExternalValidatorIsActive(user))
+                {
+                    repository.DeleteExistingValidationCode(user.Id);
+                    await SendValidationCodeAsync(user, ValidationCodeType.MultiFactorLogin);
+                }
             }
         }
 
@@ -35,7 +41,7 @@ namespace Cause.SecurityManagement.Services
                 && !userFound.PasswordMustBeResetAfterLogin
                 && userFound.TwoFactorAuthenticatorEnabled
                 && SecurityManagementOptions.MultiFactorAuthenticationIsActivated;
-        }        
+        }
 
         private async Task SendValidationCodeAsync(TUser user, ValidationCodeType type)
         {
@@ -47,6 +53,8 @@ namespace Cause.SecurityManagement.Services
                 Type = type
             };
             repository.SaveNewValidationCode(code);
+
+            if (sender == null) throw new AuthenticationValidationCodeSenderNotFoundException();
             await sender.SendCodeAsync(user, code.Code, code.ExpiresOn);
         }
 
@@ -56,10 +64,14 @@ namespace Cause.SecurityManagement.Services
             return generator.Next(0, 1000000).ToString("D6");
         }
 
-        public virtual bool CodeIsValid(Guid idUser, string validationCode, ValidationCodeType type)
+        public virtual async Task<bool> CodeIsValidAsync(TUser user, string validationCode, ValidationCodeType type)
         {
-            var code = repository.GetExistingValidCode(idUser, validationCode, type);
+            if (validator != null)
+            {
+                return await validator.CodeIsValidAsync(user, validationCode);
+            }
 
+            var code = repository.GetExistingValidCode(user.Id, validationCode, type);
             if (code != null)
             {
                 repository.DeleteCode(code);
@@ -70,10 +82,24 @@ namespace Cause.SecurityManagement.Services
 
         public async Task SendNewValidationCodeAsync(TUser user)
         {
-            var existingCode = repository.GetLastCode(user.Id);
-            ThrowExceptionIfNoCodeHasBeenFound(existingCode);
-            repository.DeleteExistingValidationCode(user.Id);
-            await SendValidationCodeAsync(user, existingCode.Type);
+            if (!await SendWithExternalSenderWhenExternalValidatorIsActive(user))
+            {
+                var existingCode = user != null ? repository.GetLastCode(user.Id) : null;
+                ThrowExceptionIfNoCodeHasBeenFound(existingCode);
+                repository.DeleteExistingValidationCode(user.Id);
+                await SendValidationCodeAsync(user, existingCode.Type);
+            }
+        }
+
+        private async Task<bool> SendWithExternalSenderWhenExternalValidatorIsActive(TUser user)
+        {
+            if (sender != null && validator != null)
+            {
+                await sender.SendCodeAsync(user);
+                return true;
+            }
+
+            return false;
         }
 
         private static void ThrowExceptionIfNoCodeHasBeenFound(UserValidationCode existingCode)

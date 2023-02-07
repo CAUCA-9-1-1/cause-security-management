@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
 using System.Threading.Tasks;
+using Cause.SecurityManagement.Authentication.MultiFactor;
 
 namespace Cause.SecurityManagement.Tests.Controllers
 {

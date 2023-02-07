@@ -9,6 +9,7 @@ using System.Text;
 using System;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Cause.SecurityManagement.Authentication.MultiFactor;
 
 namespace Cause.SecurityManagement.Controllers
 {
@@ -121,12 +122,12 @@ namespace Cause.SecurityManagement.Controllers
             }
         }
 
-        [Route("validationCode"), HttpPost, Authorize(Roles = SecurityRoles.UserLoginWithMultiFactor)]
-        public ActionResult<LoginResult> VerifyCode([FromBody] ValidationInformation validationInformation)
+        [Route("ValidationCode"), HttpPost, Authorize(Roles = SecurityRoles.UserLoginWithMultiFactor)]
+        public async Task<ActionResult<LoginResult>> VerifyCode([FromBody] ValidationInformation validationInformation)
         {
             try
             {
-                var (token, user) = service.ValidateMultiFactorCode(validationInformation);
+                var (token, user) = await service.ValidateMultiFactorCodeAsync(validationInformation);
                 return new LoginResult
                 {
                     AuthorizationType = "Bearer",
@@ -175,7 +176,7 @@ namespace Cause.SecurityManagement.Controllers
             }
             catch (InvalidTokenException exception)
             {
-                logger.LogWarning(exception, $"Could not refresh external system's acess token.  Refresh token: '{tokens?.RefreshToken}'.  Access token: '{tokens?.AccessToken}'");
+                logger.LogWarning(exception, $"Could not refresh external system's access token.  Refresh token: '{tokens?.RefreshToken}'.  Access token: '{tokens?.AccessToken}'");
                 HttpContext.Response.Headers.Add("Token-Invalid", "true");
             }
             catch (SecurityTokenExpiredException)
@@ -185,8 +186,8 @@ namespace Cause.SecurityManagement.Controllers
             catch (SecurityTokenException exception)
             {
                 HttpContext.Response.Headers.Add("Token-Invalid", "true");
-                logger.LogWarning(exception, $"Could not refresh external system's acess token - SecurityTokenException.  Refresh token: '{tokens?.RefreshToken}'.  Access token: '{tokens?.AccessToken}'");
-            }            
+                logger.LogWarning(exception, $"Could not refresh external system's access token - SecurityTokenException.  Refresh token: '{tokens?.RefreshToken}'.  Access token: '{tokens?.AccessToken}'");
+            }
 
             return Unauthorized();
         }

@@ -1,4 +1,5 @@
 ﻿using Cause.SecurityManagement.Authentication.Certificate;
+using Cause.SecurityManagement.Authentication.MultiFactor;
 using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Repositories;
 using Cause.SecurityManagement.Services;
@@ -24,6 +25,7 @@ namespace Cause.SecurityManagement
                 .AddScopedCustomServiceOrDefault<IAuthenticationService>(managementOptions.CustomAuthenticationService, () => services.AddScoped<IAuthenticationService, AuthenticationService<TUser>>())
                 .AddScopedCustomServiceOrDefault<ICurrentUserService>(managementOptions.CustomCurrentUserService, () => services.AddScoped<ICurrentUserService, CurrentUserService>())
                 .AddScopedWhenImplementationIsKnown<IAuthenticationValidationCodeSender<TUser>>(managementOptions.ValidationCodeSender)
+                .AddScopedWhenImplementationIsKnown<IAuthenticationValidationCodeValidator<TUser>>(managementOptions.ValidationCodeValidator)
                 .AddScopedWhenImplementationIsKnown<IEmailForUserModificationSender>(managementOptions.EmailForUserModificationSender);
         }
 

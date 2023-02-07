@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Net.Http.Headers;
+using Newtonsoft.Json.Linq;
 using NSubstitute;
 using NUnit.Framework;
 
@@ -149,6 +150,7 @@ namespace Cause.SecurityManagement.Tests.Authentication.Antiforgery
             {
                 httpContext.Request.Headers.UserAgent = "test mobile iPhone";
                 httpContext.Request.Headers["X-CSRF-Cookie"] = "csrf cookie for test";
+                httpContext.Request.Headers["X-CSRF-Token"] = "crsf cookie for test";
             }
 
             return httpContext;
