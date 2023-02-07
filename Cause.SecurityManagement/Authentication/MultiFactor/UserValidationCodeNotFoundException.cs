@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Cause.SecurityManagement.Services
+namespace Cause.SecurityManagement.Authentication.MultiFactor
 {
     public class UserValidationCodeNotFoundException : Exception
     { }

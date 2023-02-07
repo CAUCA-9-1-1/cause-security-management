@@ -1,4 +1,5 @@
-﻿using Cause.SecurityManagement.Models;
+﻿using Cause.SecurityManagement.Authentication.MultiFactor;
+using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Models.Configuration;
 using Cause.SecurityManagement.Models.DataTransferObjects;
 using Cause.SecurityManagement.Models.ValidationCode;
@@ -66,10 +67,10 @@ namespace Cause.SecurityManagement.Services
             return user;
         }
 
-        public (UserToken token, User user) ValidateMultiFactorCode(ValidationInformation validationInformation)
+        public async Task<(UserToken token, User user)> ValidateMultiFactorCodeAsync(ValidationInformation validationInformation)
         {
             var (userFound, roles) = GetUser(currentUserService.GetUserId());
-            if (userFound != null && multiFactorHandler.CodeIsValid(userFound.Id, validationInformation.ValidationCode, ValidationCodeType.MultiFactorLogin))
+            if (userFound != null && await multiFactorHandler.CodeIsValidAsync(userFound, validationInformation.ValidationCode, ValidationCodeType.MultiFactorLogin))
             {
                 return (GenerateUserToken(userFound, roles), userFound);
             }
@@ -119,8 +120,8 @@ namespace Cause.SecurityManagement.Services
 
         private static string GetSecurityRoleForUser(TUser userFound)
         {
-            return userFound.PasswordMustBeResetAfterLogin == true ? 
-                SecurityRoles.UserPasswordSetup : 
+            return userFound.PasswordMustBeResetAfterLogin == true ?
+                SecurityRoles.UserPasswordSetup :
                 SecurityRoles.User;
         }
 

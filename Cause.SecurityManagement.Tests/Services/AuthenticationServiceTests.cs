@@ -1,4 +1,5 @@
-﻿using Cause.SecurityManagement.Models;
+﻿using Cause.SecurityManagement.Authentication.MultiFactor;
+using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Models.Configuration;
 using Cause.SecurityManagement.Repositories;
 using Cause.SecurityManagement.Services;

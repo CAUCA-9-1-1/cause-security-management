@@ -7,6 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Repositories\**" />
+    <EmbeddedResource Remove="Repositories\**" />
+    <None Remove="Repositories\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="FluentAssertions" Version="6.8.0" />
     <PackageReference Include="NSubstitute" Version="4.4.0" />
     <PackageReference Include="nunit" Version="3.13.3" />
@@ -19,10 +25,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Cause.SecurityManagement\Cause.SecurityManagement.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Repositories\" />
   </ItemGroup>
 
 </Project>
