@@ -13,7 +13,7 @@ namespace Cause.SecurityManagement.Tests.Services
         private IExternalSystemRepository repository;
         private ITokenReader reader;
         private ITokenGenerator generator;
-        private ExternalSystemAuthenticationService<User> service;
+        private ExternalSystemAuthenticationService service;
 
         [SetUp]
         public void SetUpTest()
@@ -21,7 +21,7 @@ namespace Cause.SecurityManagement.Tests.Services
             repository = Substitute.For<IExternalSystemRepository>();
             reader = Substitute.For<ITokenReader>();
             generator = Substitute.For<ITokenGenerator>();
-            service = new ExternalSystemAuthenticationService<User>(repository, reader, generator);
+            service = new ExternalSystemAuthenticationService(repository, reader, generator);
         }
 
         [Test]
@@ -45,7 +45,7 @@ namespace Cause.SecurityManagement.Tests.Services
             var someKnownApikey = "asdlkfj";
             var someExternalSystem = new ExternalSystem { Name = "asdf" };
             repository.GetByApiKey(Arg.Is(someKnownApikey)).Returns(someExternalSystem);
-            generator.GenerateAccessToken(Arg.Is(someExternalSystem.Id), Arg.Is(someExternalSystem.Name), Arg.Is(SecurityRoles.ExternalSystem)).Returns(someAccessToken);
+            generator.GenerateAccessToken(Arg.Is(someExternalSystem.Id.ToString()), Arg.Is(someExternalSystem.Name), Arg.Is(SecurityRoles.ExternalSystem)).Returns(someAccessToken);
             generator.GenerateRefreshToken().Returns(someRefreshToken);
 
             var (token, system) = service.Login(someKnownApikey);

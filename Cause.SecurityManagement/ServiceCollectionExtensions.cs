@@ -37,7 +37,7 @@ namespace Cause.SecurityManagement
             services.AddScoped<IAuthenticationService, AuthenticationService<TUser>>();
             services.AddScoped<ITokenGenerator, TokenGenerator>();
             services.AddScoped<ITokenReader, TokenReader>();
-            services.AddScoped<IExternalSystemAuthenticationService, ExternalSystemAuthenticationService<TUser>>();
+            services.AddScoped<IExternalSystemAuthenticationService, ExternalSystemAuthenticationService>();
             services.AddScoped<IGroupManagementService, BaseGroupManagementService>();
             services.AddScoped<IPermissionManagementService, BasePermissionManagementService<TUser>>();
             services.AddScoped<IAdministratorUserGenerator, AdministratorUserGenerator<TUser>>();

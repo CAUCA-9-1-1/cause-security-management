@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 
 namespace Cause.SecurityManagement.Services
 {
-
     public class AuthenticationService<TUser> 
         : IAuthenticationService
         where TUser : User, new()
@@ -89,8 +88,8 @@ namespace Cause.SecurityManagement.Services
 
         public virtual UserToken GenerateUserCreationToken(Guid userId)
         {
-            var accessToken = generator.GenerateAccessToken(userId, "temporary", SecurityRoles.UserCreation);
-            return GenerateUserToken(userId, SecurityRoles.UserCreation, accessToken, "");
+            var accessToken = generator.GenerateAccessToken(userId.ToString(), "temporary", SecurityRoles.UserCreation);
+            return GenerateUserToken(userId, accessToken, "");
         }
 
         protected virtual (TUser user, string rolesToGive) GetUser(Guid idUser)
@@ -110,7 +109,7 @@ namespace Cause.SecurityManagement.Services
 
         private string GetRoleFromUser(TUser userFound)
         {
-            if (userFound.PasswordMustBeResetAfterLogin == true)
+            if (userFound.PasswordMustBeResetAfterLogin)
                 return SecurityRoles.UserPasswordSetup;
 
             return MustValidateCode(userFound)
@@ -120,7 +119,7 @@ namespace Cause.SecurityManagement.Services
 
         private static string GetSecurityRoleForUser(TUser userFound)
         {
-            return userFound.PasswordMustBeResetAfterLogin == true ?
+            return userFound.PasswordMustBeResetAfterLogin ?
                 SecurityRoles.UserPasswordSetup :
                 SecurityRoles.User;
         }
@@ -143,19 +142,27 @@ namespace Cause.SecurityManagement.Services
 
         public string RefreshUserToken(string token, string refreshToken)
         {
-            var userId = tokenReader.GetSidFromExpiredToken(token);
+            var userId = GetIdFromExpiredToken(token);
             var userToken = userRepository.GetToken(userId, refreshToken);
             var user = userRepository.GetUserById(userId);
 
             ThrowExceptionIfUserHasNotBeenFound(token, refreshToken, userId, user);
             tokenReader.ThrowExceptionWhenTokenIsNotValid(refreshToken, userToken);
 
-            var newAccessToken = generator.GenerateAccessToken(user.Id, user.UserName, SecurityRoles.User);
+            var newAccessToken = generator.GenerateAccessToken(user.Id.ToString(), user.UserName, SecurityRoles.User);
             // ReSharper disable once PossibleNullReferenceException
             userToken.AccessToken = newAccessToken;
             userRepository.SaveChanges();
 
             return newAccessToken;
+        }
+
+        private Guid GetIdFromExpiredToken(string token)
+        {
+            var id = tokenReader.GetSidFromExpiredToken(token);
+            if (Guid.TryParse(id, out Guid userId))
+                return userId;
+            return Guid.Empty;
         }
 
         private static void ThrowExceptionIfUserHasNotBeenFound(string token, string refreshToken, Guid userId, TUser user)
@@ -172,14 +179,14 @@ namespace Cause.SecurityManagement.Services
 
         protected virtual UserToken GenerateUserToken(TUser user, string role)
         {
-            var accessToken = generator.GenerateAccessToken(user.Id, user.UserName, role);
+            var accessToken = generator.GenerateAccessToken(user.Id.ToString(), user.UserName, role);
             var refreshToken = SecurityRoles.IsTemporaryRole(role) ? "" : generator.GenerateRefreshToken();
-            var token = GenerateUserToken(user.Id, role, accessToken, refreshToken);
+            var token = GenerateUserToken(user.Id, accessToken, refreshToken);
             userRepository.AddToken(token);
             return token;
         }
 
-        private UserToken GenerateUserToken(Guid userId, string role, string accessToken, string refreshToken)
+        private UserToken GenerateUserToken(Guid userId, string accessToken, string refreshToken)
         {
             return new UserToken { AccessToken = accessToken, RefreshToken = refreshToken, ExpiresOn = generator.GenerateRefreshTokenExpirationDate(), IdUser = userId };
         }

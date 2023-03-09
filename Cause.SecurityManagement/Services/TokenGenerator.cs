@@ -2,7 +2,9 @@
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -29,18 +31,23 @@ namespace Cause.SecurityManagement.Services
             return Convert.ToBase64String(randomNumber);
         }
 
-        public string GenerateAccessToken(Guid userId, string userName, string role)
+        public string GenerateAccessToken(string entityId, string entityName, string role, params (string type, string value)[] additionalClaims)
         {
             var lifeTimeInMinute = SecurityRoles.IsTemporaryRole(role) ? GetTemporaryAccessTokenLifeTimeInMinute() : GetAccessTokenLifeTimeInMinute();
 
-            var claims = new[]
+            var claims = new List<Claim> 
             {
-                new Claim(ClaimTypes.Role, role),
-                new Claim(JwtRegisteredClaimNames.UniqueName, userName),
-                new Claim(JwtRegisteredClaimNames.Sid, userId.ToString()),
+                new(ClaimTypes.Role, role),
+                new(JwtRegisteredClaimNames.UniqueName, entityName),
+                new(JwtRegisteredClaimNames.Sid, entityId),
             };
 
-            return GenerateAccessToken(claims, lifeTimeInMinute);
+            if (additionalClaims != null)
+            {
+                claims.AddRange(additionalClaims.Select(claim => new Claim(claim.type, claim.value)));
+            }
+
+            return GenerateAccessToken(claims.ToArray(), lifeTimeInMinute);
         }
 
         public DateTime GenerateRefreshTokenExpirationDate()
