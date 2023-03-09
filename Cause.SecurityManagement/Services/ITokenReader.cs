@@ -1,11 +1,11 @@
 ﻿using Cause.SecurityManagement.Models;
-using System;
 
 namespace Cause.SecurityManagement.Services
 {
     public interface ITokenReader
     {
-        Guid GetSidFromExpiredToken(string token);
+        string GetSidFromExpiredToken(string token);
+        string GetClaimValueFromExpiredToken(string token, string type);
         void ThrowExceptionWhenTokenIsNotValid(string refreshToken, BaseToken token);
     }
 }

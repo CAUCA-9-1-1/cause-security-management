@@ -19,13 +19,17 @@ namespace Cause.SecurityManagement.Services
             this.configuration = configuration.Value;
         }
 
-        public Guid GetSidFromExpiredToken(string token)
+        public string GetSidFromExpiredToken(string token)
         {
             var principal = GetPrincipalFromExpiredToken(token);
-            var id = principal.Claims.FirstOrDefault(claim => claim.Type == JwtRegisteredClaimNames.Sid)?.Value;
-            if (Guid.TryParse(id, out Guid userId))
-                return userId;
-            return Guid.Empty;
+            return principal.Claims.FirstOrDefault(claim => claim.Type == JwtRegisteredClaimNames.Sid)?.Value;
+        }
+
+        public string GetClaimValueFromExpiredToken(string token, string type)
+        {
+            var principal = GetPrincipalFromExpiredToken(token);
+            var value = principal.Claims.FirstOrDefault(claim => claim.Type == type)?.Value;
+            return value;
         }
 
         public void ThrowExceptionWhenTokenIsNotValid(string refreshToken, BaseToken token)

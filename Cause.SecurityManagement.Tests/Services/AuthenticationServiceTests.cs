@@ -64,13 +64,13 @@ namespace Cause.SecurityManagement.Tests.Services
             var someAccessToken = "lkjlkj";
             var someUser = new User { UserName = "asdf", PasswordMustBeResetAfterLogin = true };
             repository.GetUserWithTemporaryPassword(Arg.Is(someUserName), Arg.Is(somePassword)).Returns(someUser);
-            generator.GenerateAccessToken(Arg.Is(someUser.Id), Arg.Is(someUser.UserName), Arg.Is(SecurityRoles.UserPasswordSetup)).Returns(someAccessToken);
+            generator.GenerateAccessToken(Arg.Is(someUser.Id.ToString()), Arg.Is(someUser.UserName), Arg.Is(SecurityRoles.UserPasswordSetup)).Returns(someAccessToken);
             generator.GenerateRefreshToken().Returns(someRefreshToken);
 
             var (_, userFound) = await service.LoginAsync(someUserName, somePassword);
 
             userFound.PasswordMustBeResetAfterLogin.Should().Be(true);
-            generator.Received(1).GenerateAccessToken(Arg.Is(someUser.Id), Arg.Is(someUser.UserName), Arg.Is(SecurityRoles.UserPasswordSetup));
+            generator.Received(1).GenerateAccessToken(Arg.Is(someUser.Id.ToString()), Arg.Is(someUser.UserName), Arg.Is(SecurityRoles.UserPasswordSetup));
         }
 
         [Test]
@@ -83,13 +83,13 @@ namespace Cause.SecurityManagement.Tests.Services
             var someUser = new User { UserName = "asdf", PasswordMustBeResetAfterLogin = false };
             repository.GetUserWithTemporaryPassword(Arg.Is(someUserName), Arg.Is(somePassword)).Returns((User)null);
             repository.GetUser(Arg.Is(someUserName), Arg.Any<string>()).Returns(someUser);
-            generator.GenerateAccessToken(Arg.Is(someUser.Id), Arg.Is(someUser.UserName), Arg.Is(SecurityRoles.User)).Returns(someAccessToken);
+            generator.GenerateAccessToken(Arg.Is(someUser.Id.ToString()), Arg.Is(someUser.UserName), Arg.Is(SecurityRoles.User)).Returns(someAccessToken);
             generator.GenerateRefreshToken().Returns(someRefreshToken);
 
             var (_, userFound) = await service.LoginAsync(someUserName, somePassword);
 
             userFound.PasswordMustBeResetAfterLogin.Should().Be(false);
-            generator.Received(1).GenerateAccessToken(Arg.Is(someUser.Id), Arg.Is(someUser.UserName), Arg.Is(SecurityRoles.User));
+            generator.Received(1).GenerateAccessToken(Arg.Is(someUser.Id.ToString()), Arg.Is(someUser.UserName), Arg.Is(SecurityRoles.User));
         }
 
         [Test]
@@ -103,13 +103,13 @@ namespace Cause.SecurityManagement.Tests.Services
             var someUser = new User { UserName = "asdf", PasswordMustBeResetAfterLogin = false };
             repository.GetUserWithTemporaryPassword(Arg.Is(someUserName), Arg.Is(somePassword)).Returns((User)null);
             repository.GetUser(Arg.Is(someUserName), Arg.Any<string>()).Returns(someUser);
-            generator.GenerateAccessToken(Arg.Is(someUser.Id), Arg.Is(someUser.UserName), Arg.Is(SecurityRoles.User)).Returns(someAccessToken);
+            generator.GenerateAccessToken(Arg.Is(someUser.Id.ToString()), Arg.Is(someUser.UserName), Arg.Is(SecurityRoles.User)).Returns(someAccessToken);
             generator.GenerateRefreshToken().Returns(someRefreshToken);
 
             var (_, userFound) = await service.LoginAsync(someUserName, somePassword);
 
             userFound.PasswordMustBeResetAfterLogin.Should().Be(false);
-            generator.Received(1).GenerateAccessToken(Arg.Is(someUser.Id), Arg.Is(someUser.UserName), Arg.Is(SecurityRoles.UserLoginWithMultiFactor));
+            generator.Received(1).GenerateAccessToken(Arg.Is(someUser.Id.ToString()), Arg.Is(someUser.UserName), Arg.Is(SecurityRoles.UserLoginWithMultiFactor));
         }
 
         [Test]
