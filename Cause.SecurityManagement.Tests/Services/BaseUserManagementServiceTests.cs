@@ -1,20 +1,17 @@
 using System.Collections.ObjectModel;
+using Cause.SecurityManagement.Services;
+using TUser = Cause.SecurityManagement.Models.User;
+using System;
+using NUnit.Framework;
+using NSubstitute;
+using Cause.SecurityManagement.Models;
+using System.Collections.Generic;
+using Microsoft.Extensions.Options;
+using Cause.SecurityManagement.Models.Configuration;
+using Cause.SecurityManagement.Repositories;
 
 namespace Cause.SecurityManagement.Tests.Services
 {
-    using Cause.SecurityManagement.Services;
-    using TUser = Cause.SecurityManagement.Models.User;
-    using System;
-    using NUnit.Framework;
-    using FluentAssertions;
-    using NSubstitute;
-    using Cause.SecurityManagement.Models;
-    using System.Collections.Generic;
-    using System.Linq;
-    using Microsoft.Extensions.Options;
-    using Cause.SecurityManagement.Models.Configuration;
-    using Cause.SecurityManagement.Repositories;
-
     [TestFixture]
     public class UserManagementServiceTests
     {
@@ -57,9 +54,9 @@ namespace Cause.SecurityManagement.Tests.Services
 
             userManagementService.UpdateUserGroup(userWithGroupToRemove);
 
-            userGroupRepository.Received(1).Remove(Arg.Is<UserGroup>(userGroupAAssignableByAllUsers));
-            userGroupRepository.Received(1).Remove(Arg.Is<UserGroup>(userGroupBAssignableByAllUsers));
-            userGroupRepository.DidNotReceive().Remove(Arg.Is<UserGroup>(userGroupNotAssignableByAllUsers));
+            userGroupRepository.Received(1).Remove(Arg.Is(userGroupAAssignableByAllUsers));
+            userGroupRepository.Received(1).Remove(Arg.Is(userGroupBAssignableByAllUsers));
+            userGroupRepository.DidNotReceive().Remove(Arg.Is(userGroupNotAssignableByAllUsers));
         }
 
 
@@ -68,7 +65,7 @@ namespace Cause.SecurityManagement.Tests.Services
             userGroups.ForEach(userGroup =>
             {
                 userGroupPermissionService
-                    .CurrentUserHasRequiredPermissionForGroupsAccess(Arg.Is<Guid>(userGroup.IdGroup))
+                    .CurrentUserHasRequiredPermissionForGroupsAccess(Arg.Is(userGroup.IdGroup))
                     .Returns(UserGroupsAssignableByAllUsers[userGroup] );
             });
             userGroupRepository.GetForUser(Arg.Any<Guid>()).Returns(userGroups);
