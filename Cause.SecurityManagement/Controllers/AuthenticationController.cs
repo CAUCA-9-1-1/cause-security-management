@@ -1,5 +1,4 @@
 ﻿using Cause.SecurityManagement.Models.DataTransferObjects;
-using Cause.SecurityManagement.Repositories;
 using Cause.SecurityManagement.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,20 +15,20 @@ namespace Cause.SecurityManagement.Controllers
     [Route("api/[controller]")]
     public class AuthenticationController : Controller
     {
-        private readonly IUserPermissionRepository permissionsReader;
+        private readonly ICurrentUserService currentUserService;
         private readonly IAuthenticationService service;
         private readonly IExternalSystemAuthenticationService externalSystemAuthenticationService;
         private readonly IMobileVersionService mobileVersionService;
         private readonly ILogger<AuthenticationController> logger;
 
         public AuthenticationController(
-            IUserPermissionRepository permissionsReader,
+            ICurrentUserService currentUserService,
             IAuthenticationService service,
             IExternalSystemAuthenticationService externalSystemAuthenticationService,
             IMobileVersionService mobileVersionService,
             ILogger<AuthenticationController> logger)
         {
-            this.permissionsReader = permissionsReader;
+            this.currentUserService = currentUserService;
             this.service = service;
             this.externalSystemAuthenticationService = externalSystemAuthenticationService;
             this.mobileVersionService = mobileVersionService;
@@ -211,7 +210,7 @@ namespace Cause.SecurityManagement.Controllers
         [ProducesResponseType(401)]
         public ActionResult GetPermissions()
         {
-            return Ok(permissionsReader.GetActiveUserPermissions());
+            return Ok(currentUserService.GetPermissions());
         }
     }
 }

@@ -4,7 +4,6 @@ using System.Text.Json;
 using Cause.SecurityManagement.Controllers;
 using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Models.DataTransferObjects;
-using Cause.SecurityManagement.Repositories;
 using Cause.SecurityManagement.Services;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
@@ -20,19 +19,19 @@ namespace Cause.SecurityManagement.Tests.Controllers
     [TestFixture]
     public class AuthenticationControllerTests
     {
-        private IUserPermissionRepository permissionsReader;
+        private ICurrentUserService currentUserService;
         private IAuthenticationService authenticationService;
         private IExternalSystemAuthenticationService externalSystemAuthenticationService;
         private IMobileVersionService mobileVersionService;
         private ILogger<AuthenticationController> logger;
         private AuthenticationController controller;
 
-        private LoginInformations loginInformations = new LoginInformations
+        private readonly LoginInformations loginInformations = new()
         {
             UserName = "aUserName",
             Password = "aPassword",
         };
-        private ExternalSystemLoginInformations externalSystemLoginInformations = new ExternalSystemLoginInformations
+        private readonly ExternalSystemLoginInformations externalSystemLoginInformations = new()
         {
             Apikey = "anApiKey"
         };
@@ -40,12 +39,12 @@ namespace Cause.SecurityManagement.Tests.Controllers
         [SetUp]
         public void SetUpTest()
         {
-            permissionsReader = Substitute.For<IUserPermissionRepository>();
+            currentUserService = Substitute.For<ICurrentUserService>();
             authenticationService = Substitute.For<IAuthenticationService>();
             externalSystemAuthenticationService = Substitute.For<IExternalSystemAuthenticationService>();
             mobileVersionService = Substitute.For<IMobileVersionService>();
             logger = Substitute.For<ILogger<AuthenticationController>>();
-            controller = new AuthenticationController(permissionsReader, authenticationService, externalSystemAuthenticationService, mobileVersionService, logger);
+            controller = new AuthenticationController(currentUserService, authenticationService, externalSystemAuthenticationService, mobileVersionService, logger);
         }
 
         [Test]

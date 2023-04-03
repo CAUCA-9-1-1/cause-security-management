@@ -12,23 +12,19 @@ namespace Cause.SecurityManagement.Repositories
     where TUser : User, new()
     {
         private readonly ISecurityContext<TUser> context;
-        private readonly ICurrentUserService currentUserService;
 
-        public UserPermissionRepository(
-            IScopedDbContextProvider<TUser> contextProvider,
-            ICurrentUserService currentUserService)
+        public UserPermissionRepository(IScopedDbContextProvider<TUser> contextProvider)
         {
             context = contextProvider.GetContext();
-            this.currentUserService = currentUserService;
         }
 
-        public List<AuthenticationUserPermission> GetActiveUserPermissions()
+        public List<AuthenticationUserPermission> GetUserPermissions(Guid userId)
         {
             var idGroups = context.UserGroups.AsNoTracking()
-                .Where(ug => ug.IdUser == currentUserService.GetUserId())
+                .Where(ug => ug.IdUser == userId)
                 .Select(ug => ug.IdGroup).ToList();
             var restrictedPermissions = context.GroupPermissions.AsNoTracking()
-                .Where(g => idGroups.Contains(g.IdGroup) && g.IsAllowed == false)
+                .Where(g => idGroups.Contains(g.IdGroup) && !g.IsAllowed)
                 .Include(g => g.Permission)
                 .Select(p => new AuthenticationUserPermission
                 {

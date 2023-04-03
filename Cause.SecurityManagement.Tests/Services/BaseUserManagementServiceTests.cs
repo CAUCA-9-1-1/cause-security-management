@@ -29,8 +29,6 @@ namespace Cause.SecurityManagement.Tests.Services
         private readonly UserGroup userGroupAAssignableByAllUsers = CreateUserGroup(Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"), true);
         private readonly UserGroup userGroupBAssignableByAllUsers = CreateUserGroup(Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaab"), true);
         private readonly UserGroup userGroupNotAssignableByAllUsers = CreateUserGroup(Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"), false);
-
-
         private static readonly Dictionary<UserGroup, bool> UserGroupsAssignableByAllUsers = new();
 
         [SetUp]
