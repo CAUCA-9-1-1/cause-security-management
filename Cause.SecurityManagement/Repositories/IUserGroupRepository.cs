@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Cause.SecurityManagement.Models;
 
 namespace Cause.SecurityManagement.Repositories
@@ -14,5 +15,6 @@ namespace Cause.SecurityManagement.Repositories
         void Remove(UserGroup userGroup);
         void Update(UserGroup userGroup);
         void SaveChanges();
+        Task SaveChangesAsync();
     }
 }

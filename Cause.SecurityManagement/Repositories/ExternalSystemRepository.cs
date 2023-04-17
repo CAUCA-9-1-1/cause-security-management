@@ -1,6 +1,7 @@
 ﻿using Cause.SecurityManagement.Models;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Cause.SecurityManagement.Services;
 
 namespace Cause.SecurityManagement.Repositories
@@ -48,6 +49,10 @@ namespace Cause.SecurityManagement.Repositories
         public void SaveChanges()
         {
             context.SaveChanges();
+        }
+        public Task SaveChangesAsync()
+        {
+            return context.SaveChangesAsync();
         }
     }
 }

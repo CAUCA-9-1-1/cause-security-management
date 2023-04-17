@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Services;
 using Microsoft.EntityFrameworkCore;
@@ -60,6 +61,10 @@ namespace Cause.SecurityManagement.Repositories
         public void SaveChanges()
         {
             context.SaveChanges();
+        }
+        public Task SaveChangesAsync()
+        {
+            return context.SaveChangesAsync();
         }
     }
 }

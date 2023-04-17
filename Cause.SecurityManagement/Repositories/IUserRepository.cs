@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using System.Threading.Tasks;
 
 namespace Cause.SecurityManagement.Repositories
 {
@@ -24,6 +25,7 @@ namespace Cause.SecurityManagement.Repositories
         void Remove(TUser user);
         void Update(TUser user);
         void SaveChanges();
+        Task SaveChangesAsync();
         List<EntityEntry> GetModifieEntities();
     }
 }

@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Cause.SecurityManagement.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
@@ -24,6 +26,7 @@ namespace Cause.SecurityManagement
         EntityEntry<TEntity> Add<TEntity>(TEntity entity) where TEntity : class;
 
 		int SaveChanges();
+        Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
         List<EntityEntry> GetModifieObjects();
     }
 }

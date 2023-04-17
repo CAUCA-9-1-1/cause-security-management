@@ -2,6 +2,7 @@
 using Cause.SecurityManagement.Models.DataTransferObjects;
 using System.Collections.Generic;
 using Cause.SecurityManagement.Models;
+using System.Threading.Tasks;
 
 namespace Cause.SecurityManagement.Repositories
 {
@@ -15,6 +16,6 @@ namespace Cause.SecurityManagement.Repositories
         void Remove(UserPermission userPermission);
         void Update(UserPermission userPermission);
         void SaveChanges();
-
+        Task SaveChangesAsync();
     }
 }

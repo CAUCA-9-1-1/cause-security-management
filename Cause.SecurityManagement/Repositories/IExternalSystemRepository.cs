@@ -1,5 +1,6 @@
 ﻿using Cause.SecurityManagement.Models;
 using System;
+using System.Threading.Tasks;
 
 namespace Cause.SecurityManagement.Repositories
 {
@@ -11,5 +12,6 @@ namespace Cause.SecurityManagement.Repositories
         ExternalSystemToken GetCurrentToken(Guid idExternalSystem, string refreshToken);
         void AddToken(ExternalSystemToken token);
         void SaveChanges();
+        Task SaveChangesAsync();
     }
 }
