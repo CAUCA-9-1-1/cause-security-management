@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Cause.SecurityManagement.Models;
 
 namespace Cause.SecurityManagement.Repositories
@@ -14,5 +15,6 @@ namespace Cause.SecurityManagement.Repositories
         void Update(Group group);
         bool GroupNameAlreadyUsed(Group group);
         void SaveChanges();
+        Task SaveChangesAsync();
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Cause.SecurityManagement.Models;
 
 namespace Cause.SecurityManagement.Repositories
@@ -14,5 +15,6 @@ namespace Cause.SecurityManagement.Repositories
         void Remove(GroupPermission groupPermission);
         void Update(GroupPermission groupPermission);
         void SaveChanges();
+        Task SaveChangesAsync();
     }
 }

@@ -75,12 +75,12 @@ namespace Cause.SecurityManagement.Controllers
             };
         }
 
-        [Route("[Action]"), HttpPost, AllowAnonymous]
-        public ActionResult Refresh([FromBody] TokenRefreshResult tokens)
+        [Route("Refresh"), HttpPost, AllowAnonymous]
+        public async Task<ActionResult> RefreshAsync([FromBody] TokenRefreshResult tokens)
         {
             try
             {
-                var newAccessToken = service.RefreshUserToken(tokens.AccessToken, tokens.RefreshToken);
+                var newAccessToken = await service.RefreshUserTokenAsync(tokens.AccessToken, tokens.RefreshToken);
                 return Ok(new {AccessToken = newAccessToken, tokens.RefreshToken});
             }
             catch (InvalidTokenException exception)

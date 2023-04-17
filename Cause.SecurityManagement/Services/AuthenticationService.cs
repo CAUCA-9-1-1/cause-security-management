@@ -140,7 +140,7 @@ namespace Cause.SecurityManagement.Services
                 || userManagementService.HasPermission(user.Id, configuration.RequiredPermissionForLogin);
         }
 
-        public string RefreshUserToken(string token, string refreshToken)
+        public async Task<string> RefreshUserTokenAsync(string token, string refreshToken)
         {
             var userId = GetIdFromExpiredToken(token);
             var userToken = userRepository.GetToken(userId, refreshToken);
@@ -152,7 +152,7 @@ namespace Cause.SecurityManagement.Services
             var newAccessToken = generator.GenerateAccessToken(user.Id.ToString(), user.UserName, SecurityRoles.User);
             // ReSharper disable once PossibleNullReferenceException
             userToken.AccessToken = newAccessToken;
-            userRepository.SaveChanges();
+            await userRepository.SaveChangesAsync();
 
             return newAccessToken;
         }
