@@ -14,11 +14,11 @@
     <Description>Security Management for Asp.Net Core projects.</Description>
     <Copyright>CAUCA 9-1-1 (c) 2023</Copyright>
     <PackageTags>Cause Security Management AspNetCore Api Client Cauca</PackageTags>
-    <Version>7.0.7</Version>
-    <PackageReleaseNotes>Add a way to access permissions through CurrentUserService.</PackageReleaseNotes>
+    <Version>7.1.0</Version>
+    <PackageReleaseNotes>AuthenticationController async</PackageReleaseNotes>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <AssemblyVersion>7.0.7</AssemblyVersion>
-    <FileVersion>7.0.7</FileVersion>
+    <AssemblyVersion>7.1.0</AssemblyVersion>
+    <FileVersion>7.1.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
