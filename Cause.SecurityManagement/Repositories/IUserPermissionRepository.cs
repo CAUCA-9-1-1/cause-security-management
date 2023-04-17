@@ -8,7 +8,7 @@ namespace Cause.SecurityManagement.Repositories
 {
     public interface IUserPermissionRepository
     {
-        List<AuthenticationUserPermission> GetUserPermissions(Guid userId);
+        Task<List<AuthenticationUserPermission>> GetUserPermissionsAsync(Guid userId);
         List<UserPermission> GetForUser(Guid userId);
         UserPermission Get(Guid userPermissionId);
         bool Any(Guid userPermissionId);

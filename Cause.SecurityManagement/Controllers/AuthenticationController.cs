@@ -165,12 +165,12 @@ namespace Cause.SecurityManagement.Controllers
             };
         }
 
-        [Route("[Action]"), HttpPost, AllowAnonymous]
-        public ActionResult RefreshForExternalSystem([FromBody] TokenRefreshResult tokens)
+        [Route("RefreshForExternalSystem"), HttpPost, AllowAnonymous]
+        public async Task<ActionResult> RefreshForExternalSystemAsync([FromBody] TokenRefreshResult tokens)
         {
             try
             {
-                var newAccessToken = externalSystemAuthenticationService.RefreshAccessToken(tokens.AccessToken, tokens.RefreshToken);
+                var newAccessToken = await externalSystemAuthenticationService.RefreshAccessTokenAsync(tokens.AccessToken, tokens.RefreshToken);
                 return Ok(new { AccessToken = newAccessToken, tokens.RefreshToken });
             }
             catch (InvalidTokenException exception)
@@ -208,9 +208,9 @@ namespace Cause.SecurityManagement.Controllers
         [HttpGet, Route("Permissions")]
         [ProducesResponseType(200)]
         [ProducesResponseType(401)]
-        public ActionResult GetPermissions()
+        public async Task<ActionResult> GetPermissionsAsync()
         {
-            return Ok(currentUserService.GetPermissions());
+            return Ok(await currentUserService.GetPermissionsAsync());
         }
     }
 }

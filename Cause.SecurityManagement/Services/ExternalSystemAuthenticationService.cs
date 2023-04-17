@@ -1,6 +1,7 @@
 ﻿using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Repositories;
 using System;
+using System.Threading.Tasks;
 
 namespace Cause.SecurityManagement.Services
 {
@@ -20,7 +21,7 @@ namespace Cause.SecurityManagement.Services
             this.generator = generator;
         }
 
-        public string RefreshAccessToken(string token, string refreshToken)
+        public async Task<string> RefreshAccessTokenAsync(string token, string refreshToken)
         {
             var externalSystemId = GetIdFromExpiredToken(token);
             var externalSystemToken = repository.GetCurrentToken(externalSystemId, refreshToken);
@@ -31,7 +32,7 @@ namespace Cause.SecurityManagement.Services
             var newAccessToken = generator.GenerateAccessToken(externalSystem.Id.ToString(), externalSystem.Name, SecurityRoles.ExternalSystem);
             // ReSharper disable once PossibleNullReferenceException
             externalSystemToken.AccessToken = newAccessToken;
-            repository.SaveChanges();
+            await repository.SaveChangesAsync();
 
             return newAccessToken;
         }

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IdentityModel.Tokens.Jwt;
+using System.Threading.Tasks;
 using Cause.SecurityManagement.Models.DataTransferObjects;
 using Cause.SecurityManagement.Repositories;
 
@@ -33,9 +34,9 @@ namespace Cause.SecurityManagement.Services
             return contextAccessor.HttpContext?.Connection?.RemoteIpAddress?.MapToIPv4().ToString();
         }
 
-        public List<AuthenticationUserPermission> GetPermissions()
+        public async Task<List<AuthenticationUserPermission>> GetPermissionsAsync()
         {
-            return userPermissionRepository.GetUserPermissions(GetUserId());
+            return await userPermissionRepository.GetUserPermissionsAsync(GetUserId());
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Cause.SecurityManagement.Models.DataTransferObjects;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Cause.SecurityManagement.Services
 {
@@ -8,6 +9,6 @@ namespace Cause.SecurityManagement.Services
     {
         Guid GetUserId();
         string GetUserIpAddress();
-        List<AuthenticationUserPermission> GetPermissions();
+        Task<List<AuthenticationUserPermission>> GetPermissionsAsync();
     }
 }
