@@ -19,12 +19,12 @@ namespace Cause.SecurityManagement.Repositories
             context = contextProvider.GetContext();
         }
 
-        public List<AuthenticationUserPermission> GetUserPermissions(Guid userId)
+        public async Task<List<AuthenticationUserPermission>> GetUserPermissionsAsync(Guid userId)
         {
             var idGroups = context.UserGroups.AsNoTracking()
                 .Where(ug => ug.IdUser == userId)
                 .Select(ug => ug.IdGroup).ToList();
-            var restrictedPermissions = context.GroupPermissions.AsNoTracking()
+            var restrictedPermissions = await context.GroupPermissions.AsNoTracking()
                 .Where(g => idGroups.Contains(g.IdGroup) && !g.IsAllowed)
                 .Include(g => g.Permission)
                 .Select(p => new AuthenticationUserPermission
@@ -33,8 +33,8 @@ namespace Cause.SecurityManagement.Repositories
                     Tag = p.Permission.Tag,
                     IsAllowed = p.IsAllowed,
                 })
-                .ToList();
-            var allowedPermissions = context.GroupPermissions.AsNoTracking()
+                .ToListAsync();
+            var allowedPermissions = await context.GroupPermissions.AsNoTracking()
                 .Where(g => idGroups.Contains(g.IdGroup) && g.IsAllowed && !restrictedPermissions
                                 .Select(p => p.IdModulePermission).Contains(g.IdModulePermission))
                 .Include(g => g.Permission)
@@ -44,7 +44,7 @@ namespace Cause.SecurityManagement.Repositories
                     Tag = p.Permission.Tag,
                     IsAllowed = p.IsAllowed,
                 })
-                .ToList();
+                .ToListAsync();
 
             return restrictedPermissions.Concat(allowedPermissions).Distinct().ToList();
         }
