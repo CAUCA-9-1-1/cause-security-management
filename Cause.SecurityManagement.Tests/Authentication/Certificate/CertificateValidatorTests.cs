@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Cause.SecurityManagement.Authentication.Certificate;
 using Cause.SecurityManagement.Authentication.Exceptions;
 using Cause.SecurityManagement.Models.Configuration;
@@ -12,7 +13,7 @@ namespace Cause.SecurityManagement.Tests.Authentication.Certificate
         private readonly ICertificateValidator certificateValidator;
         private readonly SecurityConfiguration securityConfiguration = new SecurityConfiguration
         {
-            CertificateIssuer = "O=CAUCA"
+            CertificateIssuers = new List<string> { "O=CAUCA" }
         };
 
         public CertificateValidatorTests()
@@ -54,7 +55,7 @@ namespace Cause.SecurityManagement.Tests.Authentication.Certificate
             var httpContext = new DefaultHttpContext();
             httpContext.Request.Headers.Add("ssl-client-verify", "SUCCESS");
             httpContext.Request.Headers.Add("ssl-client-issuer-dn", "test,O=no-valid");
-            httpContext.Request.Headers.Add("ssl-client-subject-dn", $"{securityConfiguration.CertificateIssuer}");
+            httpContext.Request.Headers.Add("ssl-client-subject-dn", $"{securityConfiguration.CertificateIssuers[0]}");
 
             Assert.Throws<CertificateNotValid>(() => certificateValidator.ValidateCertificate(httpContext.Request.Headers));
         }
@@ -64,8 +65,8 @@ namespace Cause.SecurityManagement.Tests.Authentication.Certificate
         {
             var httpContext = new DefaultHttpContext();
             httpContext.Request.Headers.Add("ssl-client-verify", "SUCCESS");
-            httpContext.Request.Headers.Add("ssl-client-issuer-dn", $"test,{securityConfiguration.CertificateIssuer}");
-            httpContext.Request.Headers.Add("ssl-client-subject-dn", $"CN=a,{securityConfiguration.CertificateIssuer}");
+            httpContext.Request.Headers.Add("ssl-client-issuer-dn", $"test,{securityConfiguration.CertificateIssuers[0]}");
+            httpContext.Request.Headers.Add("ssl-client-subject-dn", $"CN=a,{securityConfiguration.CertificateIssuers[0]}");
 
             Assert.DoesNotThrow(() => certificateValidator.ValidateCertificate(httpContext.Request.Headers));
         }
