@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using Cause.SecurityManagement.Authentication.Exceptions;
 using Cause.SecurityManagement.Models.Configuration;
 using Microsoft.AspNetCore.Http;
@@ -50,7 +50,7 @@ namespace Cause.SecurityManagement.Authentication.Certificate
         {
             headers.TryGetValue("ssl-client-issuer-dn", out var sslClientIssuerDn);
 
-            if (configuration.CertificateIssuers == null && configuration.CertificateIssuers.Count == 0)
+            if (configuration.CertificateIssuers == null || configuration.CertificateIssuers.Count == 0)
             {
                 return;
             }
