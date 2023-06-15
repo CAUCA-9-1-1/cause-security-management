@@ -1,9 +1,11 @@
-﻿namespace Cause.SecurityManagement.Models.Configuration
+﻿using System.Collections.Generic;
+
+namespace Cause.SecurityManagement.Models.Configuration
 {
 	public class SecurityConfiguration
     {
         internal static bool UseTwoFactorsAuthentication { get; set; }
-        public string CertificateIssuer { get; set; }
+        public List<string> CertificateIssuers { get; set; }
         public string Issuer { get; set; }
         public string PackageName { get; set; }
         public string SecretKey { get; set; }

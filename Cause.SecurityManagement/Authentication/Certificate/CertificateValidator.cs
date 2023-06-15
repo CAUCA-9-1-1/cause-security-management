@@ -1,4 +1,5 @@
-﻿using Cause.SecurityManagement.Authentication.Exceptions;
+﻿using System.Linq;
+using Cause.SecurityManagement.Authentication.Exceptions;
 using Cause.SecurityManagement.Models.Configuration;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
@@ -49,7 +50,11 @@ namespace Cause.SecurityManagement.Authentication.Certificate
         {
             headers.TryGetValue("ssl-client-issuer-dn", out var sslClientIssuerDn);
 
-            if (!sslClientIssuerDn.ToString().EndsWith(configuration.CertificateIssuer))
+            if (configuration.CertificateIssuers == null && configuration.CertificateIssuers.Count == 0)
+            {
+                return;
+            }
+            if (!configuration.CertificateIssuers.Any(issuer => sslClientIssuerDn.ToString().EndsWith(issuer)))
             {
                 throw new CertificateNotValid();
             }
