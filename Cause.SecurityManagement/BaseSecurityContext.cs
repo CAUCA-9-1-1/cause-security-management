@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Cause.Core.DataLayerExtensions;
+using Cause.SecurityManagement.Interfaces;
 using Cause.SecurityManagement.Mapping;
 using Cause.SecurityManagement.Models;
 using Microsoft.EntityFrameworkCore;

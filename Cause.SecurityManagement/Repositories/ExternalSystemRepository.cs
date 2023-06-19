@@ -2,7 +2,10 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Cause.SecurityManagement.Services;
+using Microsoft.EntityFrameworkCore;
+using Cause.SecurityManagement.Interfaces.Repositories;
+using Cause.SecurityManagement.Interfaces.Services;
+using Cause.SecurityManagement.Interfaces;
 
 namespace Cause.SecurityManagement.Repositories
 {
@@ -44,6 +47,31 @@ namespace Cause.SecurityManagement.Repositories
         {
             return context.ExternalSystemTokens
                 .FirstOrDefault(t => t.IdExternalSystem == idExternalSystem && t.RefreshToken == refreshToken);
+        }
+
+        public bool NameAlreadyUsed(ExternalSystem externalSystem)
+        {
+            return context.ExternalSystems.Any(system => system.Name == externalSystem.Name && system.Id != externalSystem.Id && system.IsActive);
+        }
+
+        public bool Any(Guid externalSystemId)
+        {
+            return context.ExternalSystems.AsNoTracking().Any(externalSystem => externalSystem.Id == externalSystemId);
+        }
+
+        public void Add(ExternalSystem externalSystem)
+        {
+            context.ExternalSystems.Add(externalSystem);
+        }
+
+        public void Remove(ExternalSystem externalSystem)
+        {
+            context.ExternalSystems.Remove(externalSystem);
+        }
+
+        public void Update(ExternalSystem externalSystem)
+        {
+            context.ExternalSystems.Update(externalSystem);
         }
 
         public void SaveChanges()

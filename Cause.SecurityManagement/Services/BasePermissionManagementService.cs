@@ -1,4 +1,5 @@
-﻿using Cause.SecurityManagement.Interfaces.Services;
+﻿using Cause.SecurityManagement.Interfaces;
+using Cause.SecurityManagement.Interfaces.Services;
 using Cause.SecurityManagement.Models;
 using System;
 using System.Collections.Generic;

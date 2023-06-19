@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using Cause.SecurityManagement.Interfaces.Repositories;
 using Cause.SecurityManagement.Interfaces.Services;
+using Cause.SecurityManagement.Interfaces;
 
 namespace Cause.SecurityManagement.Repositories
 {

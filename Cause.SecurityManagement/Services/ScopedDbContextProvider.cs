@@ -1,4 +1,5 @@
-﻿using Cause.SecurityManagement.Interfaces.Services;
+﻿using Cause.SecurityManagement.Interfaces;
+using Cause.SecurityManagement.Interfaces.Services;
 using Cause.SecurityManagement.Models;
 
 namespace Cause.SecurityManagement.Services
