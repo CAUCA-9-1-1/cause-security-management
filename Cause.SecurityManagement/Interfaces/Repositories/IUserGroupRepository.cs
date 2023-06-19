@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Cause.SecurityManagement.Models;
 
-namespace Cause.SecurityManagement.Repositories
+namespace Cause.SecurityManagement.Interfaces.Repositories
 {
     public interface IUserGroupRepository
     {

@@ -1,6 +1,6 @@
-﻿using Cause.SecurityManagement.Models;
+﻿using Cause.SecurityManagement.Interfaces.Services;
+using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Models.DataTransferObjects;
-using Cause.SecurityManagement.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;

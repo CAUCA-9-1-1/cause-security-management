@@ -1,11 +1,12 @@
 ﻿using System;
 using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Models.DataTransferObjects;
-using Cause.SecurityManagement.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Cause.SecurityManagement.Interfaces.Repositories;
+using Cause.SecurityManagement.Interfaces.Services;
 
 namespace Cause.SecurityManagement.Repositories
 {

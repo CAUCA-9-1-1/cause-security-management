@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Cause.SecurityManagement.Services
+namespace Cause.SecurityManagement.Interfaces.Services
 {
     public interface ICurrentUserService
     {

@@ -3,7 +3,8 @@ using Cause.SecurityManagement.Models.ValidationCode;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
-using Cause.SecurityManagement.Services;
+using Cause.SecurityManagement.Interfaces.Repositories;
+using Cause.SecurityManagement.Interfaces.Services;
 
 namespace Cause.SecurityManagement.Repositories
 {

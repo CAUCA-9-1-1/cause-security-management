@@ -1,4 +1,6 @@
 ﻿using Cause.SecurityManagement.Authentication.MultiFactor;
+using Cause.SecurityManagement.Interfaces.Repositories;
+using Cause.SecurityManagement.Interfaces.Services;
 using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Models.Configuration;
 using Cause.SecurityManagement.Repositories;
@@ -31,7 +33,7 @@ namespace Cause.SecurityManagement.Tests.Services
         {
             configuration = new SecurityConfiguration { PackageName = "Fred's Unit Tests" };
             multiAuthHandler = Substitute.For<IAuthenticationMultiFactorHandler<User>>();
-            currentUserService = Substitute.For<ICurrentUserService>();           
+            currentUserService = Substitute.For<ICurrentUserService>();
             repository = Substitute.For<IUserRepository<User>>();
             managementService = Substitute.For<IUserManagementService<User>>();
             reader = Substitute.For<ITokenReader>();

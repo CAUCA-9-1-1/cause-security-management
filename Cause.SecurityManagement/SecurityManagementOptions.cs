@@ -1,4 +1,4 @@
-﻿using Cause.SecurityManagement.Services;
+﻿using Cause.SecurityManagement.Interfaces.Services;
 using System;
 using System.Diagnostics.CodeAnalysis;
 

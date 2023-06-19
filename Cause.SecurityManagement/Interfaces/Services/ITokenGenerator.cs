@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Cause.SecurityManagement.Services
+namespace Cause.SecurityManagement.Interfaces.Services
 {
     public interface ITokenGenerator
     {

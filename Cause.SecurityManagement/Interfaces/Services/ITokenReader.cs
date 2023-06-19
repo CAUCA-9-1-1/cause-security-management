@@ -1,6 +1,6 @@
 ﻿using Cause.SecurityManagement.Models;
 
-namespace Cause.SecurityManagement.Services
+namespace Cause.SecurityManagement.Interfaces.Services
 {
     public interface ITokenReader
     {

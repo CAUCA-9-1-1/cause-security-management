@@ -1,7 +1,8 @@
 ﻿using System;
+using Cause.SecurityManagement.Interfaces.Repositories;
+using Cause.SecurityManagement.Interfaces.Services;
 using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Models.Configuration;
-using Cause.SecurityManagement.Repositories;
 using Microsoft.Extensions.Options;
 
 namespace Cause.SecurityManagement.Services
@@ -28,7 +29,7 @@ namespace Cause.SecurityManagement.Services
         public bool CurrentUserHasRequiredPermissionForAllGroupsAccess()
         {
             return string.IsNullOrWhiteSpace(configuration.RequiredPermissionForAllGroupsAccess)
-                   || userPermissionService.HasPermission(currentUserService.GetUserId(), configuration.RequiredPermissionForAllGroupsAccess);
+                    || userPermissionService.HasPermission(currentUserService.GetUserId(), configuration.RequiredPermissionForAllGroupsAccess);
         }
 
         public bool CurrentUserHasRequiredPermissionForGroupsAccess(Guid groupId)

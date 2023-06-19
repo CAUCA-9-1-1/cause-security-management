@@ -1,4 +1,4 @@
-﻿namespace Cause.SecurityManagement.Services
+﻿namespace Cause.SecurityManagement.Interfaces.Services
 {
     public interface IMobileVersionService
     {

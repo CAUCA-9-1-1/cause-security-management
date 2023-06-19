@@ -1,13 +1,14 @@
+using Cause.SecurityManagement.Services;
+using NUnit.Framework;
+using FluentAssertions;
+using NSubstitute;
+using System.Collections.Generic;
+using Cause.SecurityManagement.Models;
+using Cause.SecurityManagement.Interfaces.Repositories;
+using Cause.SecurityManagement.Interfaces.Services;
+
 namespace Cause.SecurityManagement.Tests.Services
 {
-    using Cause.SecurityManagement.Services;
-    using NUnit.Framework;
-    using FluentAssertions;
-    using NSubstitute;
-    using System.Collections.Generic;
-    using Cause.SecurityManagement.Models;
-    using Cause.SecurityManagement.Repositories;
-
     [TestFixture]
     public class BaseGroupManagementServiceTests
     {

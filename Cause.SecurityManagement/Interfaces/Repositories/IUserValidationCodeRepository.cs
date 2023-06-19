@@ -2,7 +2,7 @@
 using Cause.SecurityManagement.Models.ValidationCode;
 using System;
 
-namespace Cause.SecurityManagement.Repositories
+namespace Cause.SecurityManagement.Interfaces.Repositories
 {
     public interface IUserValidationCodeRepository
     {

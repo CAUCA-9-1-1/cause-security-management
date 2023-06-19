@@ -8,7 +8,8 @@ using Cause.SecurityManagement.Models;
 using System.Collections.Generic;
 using Microsoft.Extensions.Options;
 using Cause.SecurityManagement.Models.Configuration;
-using Cause.SecurityManagement.Repositories;
+using Cause.SecurityManagement.Interfaces.Repositories;
+using Cause.SecurityManagement.Interfaces.Services;
 
 namespace Cause.SecurityManagement.Tests.Services
 {

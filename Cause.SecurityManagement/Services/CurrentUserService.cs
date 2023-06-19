@@ -5,7 +5,8 @@ using System.Linq;
 using System.IdentityModel.Tokens.Jwt;
 using System.Threading.Tasks;
 using Cause.SecurityManagement.Models.DataTransferObjects;
-using Cause.SecurityManagement.Repositories;
+using Cause.SecurityManagement.Interfaces.Services;
+using Cause.SecurityManagement.Interfaces.Repositories;
 
 namespace Cause.SecurityManagement.Services
 {

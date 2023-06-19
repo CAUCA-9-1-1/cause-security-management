@@ -1,15 +1,16 @@
+using Cause.SecurityManagement.Services;
+using System;
+using NUnit.Framework;
+using FluentAssertions;
+using NSubstitute;
+using Cause.SecurityManagement.Models;
+using Microsoft.Extensions.Options;
+using Cause.SecurityManagement.Models.Configuration;
+using Cause.SecurityManagement.Interfaces.Services;
+using Cause.SecurityManagement.Interfaces.Repositories;
+
 namespace Cause.SecurityManagement.Tests.Services
 {
-    using Cause.SecurityManagement.Services;
-    using System;
-    using NUnit.Framework;
-    using FluentAssertions;
-    using NSubstitute;
-    using Cause.SecurityManagement.Models;
-    using Cause.SecurityManagement.Repositories;
-    using Microsoft.Extensions.Options;
-    using Cause.SecurityManagement.Models.Configuration;
-
     [TestFixture]
     public class UserGroupPermissionServiceTests
     {

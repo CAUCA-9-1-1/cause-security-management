@@ -1,5 +1,5 @@
-﻿using Cause.SecurityManagement.Models;
-using Cause.SecurityManagement.Services;
+﻿using Cause.SecurityManagement.Interfaces.Services;
+using Cause.SecurityManagement.Models;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;

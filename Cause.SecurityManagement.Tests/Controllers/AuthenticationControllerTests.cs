@@ -4,7 +4,6 @@ using System.Text.Json;
 using Cause.SecurityManagement.Controllers;
 using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Models.DataTransferObjects;
-using Cause.SecurityManagement.Services;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -13,6 +12,7 @@ using NSubstitute;
 using NUnit.Framework;
 using System.Threading.Tasks;
 using Cause.SecurityManagement.Authentication.MultiFactor;
+using Cause.SecurityManagement.Interfaces.Services;
 
 namespace Cause.SecurityManagement.Tests.Controllers
 {

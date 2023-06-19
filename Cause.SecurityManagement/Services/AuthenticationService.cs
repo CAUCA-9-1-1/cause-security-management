@@ -1,16 +1,17 @@
 ﻿using Cause.SecurityManagement.Authentication.MultiFactor;
+using Cause.SecurityManagement.Interfaces.Repositories;
+using Cause.SecurityManagement.Interfaces.Services;
 using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Models.Configuration;
 using Cause.SecurityManagement.Models.DataTransferObjects;
 using Cause.SecurityManagement.Models.ValidationCode;
-using Cause.SecurityManagement.Repositories;
 using Microsoft.Extensions.Options;
 using System;
 using System.Threading.Tasks;
 
 namespace Cause.SecurityManagement.Services
 {
-    public class AuthenticationService<TUser> 
+    public class AuthenticationService<TUser>
         : IAuthenticationService
         where TUser : User, new()
     {

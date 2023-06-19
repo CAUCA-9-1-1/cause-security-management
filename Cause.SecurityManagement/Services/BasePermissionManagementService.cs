@@ -1,4 +1,5 @@
-﻿using Cause.SecurityManagement.Models;
+﻿using Cause.SecurityManagement.Interfaces.Services;
+using Cause.SecurityManagement.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,7 +34,7 @@ namespace Cause.SecurityManagement.Services
 
         public bool PermissionAlreadyExist(ModulePermission permission)
         {
-	        return SecurityContext.ModulePermissions.FirstOrDefault(c => c.Tag == permission.Tag) != null;
+            return SecurityContext.ModulePermissions.FirstOrDefault(c => c.Tag == permission.Tag) != null;
         }
 
         public bool Delete(Guid permissionId)
@@ -55,8 +56,8 @@ namespace Cause.SecurityManagement.Services
 
         public bool Update(ModulePermission permission)
         {
-	        if (PermissionAlreadyExist(permission))
-		        return false;
+            if (PermissionAlreadyExist(permission))
+                return false;
 
             var permissionToChange = SecurityContext.ModulePermissions.FirstOrDefault(c => c.Id == permission.Id);
             if (permissionToChange != null)

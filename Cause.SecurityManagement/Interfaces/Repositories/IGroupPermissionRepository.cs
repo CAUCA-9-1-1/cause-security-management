@@ -3,7 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Cause.SecurityManagement.Models;
 
-namespace Cause.SecurityManagement.Repositories
+namespace Cause.SecurityManagement.Interfaces.Repositories
 {
     public interface IGroupPermissionRepository
     {

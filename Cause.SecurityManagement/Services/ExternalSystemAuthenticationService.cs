@@ -1,5 +1,6 @@
-﻿using Cause.SecurityManagement.Models;
-using Cause.SecurityManagement.Repositories;
+﻿using Cause.SecurityManagement.Interfaces.Repositories;
+using Cause.SecurityManagement.Interfaces.Services;
+using Cause.SecurityManagement.Models;
 using System;
 using System.Threading.Tasks;
 

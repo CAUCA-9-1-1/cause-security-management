@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Models.DataTransferObjects;
 
-namespace Cause.SecurityManagement.Services
+namespace Cause.SecurityManagement.Interfaces.Services
 {
     public interface IUserManagementService<TUser>
     {

@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Cause.SecurityManagement.Interfaces.Repositories;
+using Cause.SecurityManagement.Interfaces.Services;
 using Cause.SecurityManagement.Models;
-using Cause.SecurityManagement.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace Cause.SecurityManagement.Repositories

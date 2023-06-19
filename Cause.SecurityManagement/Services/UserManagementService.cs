@@ -4,8 +4,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Cause.SecurityManagement.Models.Configuration;
-using Cause.SecurityManagement.Repositories;
 using Microsoft.Extensions.Options;
+using Cause.SecurityManagement.Interfaces.Services;
+using Cause.SecurityManagement.Interfaces.Repositories;
 
 namespace Cause.SecurityManagement.Services
 {
@@ -45,7 +46,7 @@ namespace Cause.SecurityManagement.Services
 
 		public virtual TUser GetUser(Guid userId)
 		{
-		    return userRepository.Get(userId);
+            return userRepository.Get(userId);
 		}
 
 		public virtual bool UpdateUser(TUser user)

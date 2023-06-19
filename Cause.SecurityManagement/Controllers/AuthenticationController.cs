@@ -9,6 +9,7 @@ using System;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Cause.SecurityManagement.Authentication.MultiFactor;
+using Cause.SecurityManagement.Interfaces.Services;
 
 namespace Cause.SecurityManagement.Controllers
 {

@@ -1,5 +1,7 @@
 ﻿using Cause.SecurityManagement.Authentication.Certificate;
 using Cause.SecurityManagement.Authentication.MultiFactor;
+using Cause.SecurityManagement.Interfaces.Repositories;
+using Cause.SecurityManagement.Interfaces.Services;
 using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Repositories;
 using Cause.SecurityManagement.Services;
@@ -33,7 +35,7 @@ namespace Cause.SecurityManagement
         {
             services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddScoped<IAuthenticationMultiFactorHandler<TUser>, AuthenticationMultiFactorHandler<TUser>>();
-            services.AddScoped<IMobileVersionService, MobileVersionService>();            
+            services.AddScoped<IMobileVersionService, MobileVersionService>();
             services.AddScoped<IAuthenticationService, AuthenticationService<TUser>>();
             services.AddScoped<ITokenGenerator, TokenGenerator>();
             services.AddScoped<ITokenReader, TokenReader>();

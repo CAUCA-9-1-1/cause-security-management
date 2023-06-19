@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Cause.SecurityManagement.Services
+namespace Cause.SecurityManagement.Interfaces.Services
 {
 	public interface IGroupManagementService
     {

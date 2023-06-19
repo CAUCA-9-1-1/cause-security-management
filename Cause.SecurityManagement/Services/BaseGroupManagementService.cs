@@ -2,7 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Cause.SecurityManagement.Repositories;
+using Cause.SecurityManagement.Interfaces.Services;
+using Cause.SecurityManagement.Interfaces.Repositories;
 
 namespace Cause.SecurityManagement.Services
 {

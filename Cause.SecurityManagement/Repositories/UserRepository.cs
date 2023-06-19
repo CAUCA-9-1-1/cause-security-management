@@ -3,9 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Cause.SecurityManagement.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Cause.SecurityManagement.Interfaces.Repositories;
+using Cause.SecurityManagement.Interfaces.Services;
 
 namespace Cause.SecurityManagement.Repositories
 {
@@ -85,6 +86,7 @@ namespace Cause.SecurityManagement.Repositories
         {
             return context.Users.AsNoTracking().Any(u => u.Id == userId);
         }
+
         public void Add(TUser user)
         {
             context.Users.Add(user);

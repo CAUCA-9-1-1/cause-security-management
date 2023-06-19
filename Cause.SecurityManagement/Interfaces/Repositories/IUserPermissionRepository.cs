@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using Cause.SecurityManagement.Models;
 using System.Threading.Tasks;
 
-namespace Cause.SecurityManagement.Repositories
+namespace Cause.SecurityManagement.Interfaces.Repositories
 {
     public interface IUserPermissionRepository
     {

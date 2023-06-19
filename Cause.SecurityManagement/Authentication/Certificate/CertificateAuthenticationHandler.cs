@@ -5,8 +5,8 @@ using Microsoft.Extensions.Logging;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Authentication;
 using System.Security.Claims;
-using Cause.SecurityManagement.Repositories;
 using Cause.SecurityManagement.Authentication.Exceptions;
+using Cause.SecurityManagement.Interfaces.Repositories;
 
 namespace Cause.SecurityManagement.Authentication.Certificate
 {

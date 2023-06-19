@@ -5,7 +5,7 @@ using System.Linq;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System.Threading.Tasks;
 
-namespace Cause.SecurityManagement.Repositories
+namespace Cause.SecurityManagement.Interfaces.Repositories
 {
     public interface IUserRepository<TUser>
         where TUser : User, new()

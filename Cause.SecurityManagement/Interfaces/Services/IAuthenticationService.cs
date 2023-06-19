@@ -3,7 +3,7 @@ using Cause.SecurityManagement.Models.DataTransferObjects;
 using System;
 using System.Threading.Tasks;
 
-namespace Cause.SecurityManagement.Services
+namespace Cause.SecurityManagement.Interfaces.Services
 {
     public interface IAuthenticationService
     {

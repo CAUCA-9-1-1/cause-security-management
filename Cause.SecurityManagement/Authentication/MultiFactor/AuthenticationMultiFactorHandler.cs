@@ -1,6 +1,6 @@
-﻿using Cause.SecurityManagement.Models;
+﻿using Cause.SecurityManagement.Interfaces.Repositories;
+using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Models.ValidationCode;
-using Cause.SecurityManagement.Repositories;
 using System;
 using System.Threading.Tasks;
 
