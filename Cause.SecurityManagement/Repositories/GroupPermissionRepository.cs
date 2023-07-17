@@ -20,7 +20,6 @@ namespace Cause.SecurityManagement.Repositories
         public IQueryable<GroupPermission> GetForGroup(Guid groupId)
         {
             return context.GroupPermissions
-                .Include( gp => gp.Group)
                 .AsNoTracking()
                 .Where(gp => gp.IdGroup == groupId);
         }
