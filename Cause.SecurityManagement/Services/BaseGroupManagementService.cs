@@ -104,11 +104,11 @@ namespace Cause.SecurityManagement.Services
             var groupPermissions = group.Permissions.ToList();
             var dbGroupPermissions = groupPermissionRepository.GetForGroup(group.Id).ToList();
 
-            dbGroupPermissions.ForEach(groupPermission =>
+            dbGroupPermissions.ForEach(dbGroupPermission =>
             {
-                if (groupPermissions.Any(g => g.Id == groupPermission.Id) == false)
+                if (!groupPermissions.Any(g => g.Id == dbGroupPermission.Id))
                 {
-                    groupPermissionRepository.Remove(groupPermission);
+                    groupPermissionRepository.Remove(dbGroupPermission);
                 }
             });
 
