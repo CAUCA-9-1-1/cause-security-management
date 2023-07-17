@@ -26,7 +26,7 @@ namespace Cause.SecurityManagement.Services
 			IUserRepository<TUser> userRepository,
             IUserGroupPermissionService userGroupPermissionService,
             IUserPermissionService userPermissionService,
-            IEmailForUserModificationSender emailSender)
+            IEmailForUserModificationSender emailSender = null)
 		{
             this.emailSender = emailSender;
             this.userGroupRepository = userGroupRepository;
