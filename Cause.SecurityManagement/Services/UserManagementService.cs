@@ -50,6 +50,7 @@ namespace Cause.SecurityManagement.Services
 
 		public virtual bool UpdateUser(TUser user)
 		{
+            
 			if (UserNameAlreadyUsed(user))
 				return false;
 
@@ -63,8 +64,11 @@ namespace Cause.SecurityManagement.Services
             UpdatePassword(user, true);
 
             userRepository.SaveChanges();
-			emailSender?.SendEmailForModifiedUser(user.Email);
-			return true;
+            if (user.IsActive)
+            {
+                emailSender?.SendEmailForModifiedUser(user.Email);
+            }
+            return true;
 		}
 
         public virtual void UpdatePassword(TUser user, bool userMustResetPasswordWhenPasswordIsChanged)
@@ -159,8 +163,11 @@ namespace Cause.SecurityManagement.Services
                 user.Password = new PasswordGenerator().EncodePassword(newPassword, SecurityConfiguration.PackageName);
 				user.PasswordMustBeResetAfterLogin = userMustResetPasswwordAtNextLogin;
                 userRepository.SaveChanges();
-				emailSender?.SendEmailForModifiedPassword(user.Email);
-				return true;
+                if (user.IsActive)
+                {
+                    emailSender?.SendEmailForModifiedPassword(user.Email);
+                }
+                return true;
             }
             return false;
         }
