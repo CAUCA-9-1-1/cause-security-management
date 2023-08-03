@@ -14,11 +14,11 @@
     <Description>Security Management for Asp.Net Core projects.</Description>
     <Copyright>CAUCA 9-1-1 (c) 2023</Copyright>
     <PackageTags>Cause Security Management AspNetCore Api Client Cauca</PackageTags>
-    <Version>7.2.3</Version>
+    <Version>7.2.4</Version>
     <PackageReleaseNotes>AuthenticationController async</PackageReleaseNotes>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <AssemblyVersion>7.2.3</AssemblyVersion>
-    <FileVersion>7.2.3</FileVersion>
+    <AssemblyVersion>7.2.4</AssemblyVersion>
+    <FileVersion>7.2.4</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
