@@ -17,8 +17,8 @@
     <Version>7.2.3</Version>
     <PackageReleaseNotes>AuthenticationController async</PackageReleaseNotes>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <AssemblyVersion>7.2.2</AssemblyVersion>
-    <FileVersion>7.2.2</FileVersion>
+    <AssemblyVersion>7.2.3</AssemblyVersion>
+    <FileVersion>7.2.3</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
