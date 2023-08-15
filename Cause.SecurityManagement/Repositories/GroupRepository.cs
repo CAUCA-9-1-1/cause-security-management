@@ -24,6 +24,7 @@ namespace Cause.SecurityManagement.Repositories
             return context.Groups
                 .Include(g => g.Users)
                 .Include(g => g.Permissions)
+                .AsSplitQuery()
                 .ToList();
         }
 
