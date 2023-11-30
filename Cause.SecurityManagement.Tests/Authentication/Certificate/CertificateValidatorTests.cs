@@ -11,7 +11,7 @@ namespace Cause.SecurityManagement.Tests.Authentication.Certificate
 	public class CertificateValidatorTests
     {
         private readonly ICertificateValidator certificateValidator;
-        private readonly SecurityConfiguration securityConfiguration = new SecurityConfiguration
+        private readonly SecurityConfiguration securityConfiguration = new()
         {
             CertificateIssuers = new List<string> { "O=CAUCA" }
         };
@@ -34,7 +34,7 @@ namespace Cause.SecurityManagement.Tests.Authentication.Certificate
         public void WithInvalidCertificate_WhenValidated_ShouldThrowsExceptionAsync()
         {
             var httpContext = new DefaultHttpContext();
-            httpContext.Request.Headers.Add("ssl-client-verify", "FAILED");
+            httpContext.Request.Headers.Append("ssl-client-verify", "FAILED");
 
             Assert.Throws<CertificateNotValid>(() => certificateValidator.ValidateCertificate(httpContext.Request.Headers));
         }
@@ -43,8 +43,8 @@ namespace Cause.SecurityManagement.Tests.Authentication.Certificate
         public void WithInvalidCertificateIssuer_WhenValidated_ShouldThrowsExceptionAsync()
         {
             var httpContext = new DefaultHttpContext();
-            httpContext.Request.Headers.Add("ssl-client-verify", "SUCCESS");
-            httpContext.Request.Headers.Add("ssl-client-issuer-dn", $"test,O=no-valid");
+            httpContext.Request.Headers.Append("ssl-client-verify", "SUCCESS");
+            httpContext.Request.Headers.Append("ssl-client-issuer-dn", "test,O=no-valid");
 
             Assert.Throws<CertificateNotValid>(() => certificateValidator.ValidateCertificate(httpContext.Request.Headers));
         }
@@ -53,9 +53,9 @@ namespace Cause.SecurityManagement.Tests.Authentication.Certificate
         public void WithInvalidCertificateSubject_WhenValidated_ShouldThrowsExceptionAsync()
         {
             var httpContext = new DefaultHttpContext();
-            httpContext.Request.Headers.Add("ssl-client-verify", "SUCCESS");
-            httpContext.Request.Headers.Add("ssl-client-issuer-dn", "test,O=no-valid");
-            httpContext.Request.Headers.Add("ssl-client-subject-dn", $"{securityConfiguration.CertificateIssuers[0]}");
+            httpContext.Request.Headers.Append("ssl-client-verify", "SUCCESS");
+            httpContext.Request.Headers.Append("ssl-client-issuer-dn", "test,O=no-valid");
+            httpContext.Request.Headers.Append("ssl-client-subject-dn", $"{securityConfiguration.CertificateIssuers[0]}");
 
             Assert.Throws<CertificateNotValid>(() => certificateValidator.ValidateCertificate(httpContext.Request.Headers));
         }
@@ -64,9 +64,9 @@ namespace Cause.SecurityManagement.Tests.Authentication.Certificate
         public void WithValidCertificate_WhenValidated_ShouldThrowsExceptionAsync()
         {
             var httpContext = new DefaultHttpContext();
-            httpContext.Request.Headers.Add("ssl-client-verify", "SUCCESS");
-            httpContext.Request.Headers.Add("ssl-client-issuer-dn", $"test,{securityConfiguration.CertificateIssuers[0]}");
-            httpContext.Request.Headers.Add("ssl-client-subject-dn", $"CN=a,{securityConfiguration.CertificateIssuers[0]}");
+            httpContext.Request.Headers.Append("ssl-client-verify", "SUCCESS");
+            httpContext.Request.Headers.Append("ssl-client-issuer-dn", $"test,{securityConfiguration.CertificateIssuers[0]}");
+            httpContext.Request.Headers.Append("ssl-client-subject-dn", $"CN=a,{securityConfiguration.CertificateIssuers[0]}");
 
             Assert.DoesNotThrow(() => certificateValidator.ValidateCertificate(httpContext.Request.Headers));
         }

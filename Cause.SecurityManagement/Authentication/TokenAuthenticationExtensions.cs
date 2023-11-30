@@ -6,6 +6,7 @@ using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 
 namespace Cause.SecurityManagement.Authentication
 {
@@ -35,9 +36,9 @@ namespace Cause.SecurityManagement.Authentication
                     {
                         context.Response.StatusCode = 401;
                         if (context.Exception.GetType() == typeof(SecurityTokenException))
-                            context.Response.Headers.Add("Token-Expired", "true");
+                            context.Response.Headers.Append("Token-Expired", "true");
                         else if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
-                            context.Response.Headers.Add("Token-Expired", "true");
+                            context.Response.Headers.Append("Token-Expired", "true");
                         return Task.CompletedTask;
                     },
                 };

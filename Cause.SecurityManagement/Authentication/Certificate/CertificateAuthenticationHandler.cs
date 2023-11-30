@@ -16,17 +16,17 @@ namespace Cause.SecurityManagement.Authentication.Certificate
         private readonly IExternalSystemRepository repository;
 
         public CertificateAuthenticationHandler(
-            IOptionsMonitor<CertificateAuthenticationOptions> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock,
+            IOptionsMonitor<CertificateAuthenticationOptions> options, ILoggerFactory logger, UrlEncoder encoder,
             ICertificateValidator certificateValidator,
             IExternalSystemRepository repository
-        ) : base(options, logger, encoder, clock)
+        ) : base(options, logger, encoder)
         {
             this.certificateValidator = certificateValidator;
             this.repository = repository;
         }
 
         protected override Task<AuthenticateResult> HandleAuthenticateAsync()
-        {
+        { 
             try
             {
                 certificateValidator.ValidateCertificate(Request.Headers);
