@@ -14,18 +14,12 @@
     <Description>Security Management for Asp.Net Core projects.</Description>
     <Copyright>CAUCA 9-1-1 (c) 2023</Copyright>
     <PackageTags>Cause Security Management AspNetCore Api Client Cauca</PackageTags>
-    <Version>7.2.5</Version>
-    <PackageReleaseNotes>AuthenticationController async</PackageReleaseNotes>
+    <Version>7.3.0</Version>
+    <PackageReleaseNotes>Allow seemless secret change</PackageReleaseNotes>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <AssemblyVersion>7.2.5</AssemblyVersion>
-    <FileVersion>7.2.5</FileVersion>
+    <AssemblyVersion>7.3.0</AssemblyVersion>
+    <FileVersion>7.3.0</FileVersion>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="Data\**" />
-    <EmbeddedResource Remove="Data\**" />
-    <None Remove="Data\**" />
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Cause.Core.DataLayerExtensions" Version="7.0.*" />

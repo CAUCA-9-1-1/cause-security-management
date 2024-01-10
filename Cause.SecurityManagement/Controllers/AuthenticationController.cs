@@ -9,6 +9,7 @@ using System;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Cause.SecurityManagement.Authentication.MultiFactor;
+using Microsoft.AspNetCore.Http;
 
 namespace Cause.SecurityManagement.Controllers
 {
@@ -86,21 +87,21 @@ namespace Cause.SecurityManagement.Controllers
             catch (InvalidTokenException exception)
             {
                 logger.LogWarning(exception, $"Could not refresh user's acess token.  Refresh token: '{tokens?.RefreshToken}'.  Access token: '{tokens?.AccessToken}'");
-                HttpContext.Response.Headers.Add("Token-Invalid", "true");
+                HttpContext.Response.Headers.Append("Token-Invalid", "true");
             }
             catch (SecurityTokenExpiredException exception)
             {
-                HttpContext.Response.Headers.Add("Refresh-Token-Expired", "true");
+                HttpContext.Response.Headers.Append("Refresh-Token-Expired", "true");
                 logger.LogWarning(exception, $"Could not refresh external system's acess token - SecurityTokenExpiredException.  Refresh token: '{tokens?.RefreshToken}'.  Access token: '{tokens?.AccessToken}'");
             }
             catch (SecurityTokenException exception)
             {
-                HttpContext.Response.Headers.Add("Token-Invalid", "true");
+                HttpContext.Response.Headers.Append("Token-Invalid", "true");
                 logger.LogWarning(exception, $"Could not refresh external system's acess token - SecurityTokenException.  Refresh token: '{tokens?.RefreshToken}'.  Access token: '{tokens?.AccessToken}'");
             }
             catch (InvalidTokenUserException exception)
             {
-                HttpContext.Response.Headers.Add("Token-Invalid", "true");
+                HttpContext.Response.Headers.Append("Token-Invalid", "true");
                 logger.LogWarning(exception, $"Could not refresh external system's acess token - InvalidTokenUserException.  Refresh token: '{tokens?.RefreshToken}'.  Access token: '{tokens?.AccessToken}'");
             }
 
@@ -176,15 +177,15 @@ namespace Cause.SecurityManagement.Controllers
             catch (InvalidTokenException exception)
             {
                 logger.LogWarning(exception, $"Could not refresh external system's access token.  Refresh token: '{tokens?.RefreshToken}'.  Access token: '{tokens?.AccessToken}'");
-                HttpContext.Response.Headers.Add("Token-Invalid", "true");
+                HttpContext.Response.Headers.Append("Token-Invalid", "true");
             }
             catch (SecurityTokenExpiredException)
             {
-                HttpContext.Response.Headers.Add("Refresh-Token-Expired", "true");
+                HttpContext.Response.Headers.Append("Refresh-Token-Expired", "true");
             }
             catch (SecurityTokenException exception)
             {
-                HttpContext.Response.Headers.Add("Token-Invalid", "true");
+                HttpContext.Response.Headers.Append("Token-Invalid", "true");
                 logger.LogWarning(exception, $"Could not refresh external system's access token - SecurityTokenException.  Refresh token: '{tokens?.RefreshToken}'.  Access token: '{tokens?.AccessToken}'");
             }
 
