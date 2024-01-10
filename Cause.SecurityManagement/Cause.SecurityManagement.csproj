@@ -13,17 +13,17 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Description>Security Management for Asp.Net Core projects.</Description>
     <Copyright>CAUCA 9-1-1 (c) 2023</Copyright>
-    <PackageTags>Cause Security Management AspNetCore Api Client Cauca</PackageTags>
-    <Version>8.0.0</Version>
+    <PackageTags>Add a way to seemlessly change the secret</PackageTags>
+    <Version>8.0.5</Version>
     <PackageReleaseNotes>Bump to DotNet8</PackageReleaseNotes>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <AssemblyVersion>8.0.0</AssemblyVersion>
-    <FileVersion>8.0.0</FileVersion>
+    <AssemblyVersion>8.0.5</AssemblyVersion>
+    <FileVersion>8.0.5</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Cause.Core.DataLayerExtensions" Version="8.0.*" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.*" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.1" />
   </ItemGroup>
   
   <ItemGroup>

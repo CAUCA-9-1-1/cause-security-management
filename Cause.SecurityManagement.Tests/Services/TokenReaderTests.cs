@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using NUnit.Framework;
 using System;
+using Cause.SecurityManagement.Services;
 using TokenReader = Cause.SecurityManagement.Services.TokenReader;
 
 namespace Cause.SecurityManagement.Tests.Services
@@ -17,8 +18,69 @@ namespace Cause.SecurityManagement.Tests.Services
         [SetUp]
         public void SetUpTest()
         {
-            configuration = new SecurityConfiguration();
-            reader = new TokenReader(Options.Create(configuration));            
+            configuration = new SecurityConfiguration
+            {
+                Issuer = "http://mytest.ca",
+                PackageName = "CauseSecurityManagement",
+                SecretKey = "RHzb3Z68KW9LanvjBoev2fupPzn94A3r"
+            };
+            reader = new TokenReader(Options.Create(configuration));
+        }
+
+        [Test]
+        public void TokenGeneratedWithSecret_WhenGettingSid_ShouldBeAbleToReadIt()
+        {
+            var someUserId = "someUserId";
+            var generator = new TokenGenerator(Options.Create(configuration));
+            var token = generator.GenerateAccessToken(someUserId,"user", "test");
+            
+            var result = reader.GetSidFromExpiredToken(token);
+
+            result.Should().Be(someUserId);
+        }
+
+        [Test]
+        public void TokenGeneratedWithPreviousSecret_WhenGettingSid_ShouldBeAbleToReadIt()
+        {
+            var someUserId = "someUserId";
+            var generator = new TokenGenerator(Options.Create(configuration));
+            var token = generator.GenerateAccessToken(someUserId, "user", "test");
+            configuration.AllowTokenRefreshWithPreviousSecretKey = true;
+            configuration.PreviousSecretKey = configuration.SecretKey;
+            configuration.SecretKey = "fIgA12S6y7JlfsX6iwizpAdlFDbrQFGs";
+
+            var result = reader.GetSidFromExpiredToken(token);
+            
+            result.Should().Be(someUserId);
+        }
+
+        [Test]
+        public void TokenGeneratedWithSecret_WhenGettingClaimValue_ShouldBeAbleToReadIt()
+        {
+            var someUserId = "someUserId";
+            var someRole = (Type: "some", Value: "role");
+            var generator = new TokenGenerator(Options.Create(configuration));
+            var token = generator.GenerateAccessToken(someUserId, "user", "test", someRole);
+
+            var result = reader.GetClaimValueFromExpiredToken(token, someRole.Type);
+
+            result.Should().Be(someRole.Value);
+        }
+
+        [Test]
+        public void TokenGeneratedWithPreviousSecret_WhenGettingClaimValue_ShouldBeAbleToReadIt()
+        {
+            var someUserId = "someUserId";
+            var someRole = (Type: "some", Value: "role");
+            var generator = new TokenGenerator(Options.Create(configuration));
+            var token = generator.GenerateAccessToken(someUserId, "user", "test", someRole);
+            configuration.AllowTokenRefreshWithPreviousSecretKey = true;
+            configuration.PreviousSecretKey = configuration.SecretKey;
+            configuration.SecretKey = "fIgA12S6y7JlfsX6iwizpAdlFDbrQFGs";
+
+            var result = reader.GetClaimValueFromExpiredToken(token, someRole.Type);
+
+            result.Should().Be(someRole.Value);
         }
 
         [Test]

@@ -44,32 +44,50 @@ namespace Cause.SecurityManagement.Services
                 throw new SecurityTokenExpiredException("Token expired.");
         }
 
-        private ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
+        private ClaimsPrincipal GetPrincipalFromExpiredToken(string token, bool isRetry = false)
         {
             try
             {
-                TokenValidationParameters tokenValidationParameters = GenerateTokenValidationParameters();
-
+                var tokenValidationParameters = GenerateTokenValidationParameters(isRetry);
                 var tokenHandler = new JwtSecurityTokenHandler();
                 var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out var securityToken);
-                if (securityToken is not JwtSecurityToken jwtSecurityToken
-                    || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
-                    throw new SecurityTokenException("Invalid token");
+                ThrowExceptionWhenInvalid(securityToken);
 
                 return principal;
             }
-            catch (ArgumentException exception)
+            catch (SecurityTokenSignatureKeyNotFoundException exception)
             {
-                throw new InvalidTokenException(token, exception);
+                if (!CanRetryWithPreviousSecretKey() || isRetry)
+                {
+                    throw new InvalidTokenException(token, exception);
+                }
+                return GetPrincipalFromExpiredToken(token, true);
             }
         }
 
-        private TokenValidationParameters GenerateTokenValidationParameters()
+        private bool CanRetryWithPreviousSecretKey()
         {
+            return configuration.AllowTokenRefreshWithPreviousSecretKey && !string.IsNullOrWhiteSpace(configuration.PreviousSecretKey);
+        }
+
+        private static void ThrowExceptionWhenInvalid(SecurityToken securityToken)
+        {
+            if (IsInvalid(securityToken))
+                throw new SecurityTokenException("Invalid token");
+        }
+
+        private static bool IsInvalid(SecurityToken securityToken)
+        {
+            return securityToken is not JwtSecurityToken jwtSecurityToken || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase);
+        }
+
+        private TokenValidationParameters GenerateTokenValidationParameters(bool isRetry)
+        {
+            var key = isRetry ? configuration.PreviousSecretKey : configuration.SecretKey;
             return new TokenValidationParameters
             {
                 ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration.SecretKey)),
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
                 ValidateIssuer = true,
                 ValidIssuer = configuration.Issuer,
                 ValidateAudience = true,

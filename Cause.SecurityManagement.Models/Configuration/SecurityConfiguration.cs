@@ -8,6 +8,8 @@ namespace Cause.SecurityManagement.Models.Configuration
         public List<string> CertificateIssuers { get; set; }
         public string Issuer { get; set; }
         public string PackageName { get; set; }
+        public bool AllowTokenRefreshWithPreviousSecretKey { get; set; }
+        public string PreviousSecretKey { get; set; }
         public string SecretKey { get; set; }
         public string MinimalVersion { get; set; }
         public string LatestVersion { get; set; }
