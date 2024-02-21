@@ -14,16 +14,17 @@
     <Description>Security Management for Asp.Net Core projects.</Description>
     <Copyright>CAUCA 9-1-1 (c) 2023</Copyright>
     <PackageTags>Cause Security Management AspNetCore Api Client Cauca</PackageTags>
-    <Version>7.3.0</Version>
-    <PackageReleaseNotes>Allow seemless secret change</PackageReleaseNotes>
+    <Version>7.3.3</Version>
+    <PackageReleaseNotes>Allow UserRepository to be used directly from a context</PackageReleaseNotes>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <AssemblyVersion>7.3.0</AssemblyVersion>
-    <FileVersion>7.3.0</FileVersion>
+    <AssemblyVersion>7.3.3</AssemblyVersion>
+    <FileVersion>7.3.3</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Cause.Core.DataLayerExtensions" Version="7.0.*" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.*" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.14" />
+	<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.27.0" />
   </ItemGroup>
   
   <ItemGroup>
