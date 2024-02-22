@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Cause.SecurityManagement.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Cause.SecurityManagement.Repositories
 {
@@ -15,7 +14,6 @@ namespace Cause.SecurityManagement.Repositories
     {
         private readonly ISecurityContext<TUser> context;
 
-        [ActivatorUtilitiesConstructor]
         public UserRepository(IScopedDbContextProvider<TUser> contextProvider)
         {
             context = contextProvider.GetContext();

@@ -14,11 +14,11 @@
     <Description>Security Management for Asp.Net Core projects.</Description>
     <Copyright>CAUCA 9-1-1 (c) 2024</Copyright>
     <PackageTags>Cause Security Management AspNetCore Api Client Cauca</PackageTags>
-    <PackageReleaseNotes>Allow UserRepository to be used directly from a context</PackageReleaseNotes>
-    <Version>8.0.6</Version>
+    <PackageReleaseNotes>Fix DotNet 8 breaking change when using ActivatorUtilities.</PackageReleaseNotes>
+    <Version>8.0.7</Version>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <AssemblyVersion>8.0.6</AssemblyVersion>
-    <FileVersion>8.0.6</FileVersion>
+    <AssemblyVersion>8.0.7</AssemblyVersion>
+    <FileVersion>8.0.7</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>

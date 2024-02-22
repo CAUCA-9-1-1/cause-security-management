@@ -42,7 +42,7 @@ namespace Cause.SecurityManagement
             services.AddScoped<IPermissionManagementService, BasePermissionManagementService<TUser>>();
             services.AddScoped<IAdministratorUserGenerator, AdministratorUserGenerator<TUser>>();
             services.AddScoped<IUserPermissionRepository, UserPermissionRepository<TUser>>();
-            services.AddScoped<IUserRepository<TUser>>(provider => ActivatorUtilities.CreateInstance<UserRepository<TUser>>(provider));
+            services.AddScoped<IUserRepository<TUser>>(provider => new UserRepository<TUser>(provider.GetRequiredService<IScopedDbContextProvider<TUser>>()));
             services.AddScoped<IGroupRepository, GroupRepository<TUser>>();
             services.AddScoped<IUserGroupRepository, UserGroupRepository<TUser>>();
             services.AddScoped<IGroupPermissionRepository, GroupPermissionRepository<TUser>>();
