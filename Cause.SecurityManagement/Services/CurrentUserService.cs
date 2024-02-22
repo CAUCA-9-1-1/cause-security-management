@@ -29,6 +29,12 @@ namespace Cause.SecurityManagement.Services
             return Guid.Empty;
         }
 
+        public string GetCustomClaimValue(string claimType)
+        {
+            return contextAccessor.HttpContext?.User.Claims
+                .FirstOrDefault(claim => claim.Type == claimType)?.Value;
+        }
+
         public string GetUserIpAddress()
         {
             return contextAccessor.HttpContext?.Connection?.RemoteIpAddress?.MapToIPv4().ToString();

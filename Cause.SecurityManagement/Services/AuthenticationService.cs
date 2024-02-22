@@ -5,6 +5,7 @@ using Cause.SecurityManagement.Models.DataTransferObjects;
 using Cause.SecurityManagement.Models.ValidationCode;
 using Cause.SecurityManagement.Repositories;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Threading.Tasks;
 
@@ -142,6 +143,8 @@ namespace Cause.SecurityManagement.Services
 
         public async Task<string> RefreshUserTokenAsync(string token, string refreshToken)
         {
+            ThrowExceptionWhenTokenHasNoValue(token, refreshToken);
+
             var userId = GetIdFromExpiredToken(token);
             var userToken = userRepository.GetToken(userId, refreshToken);
             var user = userRepository.GetUserById(userId);
@@ -155,6 +158,14 @@ namespace Cause.SecurityManagement.Services
             await userRepository.SaveChangesAsync();
 
             return newAccessToken;
+        }
+
+        private static void ThrowExceptionWhenTokenHasNoValue(string token, string refreshToken)
+        {
+            if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(refreshToken))
+            {
+                throw new SecurityTokenException("Invalid token.");
+            }
         }
 
         private Guid GetIdFromExpiredToken(string token)
@@ -188,7 +199,14 @@ namespace Cause.SecurityManagement.Services
 
         private UserToken GenerateUserToken(Guid userId, string accessToken, string refreshToken)
         {
-            return new UserToken { AccessToken = accessToken, RefreshToken = refreshToken, ExpiresOn = generator.GenerateRefreshTokenExpirationDate(), IdUser = userId };
+            return new UserToken
+            {
+                AccessToken = accessToken,
+                RefreshToken = refreshToken,
+                ExpiresOn = generator.GenerateRefreshTokenExpirationDate(),
+                ForIssuer = configuration.Issuer,
+                IdUser = userId
+            };
         }
     }
 }

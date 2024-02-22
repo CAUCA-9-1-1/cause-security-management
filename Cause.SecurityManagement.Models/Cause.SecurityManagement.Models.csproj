@@ -1,16 +1,19 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard1.2</TargetFramework>
+	  <IsPackable>true</IsPackable>
+	  <TargetFramework>net8</TargetFramework>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <Version>1.7.2</Version>
+    <Version>8.0.0</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <AssemblyVersion>1.7.2</AssemblyVersion>
-    <FileVersion>1.7.2</FileVersion>
+	  <RepositoryUrl>https://github.com/CAUCA-9-1-1/cause-security-management</RepositoryUrl>
+	  <PackageProjectUrl>https://github.com/CAUCA-9-1-1/cause-security-management</PackageProjectUrl>
+    <AssemblyVersion>8.0.0</AssemblyVersion>
+    <FileVersion>8.0.0</FileVersion>
     <Authors>Fred Catellier</Authors>
     <Description>Base models for the Cause.SecurityManagement's library.</Description>
-    <Copyright>CAUCA 9-1-1 2022</Copyright>
-    <PackageReleaseNotes>Transform security configuration into a class to make it injectable.</PackageReleaseNotes>
+    <Copyright>CAUCA 9-1-1 2024</Copyright>
+    <PackageReleaseNotes>Update to DotNet 8.</PackageReleaseNotes>
     <Company>CAUCA 9-1-1</Company>
   </PropertyGroup>
 

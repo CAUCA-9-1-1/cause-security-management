@@ -44,12 +44,23 @@ namespace Cause.SecurityManagement.Services
             {
                 var accessToken = generator.GenerateAccessToken(externalSystemFound.Id.ToString(), externalSystemFound.Name, SecurityRoles.ExternalSystem);
                 var refreshToken = generator.GenerateRefreshToken();
-                var token = new ExternalSystemToken { AccessToken = accessToken, RefreshToken = refreshToken, ExpiresOn = DateTime.Now.AddMinutes(generator.GetRefreshTokenLifeTimeInMinute()), IdExternalSystem = externalSystemFound.Id };
+                var token = GenerateExternalSystemToken(accessToken, refreshToken, externalSystemFound);
                 repository.AddToken(token);
                 return (token, externalSystemFound);
             }
 
             return (null, null);
+        }
+
+        private ExternalSystemToken GenerateExternalSystemToken(string accessToken, string refreshToken, ExternalSystem externalSystemFound)
+        {
+            return new ExternalSystemToken
+            {
+                AccessToken = accessToken,
+                RefreshToken = refreshToken,
+                ExpiresOn = DateTime.Now.AddMinutes(generator.GetRefreshTokenLifeTimeInMinute()),
+                IdExternalSystem = externalSystemFound.Id,
+            };
         }
 
         private Guid GetIdFromExpiredToken(string token)

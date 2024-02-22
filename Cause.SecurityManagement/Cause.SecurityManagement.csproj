@@ -12,18 +12,18 @@
     <PackageProjectUrl>https://github.com/CAUCA-9-1-1/cause-security-management</PackageProjectUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Description>Security Management for Asp.Net Core projects.</Description>
-    <Copyright>CAUCA 9-1-1 (c) 2023</Copyright>
+    <Copyright>CAUCA 9-1-1 (c) 2024</Copyright>
     <PackageTags>Cause Security Management AspNetCore Api Client Cauca</PackageTags>
     <PackageReleaseNotes>Allow UserRepository to be used directly from a context</PackageReleaseNotes>
-    <Version>8.0.5</Version>
+    <Version>8.0.6</Version>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <AssemblyVersion>8.0.5</AssemblyVersion>
-    <FileVersion>8.0.5</FileVersion>
+    <AssemblyVersion>8.0.6</AssemblyVersion>
+    <FileVersion>8.0.6</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Cause.Core.DataLayerExtensions" Version="8.0.*" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.2" />
   </ItemGroup>
   
   <ItemGroup>
