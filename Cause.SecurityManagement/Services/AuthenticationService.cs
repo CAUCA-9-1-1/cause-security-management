@@ -11,35 +11,19 @@ using System.Threading.Tasks;
 
 namespace Cause.SecurityManagement.Services
 {
-    public class AuthenticationService<TUser> 
+    public class AuthenticationService<TUser>(
+        ICurrentUserService currentUserService,
+        IUserRepository<TUser> userRepository,
+        IUserManagementService<TUser> userManagementService,
+        IAuthenticationMultiFactorHandler<TUser> multiFactorHandler,
+        ITokenReader tokenReader,
+        ITokenGenerator generator,
+        IUserTokenGenerator userTokenGenerator,
+        IOptions<SecurityConfiguration> configuration)
         : IAuthenticationService
         where TUser : User, new()
     {
-        private readonly ICurrentUserService currentUserService;
-        private readonly IUserRepository<TUser> userRepository;
-        private readonly IUserManagementService<TUser> userManagementService;
-        private readonly IAuthenticationMultiFactorHandler<TUser> multiFactorHandler;
-        private readonly ITokenReader tokenReader;
-        private readonly ITokenGenerator generator;
-        private readonly SecurityConfiguration configuration;
-
-        public AuthenticationService(
-            ICurrentUserService currentUserService,
-            IUserRepository<TUser> userRepository,
-            IUserManagementService<TUser> userManagementService,
-            IAuthenticationMultiFactorHandler<TUser> multiFactorHandler,
-            ITokenReader tokenReader,
-            ITokenGenerator generator,
-            IOptions<SecurityConfiguration> configuration)
-        {
-            this.currentUserService = currentUserService;
-            this.userRepository = userRepository;
-            this.userManagementService = userManagementService;
-            this.multiFactorHandler = multiFactorHandler;
-            this.tokenReader = tokenReader;
-            this.generator = generator;
-            this.configuration = configuration.Value;
-        }
+        private readonly SecurityConfiguration configuration = configuration.Value;
 
         public virtual async Task<(UserToken token, User user)> LoginAsync(string userName, string password)
         {
@@ -61,7 +45,7 @@ namespace Cause.SecurityManagement.Services
         protected virtual async Task<(UserToken token, TUser user)> GenerateTokenIfUserCanLogInAsync(TUser userFound, string role)
         {
             var user = CanLogIn(userFound) ?
-                (GenerateUserToken(userFound, role), userFound) :
+                (userTokenGenerator.GenerateUserToken(userFound, role), userFound) :
                 (null, null);
             await multiFactorHandler.SendValidationCodeWhenNeededAsync(user.userFound);
             return user;
@@ -72,7 +56,7 @@ namespace Cause.SecurityManagement.Services
             var (userFound, roles) = GetUser(currentUserService.GetUserId());
             if (userFound != null && await multiFactorHandler.CodeIsValidAsync(userFound, validationInformation.ValidationCode, ValidationCodeType.MultiFactorLogin))
             {
-                return (GenerateUserToken(userFound, roles), userFound);
+                return (userTokenGenerator.GenerateUserToken(userFound, roles), userFound);
             }
             throw new InvalidValidationCodeException($"Validation code {validationInformation.ValidationCode} is invalid for this user.");
         }
@@ -82,7 +66,7 @@ namespace Cause.SecurityManagement.Services
             var userFound = userRepository.GetUserById(userId);
             if (userFound != null)
             {
-                return GenerateUserToken(userFound, SecurityRoles.UserRecovery);
+                return userTokenGenerator.GenerateUserToken(userFound, SecurityRoles.UserRecovery);
             }
             return null;
         }
@@ -90,7 +74,7 @@ namespace Cause.SecurityManagement.Services
         public virtual UserToken GenerateUserCreationToken(Guid userId)
         {
             var accessToken = generator.GenerateAccessToken(userId.ToString(), "temporary", SecurityRoles.UserCreation);
-            return GenerateUserToken(userId, accessToken, "");
+            return userTokenGenerator.GenerateUserToken(userId, accessToken, "", SecurityRoles.UserCreation);
         }
 
         protected virtual (TUser user, string rolesToGive) GetUser(Guid idUser)
@@ -186,27 +170,6 @@ namespace Cause.SecurityManagement.Services
         {
             var user = userRepository.GetUserById(currentUserService.GetUserId());
             await multiFactorHandler.SendNewValidationCodeAsync(user);
-        }
-
-        protected virtual UserToken GenerateUserToken(TUser user, string role)
-        {
-            var accessToken = generator.GenerateAccessToken(user.Id.ToString(), user.UserName, role);
-            var refreshToken = SecurityRoles.IsTemporaryRole(role) ? "" : generator.GenerateRefreshToken();
-            var token = GenerateUserToken(user.Id, accessToken, refreshToken);
-            userRepository.AddToken(token);
-            return token;
-        }
-
-        private UserToken GenerateUserToken(Guid userId, string accessToken, string refreshToken)
-        {
-            return new UserToken
-            {
-                AccessToken = accessToken,
-                RefreshToken = refreshToken,
-                ExpiresOn = generator.GenerateRefreshTokenExpirationDate(),
-                ForIssuer = configuration.Issuer,
-                IdUser = userId
-            };
         }
     }
 }

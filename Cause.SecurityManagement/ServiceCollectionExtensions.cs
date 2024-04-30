@@ -26,7 +26,8 @@ namespace Cause.SecurityManagement
                 .AddScopedCustomServiceOrDefault<ICurrentUserService>(managementOptions.CustomCurrentUserService, () => services.AddScoped<ICurrentUserService, CurrentUserService>())
                 .AddScopedWhenImplementationIsKnown<IAuthenticationValidationCodeSender<TUser>>(managementOptions.ValidationCodeSender)
                 .AddScopedWhenImplementationIsKnown<IAuthenticationValidationCodeValidator<TUser>>(managementOptions.ValidationCodeValidator)
-                .AddScopedWhenImplementationIsKnown<IEmailForUserModificationSender>(managementOptions.EmailForUserModificationSender);
+                .AddScopedWhenImplementationIsKnown<IEmailForUserModificationSender>(managementOptions.EmailForUserModificationSender)
+                .AddScopedWhenImplementationIsKnown<IDeviceManager>(managementOptions.DeviceManager);
         }
 
         private static IServiceCollection AddBaseConfiguration<TUser>(this IServiceCollection services) where TUser : User, new()

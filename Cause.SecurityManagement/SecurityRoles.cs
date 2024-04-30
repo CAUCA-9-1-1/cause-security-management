@@ -15,7 +15,7 @@ namespace Cause.SecurityManagement
         public const string UserAndUserRecovery = User + "," + UserRecovery;
         public const string UserAndRecoveryAndCreation = User + "," + UserCreation + "," + UserRecovery;
         
-        internal static string[] TemporaryRoles = new[] { UserCreation, UserRecovery, UserPasswordSetup, UserLoginWithMultiFactor };
+        internal static readonly string[] TemporaryRoles = [UserCreation, UserRecovery, UserPasswordSetup, UserLoginWithMultiFactor];
 
         public static bool IsTemporaryRole(string role)
         {
