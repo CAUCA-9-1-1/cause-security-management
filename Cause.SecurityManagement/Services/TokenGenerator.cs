@@ -9,84 +9,79 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Cause.SecurityManagement.Services
+namespace Cause.SecurityManagement.Services;
+
+public class TokenGenerator(IOptions<SecurityConfiguration> configuration) : ITokenGenerator
 {
-    public class TokenGenerator : ITokenGenerator
+    public readonly int DefaultRefreshTokenLifetimeInMinutes = 9 * 60;
+    public readonly int DefaultAccessTokenLifetimeInMinutes = 60;
+    public readonly int DefaultTemporaryAccessTokenLifetimeInMinutes = 5;
+
+    private readonly SecurityConfiguration configuration = configuration.Value;
+
+    public string GenerateRefreshToken()
     {
-        public readonly int DefaultRefreshTokenLifetimeInMinutes = 9 * 60;
-        public readonly int DefaultAccessTokenLifetimeInMinutes = 60;
-        public readonly int DefaultTemporaryAccessTokenLifetimeInMinutes = 5;
+        var randomNumber = new byte[32];
+        using var rng = RandomNumberGenerator.Create();
+        rng.GetBytes(randomNumber);
+        return Convert.ToBase64String(randomNumber);
+    }
 
-        private readonly SecurityConfiguration configuration;
+    public string GenerateAccessToken(string entityId, string entityName, string role, params (string type, string value)[] additionalClaims)
+    {
+        var lifeTimeInMinute = SecurityRoles.IsTemporaryRole(role) ? GetTemporaryAccessTokenLifeTimeInMinute() : GetAccessTokenLifeTimeInMinute();
 
-        public TokenGenerator(IOptions<SecurityConfiguration> configuration)
+        var claims = new List<Claim> 
         {
-            this.configuration = configuration.Value;
-        }
-        public string GenerateRefreshToken()
+            new(ClaimTypes.Role, role),
+            new(JwtRegisteredClaimNames.UniqueName, entityName),
+            new(JwtRegisteredClaimNames.Sid, entityId),
+        };
+
+        if (additionalClaims != null)
         {
-            var randomNumber = new byte[32];
-            using var rng = RandomNumberGenerator.Create();
-            rng.GetBytes(randomNumber);
-            return Convert.ToBase64String(randomNumber);
-        }
-
-        public string GenerateAccessToken(string entityId, string entityName, string role, params (string type, string value)[] additionalClaims)
-        {
-            var lifeTimeInMinute = SecurityRoles.IsTemporaryRole(role) ? GetTemporaryAccessTokenLifeTimeInMinute() : GetAccessTokenLifeTimeInMinute();
-
-            var claims = new List<Claim> 
-            {
-                new(ClaimTypes.Role, role),
-                new(JwtRegisteredClaimNames.UniqueName, entityName),
-                new(JwtRegisteredClaimNames.Sid, entityId),
-            };
-
-            if (additionalClaims != null)
-            {
-                claims.AddRange(additionalClaims.Select(claim => new Claim(claim.type, claim.value)));
-            }
-
-            return GenerateAccessToken(claims.ToArray(), lifeTimeInMinute);
+            claims.AddRange(additionalClaims.Select(claim => new Claim(claim.type, claim.value)));
         }
 
-        public DateTime GenerateRefreshTokenExpirationDate()
-        {
-            var lifeTimeInMinute = GetRefreshTokenLifeTimeInMinute();
-            if (configuration.RefreshTokenCanExpire)
-            {
-                return DateTime.Now.AddMinutes(lifeTimeInMinute);
-            }
-            return DateTime.MaxValue;
-        }
+        return GenerateAccessToken(claims.ToArray(), lifeTimeInMinute);
+    }
 
-        protected string GenerateAccessToken(Claim[] claims, int lifeTimeInMinute)
+    public DateTime GenerateRefreshTokenExpirationDate()
+    {
+        var lifeTimeInMinute = GetRefreshTokenLifeTimeInMinute();
+        if (configuration.RefreshTokenCanExpire)
         {
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration.SecretKey));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            var token = new JwtSecurityToken(configuration.Issuer,
-                configuration.PackageName,
-                claims,
-                notBefore: DateTime.Now,
-                expires: DateTime.Now.AddMinutes(lifeTimeInMinute),
-                signingCredentials: creds);
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            return DateTime.Now.AddMinutes(lifeTimeInMinute);
         }
+        return DateTime.MaxValue;
+    }
 
-        public int GetRefreshTokenLifeTimeInMinute()
-        {
-            return configuration.RefreshTokenLifeTimeInMinutes ?? DefaultRefreshTokenLifetimeInMinutes;
-        }
+    protected string GenerateAccessToken(Claim[] claims, int lifeTimeInMinute)
+    {
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration.SecretKey));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        public int GetTemporaryAccessTokenLifeTimeInMinute()
-        {
-            return configuration.TemporaryAccessTokenLifeTimeInMinutes ?? DefaultTemporaryAccessTokenLifetimeInMinutes;
-        }
+        var token = new JwtSecurityToken(configuration.Issuer,
+            configuration.PackageName,
+            claims,
+            notBefore: DateTime.Now,
+            expires: DateTime.Now.AddMinutes(lifeTimeInMinute),
+            signingCredentials: creds);
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
 
-        public int GetAccessTokenLifeTimeInMinute()
-        {
-            return configuration.AccessTokenLifeTimeInMinutes ?? DefaultAccessTokenLifetimeInMinutes;
-        }
+    public int GetRefreshTokenLifeTimeInMinute()
+    {
+        return configuration.RefreshTokenLifeTimeInMinutes ?? DefaultRefreshTokenLifetimeInMinutes;
+    }
+
+    public int GetTemporaryAccessTokenLifeTimeInMinute()
+    {
+        return configuration.TemporaryAccessTokenLifeTimeInMinutes ?? DefaultTemporaryAccessTokenLifetimeInMinutes;
+    }
+
+    public int GetAccessTokenLifeTimeInMinute()
+    {
+        return configuration.AccessTokenLifeTimeInMinutes ?? DefaultAccessTokenLifetimeInMinutes;
     }
 }

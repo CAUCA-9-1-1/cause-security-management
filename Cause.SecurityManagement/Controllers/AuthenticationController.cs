@@ -14,29 +14,14 @@ using Microsoft.AspNetCore.Http;
 namespace Cause.SecurityManagement.Controllers
 {
     [Route("api/[controller]")]
-    public class AuthenticationController : Controller
+    public class AuthenticationController(
+        ICurrentUserService currentUserService,
+        IAuthenticationService service,
+        IExternalSystemAuthenticationService externalSystemAuthenticationService,
+        IMobileVersionService mobileVersionService,
+        ILogger<AuthenticationController> logger)
+        : Controller
     {
-        private readonly ICurrentUserService currentUserService;
-        private readonly IAuthenticationService service;
-        private readonly IExternalSystemAuthenticationService externalSystemAuthenticationService;
-        private readonly IMobileVersionService mobileVersionService;
-        private readonly ILogger<AuthenticationController> logger;
-
-        public AuthenticationController(
-            ICurrentUserService currentUserService,
-            IAuthenticationService service,
-            IExternalSystemAuthenticationService externalSystemAuthenticationService,
-            IMobileVersionService mobileVersionService,
-            ILogger<AuthenticationController> logger)
-        {
-            this.currentUserService = currentUserService;
-            this.service = service;
-            this.externalSystemAuthenticationService = externalSystemAuthenticationService;
-            this.mobileVersionService = mobileVersionService;
-            this.logger = logger;
-        }
-
-
         [Route("[Action]"), HttpPost, AllowAnonymous]
         [ProducesResponseType(typeof(LoginResult), 200)]
         [ProducesResponseType(typeof(UnauthorizedResult), 401)]
@@ -86,7 +71,7 @@ namespace Cause.SecurityManagement.Controllers
             }
             catch (InvalidTokenException exception)
             {
-                logger.LogWarning(exception, $"Could not refresh user's acess token.  Refresh token: '{tokens?.RefreshToken}'.  Access token: '{tokens?.AccessToken}'");
+                logger.LogWarning(exception, "Could not refresh user's acess token.  Refresh token: '{tokens?.RefreshToken}'.  Access token: '{tokens?.AccessToken}'", tokens?.RefreshToken, tokens?.AccessToken);
                 HttpContext.Response.Headers.Append("Token-Invalid", "true");
             }
             catch (SecurityTokenExpiredException exception)

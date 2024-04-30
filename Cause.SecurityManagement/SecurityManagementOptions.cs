@@ -6,12 +6,13 @@ namespace Cause.SecurityManagement
 {
     public class SecurityManagementOptions
     {
-        internal (Type serviceType, Type implementationType)? CustomAuthenticationService { get; set; } = null;
-        internal (Type serviceType, Type implementationType)? CustomUserManagementService { get; set; } = null;
-        internal (Type serviceType, Type implementationType)? CustomCurrentUserService { get; set; } = null;
-        internal Type ValidationCodeSender { get; set; } = null;
-        internal Type ValidationCodeValidator { get; set; } = null;
-        internal Type EmailForUserModificationSender { get; set; } = null;
+        internal (Type serviceType, Type implementationType)? CustomAuthenticationService { get; set; }
+        internal (Type serviceType, Type implementationType)? CustomUserManagementService { get; set; }
+        internal (Type serviceType, Type implementationType)? CustomCurrentUserService { get; set; }
+        internal Type ValidationCodeSender { get; set; }
+        internal Type ValidationCodeValidator { get; set; }
+        internal Type EmailForUserModificationSender { get; set; }
+        internal Type DeviceManager { get; set; }
         internal static bool MultiFactorAuthenticationIsActivated { get; set; }
 
         public SecurityManagementOptions()
@@ -49,8 +50,7 @@ namespace Cause.SecurityManagement
 
         public void UseMultiFactorAuthentication<
             [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TSenderImplementation,
-            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TCheckerImplementation
-        >()
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TCheckerImplementation>()
         {
             MultiFactorAuthenticationIsActivated = true;
             ValidationCodeSender = typeof(TSenderImplementation);
@@ -61,6 +61,12 @@ namespace Cause.SecurityManagement
             where TImplementation : IEmailForUserModificationSender
         {
             EmailForUserModificationSender = typeof(TImplementation);
+        }
+
+        public void ManageDeviceWhenCreatingRegularUser<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TImplementation>()
+            where TImplementation : IDeviceManager
+        {
+            DeviceManager = typeof(TImplementation);
         }
     }
 }

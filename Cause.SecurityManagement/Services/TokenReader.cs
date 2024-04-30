@@ -10,14 +10,9 @@ using System.Text;
 
 namespace Cause.SecurityManagement.Services
 {
-    public class TokenReader : ITokenReader
+    public class TokenReader(IOptions<SecurityConfiguration> configuration) : ITokenReader
     {
-        private readonly SecurityConfiguration configuration;
-
-        public TokenReader(IOptions<SecurityConfiguration> configuration)
-        {
-            this.configuration = configuration.Value;
-        }
+        private readonly SecurityConfiguration configuration = configuration.Value;
 
         public string GetSidFromExpiredToken(string token)
         {
@@ -62,6 +57,10 @@ namespace Cause.SecurityManagement.Services
                     throw new InvalidTokenException(token, exception);
                 }
                 return GetPrincipalFromExpiredToken(token, true);
+            }
+            catch (SecurityTokenMalformedException exception)
+            {
+                throw new InvalidTokenException(token, exception);
             }
         }
 
