@@ -7,16 +7,12 @@ using Microsoft.AspNetCore.Mvc;
 namespace Cause.SecurityManagement.Controllers
 {
 	[Route("api/permissions")]
-	public abstract class BasePermissionManagementController : Controller
+	public abstract class BasePermissionManagementController(IPermissionManagementService permissionService)
+        : Controller
     {
-		protected IPermissionManagementService PermissionService;
+		protected IPermissionManagementService PermissionService = permissionService;
 
-		protected BasePermissionManagementController(IPermissionManagementService permissionService)
-		{
-            PermissionService = permissionService;
-		}
-
-		[HttpGet]
+        [HttpGet]
 		public ActionResult<List<ModulePermission>> GetPermissions()
 		{
 			return PermissionService.GetPermissions();

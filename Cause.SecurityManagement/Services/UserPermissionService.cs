@@ -6,22 +6,14 @@ using Cause.SecurityManagement.Repositories;
 
 namespace Cause.SecurityManagement.Services
 {
-    public class UserPermissionService : IUserPermissionService
+    public class UserPermissionService(
+        IGroupPermissionRepository groupPermissionRepository,
+        IUserPermissionRepository userPermissionRepository)
+        : IUserPermissionService
     {
-        private readonly IGroupPermissionRepository groupPermissionRepository;
-        private readonly IUserPermissionRepository userPermissionRepository;
-
-        public UserPermissionService(
-            IGroupPermissionRepository groupPermissionRepository,
-            IUserPermissionRepository userPermissionRepository)
-        {
-            this.groupPermissionRepository = groupPermissionRepository;
-            this.userPermissionRepository = userPermissionRepository;
-        }
-
         public bool HasPermission(Guid userId, string permissionTag)
         {
-            return GetPermissionsForUser(userId).Any(permission => permission.FeatureName == permissionTag && permission.Access);
+            return GetPermissionsForUser(userId).Exists(permission => permission.FeatureName == permissionTag && permission.Access);
         }
 
         public List<UserMergedPermission> GetPermissionsForUser(Guid userId)

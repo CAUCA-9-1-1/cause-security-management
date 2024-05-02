@@ -22,7 +22,7 @@ namespace Cause.SecurityManagement
             return services
                 .AddBaseConfiguration<TUser>()
                 .AddScopedCustomServiceOrDefault<IUserManagementService<TUser>>(managementOptions.CustomUserManagementService, () => services.AddScoped<IUserManagementService<TUser>, UserManagementService<TUser>>())
-                .AddScopedCustomServiceOrDefault<IAuthenticationService>(managementOptions.CustomAuthenticationService, () => services.AddScoped<IAuthenticationService, AuthenticationService<TUser>>())
+                .AddScopedCustomServiceOrDefault<IUserAuthenticator>(managementOptions.CustomAuthenticationService, () => services.AddScoped<IUserAuthenticator, UserAuthenticator<TUser>>())
                 .AddScopedCustomServiceOrDefault<ICurrentUserService>(managementOptions.CustomCurrentUserService, () => services.AddScoped<ICurrentUserService, CurrentUserService>())
                 .AddScopedWhenImplementationIsKnown<IAuthenticationValidationCodeSender<TUser>>(managementOptions.ValidationCodeSender)
                 .AddScopedWhenImplementationIsKnown<IAuthenticationValidationCodeValidator<TUser>>(managementOptions.ValidationCodeValidator)
@@ -35,7 +35,7 @@ namespace Cause.SecurityManagement
             services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddScoped<IAuthenticationMultiFactorHandler<TUser>, AuthenticationMultiFactorHandler<TUser>>();
             services.AddScoped<IMobileVersionService, MobileVersionService>();            
-            services.AddScoped<IAuthenticationService, AuthenticationService<TUser>>();
+            services.AddScoped<IUserAuthenticator, UserAuthenticator<TUser>>();
             services.AddScoped<ITokenGenerator, TokenGenerator>();
             services.AddScoped<ITokenReader, TokenReader>();
             services.AddScoped<IExternalSystemAuthenticationService, ExternalSystemAuthenticationService>();
@@ -53,6 +53,8 @@ namespace Cause.SecurityManagement
             services.AddScoped<IUserValidationCodeRepository, UserValidationCodeRepository<TUser>>();
             services.AddScoped<IScopedDbContextProvider<TUser>, ScopedDbContextProvider<TUser>>();
             services.AddScoped<ICertificateValidator, CertificateValidator>();
+            services.AddScoped<IUserTokenGenerator, UserTokenGenerator<TUser>>();
+            services.AddScoped<IUserTokenRefresher, UserTokenRefresher<TUser>>();
             return services;
         }
 

@@ -6,24 +6,14 @@ using Microsoft.Extensions.Options;
 
 namespace Cause.SecurityManagement.Services
 {
-    public class UserGroupPermissionService : IUserGroupPermissionService
+    public class UserGroupPermissionService(
+        ICurrentUserService currentUserService,
+        IGroupRepository groupRepository,
+        IUserPermissionService userPermissionService,
+        IOptions<SecurityConfiguration> configuration)
+        : IUserGroupPermissionService
     {
-        private readonly ICurrentUserService currentUserService;
-        private readonly IGroupRepository groupRepository;
-        private readonly IUserPermissionService userPermissionService;
-        private readonly SecurityConfiguration configuration;
-
-        public UserGroupPermissionService(
-            ICurrentUserService currentUserService,
-            IGroupRepository groupRepository,
-            IUserPermissionService userPermissionService,
-            IOptions<SecurityConfiguration> configuration)
-        {
-            this.currentUserService = currentUserService;
-            this.groupRepository = groupRepository;
-            this.userPermissionService = userPermissionService;
-            this.configuration = configuration.Value;
-        }
+        private readonly SecurityConfiguration configuration = configuration.Value;
 
         public bool CurrentUserHasRequiredPermissionForAllGroupsAccess()
         {

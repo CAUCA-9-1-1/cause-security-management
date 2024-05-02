@@ -6,32 +6,19 @@ using Cause.SecurityManagement.Repositories;
 
 namespace Cause.SecurityManagement.Services
 {
-    public class BaseGroupManagementService : IGroupManagementService
+    public class BaseGroupManagementService(
+        IGroupRepository groupRepository,
+        IUserGroupRepository userGroupRepository,
+        IGroupPermissionRepository groupPermissionRepository,
+        IUserGroupPermissionService userGroupPermissionService)
+        : IGroupManagementService
     {
-        private readonly IGroupRepository groupRepository;
-        private readonly IUserGroupRepository userGroupRepository;
-        private readonly IGroupPermissionRepository groupPermissionRepository;
-        private readonly IUserGroupPermissionService userGroupPermissionService;
-
-        public BaseGroupManagementService(
-            IGroupRepository groupRepository,
-            IUserGroupRepository userGroupRepository,
-            IGroupPermissionRepository groupPermissionRepository,
-            IUserGroupPermissionService userGroupPermissionService
-        )
-        {
-            this.groupRepository = groupRepository;
-            this.userGroupRepository = userGroupRepository;
-            this.groupPermissionRepository = groupPermissionRepository;
-            this.userGroupPermissionService = userGroupPermissionService;
-        }
-
         public List<Group> GetActiveGroups()
         {
             var groups = groupRepository.GetActiveGroups();
 
             return groups
-                .Where(group => userGroupPermissionService.CurrentUserHasRequiredPermissionForGroupsAccess(group))
+                .Where(userGroupPermissionService.CurrentUserHasRequiredPermissionForGroupsAccess)
                 .ToList();
         }
 
@@ -77,7 +64,7 @@ namespace Cause.SecurityManagement.Services
 
             dbGroupUsers.ForEach(groupUser =>
             {
-                if (groupUsers.Any(g => g.Id == groupUser.Id) == false)
+                if (!groupUsers.Exists(g => g.Id == groupUser.Id))
                 {
                     userGroupRepository.Remove(groupUser);
                 }
@@ -106,7 +93,7 @@ namespace Cause.SecurityManagement.Services
 
             dbGroupPermissions.ForEach(dbGroupPermission =>
             {
-                if (!groupPermissions.Any(g => g.Id == dbGroupPermission.Id))
+                if (!groupPermissions.Exists(g => g.Id == dbGroupPermission.Id))
                 {
                     groupPermissionRepository.Remove(dbGroupPermission);
                 }

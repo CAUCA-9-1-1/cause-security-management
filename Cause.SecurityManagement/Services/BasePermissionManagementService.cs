@@ -5,15 +5,11 @@ using System.Linq;
 
 namespace Cause.SecurityManagement.Services
 {
-    public class BasePermissionManagementService<TUser> : IPermissionManagementService
+    public class BasePermissionManagementService<TUser>(ISecurityContext<TUser> securityContext)
+        : IPermissionManagementService
         where TUser : User, new()
     {
-		protected ISecurityContext<TUser> SecurityContext;
-
-		public BasePermissionManagementService(ISecurityContext<TUser> securityContext)
-		{
-			SecurityContext = securityContext;
-		}
+		protected ISecurityContext<TUser> SecurityContext = securityContext;
 
         public bool Add(ModulePermission permission)
         {

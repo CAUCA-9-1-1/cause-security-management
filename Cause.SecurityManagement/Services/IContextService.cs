@@ -10,5 +10,6 @@ namespace Cause.SecurityManagement.Services
         Guid GetUserId();
         string GetUserIpAddress();
         Task<List<AuthenticationUserPermission>> GetPermissionsAsync();
+        Guid? GetUserDeviceId();
     }
 }

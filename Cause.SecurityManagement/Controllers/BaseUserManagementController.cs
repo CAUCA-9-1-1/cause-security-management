@@ -9,18 +9,13 @@ using System.Collections.Generic;
 namespace Cause.SecurityManagement.Controllers
 {
 	[Route("api/users")]
-	public abstract class BaseUserManagementController<TService, TUser> : Controller
-		where TService : IUserManagementService<TUser>
-        where TUser: User, new()
-	{
-		protected TService UserService;
+	public abstract class BaseUserManagementController<TService, TUser>(TService userService) : Controller
+        where TService : IUserManagementService<TUser>
+        where TUser : User, new()
+    {
+		protected TService UserService = userService;
 
-		protected BaseUserManagementController(TService userService)
-		{
-			UserService = userService;
-		}
-
-		[HttpGet]
+        [HttpGet]
 		public ActionResult<List<TUser>> GetUsers()
 		{
 			return UserService.GetActiveUsers();

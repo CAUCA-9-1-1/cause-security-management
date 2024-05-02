@@ -27,7 +27,7 @@ public class TokenGenerator(IOptions<SecurityConfiguration> configuration) : ITo
         return Convert.ToBase64String(randomNumber);
     }
 
-    public string GenerateAccessToken(string entityId, string entityName, string role, params (string type, string value)[] additionalClaims)
+    public string GenerateAccessToken(string entityId, string entityName, string role, params CustomClaims[] additionalClaims)
     {
         var lifeTimeInMinute = SecurityRoles.IsTemporaryRole(role) ? GetTemporaryAccessTokenLifeTimeInMinute() : GetAccessTokenLifeTimeInMinute();
 
@@ -40,7 +40,7 @@ public class TokenGenerator(IOptions<SecurityConfiguration> configuration) : ITo
 
         if (additionalClaims != null)
         {
-            claims.AddRange(additionalClaims.Select(claim => new Claim(claim.type, claim.value)));
+            claims.AddRange(additionalClaims.Select(claim => new Claim(claim.Type, claim.Value)));
         }
 
         return GenerateAccessToken(claims.ToArray(), lifeTimeInMinute);
@@ -49,11 +49,7 @@ public class TokenGenerator(IOptions<SecurityConfiguration> configuration) : ITo
     public DateTime GenerateRefreshTokenExpirationDate()
     {
         var lifeTimeInMinute = GetRefreshTokenLifeTimeInMinute();
-        if (configuration.RefreshTokenCanExpire)
-        {
-            return DateTime.Now.AddMinutes(lifeTimeInMinute);
-        }
-        return DateTime.MaxValue;
+        return configuration.RefreshTokenCanExpire ? DateTime.Now.AddMinutes(lifeTimeInMinute) : DateTime.MaxValue;
     }
 
     protected string GenerateAccessToken(Claim[] claims, int lifeTimeInMinute)
