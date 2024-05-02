@@ -2,10 +2,5 @@
 
 namespace Cause.SecurityManagement.Services
 {
-    public class InvalidValidationCodeException : Exception
-    {
-        public InvalidValidationCodeException(string message) : base (message)
-        {
-        }
-    }
+    public class InvalidValidationCodeException(string message) : Exception(message);
 }

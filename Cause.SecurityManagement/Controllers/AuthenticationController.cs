@@ -16,7 +16,8 @@ namespace Cause.SecurityManagement.Controllers
     [Route("api/[controller]")]
     public class AuthenticationController(
         ICurrentUserService currentUserService,
-        IAuthenticationService service,
+        IUserAuthenticator userAuthenticator,
+        IUserTokenRefresher userTokenRefresher,
         IExternalSystemAuthenticationService externalSystemAuthenticationService,
         IMobileVersionService mobileVersionService,
         ILogger<AuthenticationController> logger)
@@ -44,7 +45,7 @@ namespace Cause.SecurityManagement.Controllers
 
         private async Task<ActionResult<LoginResult>> Logon(LoginInformations login)
         {
-            var (token, user) = await service.LoginAsync(login?.UserName, login?.Password);
+            var (token, user) = await userAuthenticator.LoginAsync(login?.UserName, login?.Password);
             if (user == null || token == null)
                 return Unauthorized();
 
@@ -55,18 +56,18 @@ namespace Cause.SecurityManagement.Controllers
                 ExpiredOn = token.ExpiresOn,
                 RefreshToken = token.RefreshToken,
                 MustChangePassword = user.PasswordMustBeResetAfterLogin,
-                MustVerifyCode = service.MustValidateCode(user),
+                MustVerifyCode = userAuthenticator.MustValidateCode(user),
                 IdUser = user.Id,
                 Name = user.FirstName + " " + user.LastName,
             };
         }
 
         [Route("Refresh"), HttpPost, AllowAnonymous]
-        public async Task<ActionResult> RefreshAsync([FromBody] TokenRefreshResult tokens)
+        public async Task<ActionResult> GetNewAccessTokenAsync([FromBody] TokenRefreshResult tokens)
         {
             try
             {
-                var newAccessToken = await service.RefreshUserTokenAsync(tokens.AccessToken, tokens.RefreshToken);
+                var newAccessToken = await userTokenRefresher.GetNewAccessTokenAsync(tokens.AccessToken, tokens.RefreshToken);
                 return Ok(new {AccessToken = newAccessToken, tokens.RefreshToken});
             }
             catch (InvalidTokenException exception)
@@ -79,6 +80,7 @@ namespace Cause.SecurityManagement.Controllers
                 HttpContext.Response.Headers.Append("Refresh-Token-Expired", "true");
                 logger.LogWarning(exception, $"Could not refresh external system's acess token - SecurityTokenExpiredException.  Refresh token: '{tokens?.RefreshToken}'.  Access token: '{tokens?.AccessToken}'");
             }
+            
             catch (SecurityTokenException exception)
             {
                 HttpContext.Response.Headers.Append("Token-Invalid", "true");
@@ -98,7 +100,7 @@ namespace Cause.SecurityManagement.Controllers
         {
             try
             {
-                await service.SendNewCodeAsync();
+                await userAuthenticator.SendNewCodeAsync();
                 return Ok();
             }
             catch (UserValidationCodeNotFoundException)
@@ -112,7 +114,7 @@ namespace Cause.SecurityManagement.Controllers
         {
             try
             {
-                var (token, user) = await service.ValidateMultiFactorCodeAsync(validationInformation);
+                var (token, user) = await userAuthenticator.ValidateMultiFactorCodeAsync(validationInformation);
                 return new LoginResult
                 {
                     AuthorizationType = "Bearer",

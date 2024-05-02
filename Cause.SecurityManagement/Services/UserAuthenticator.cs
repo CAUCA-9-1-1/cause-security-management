@@ -5,22 +5,20 @@ using Cause.SecurityManagement.Models.DataTransferObjects;
 using Cause.SecurityManagement.Models.ValidationCode;
 using Cause.SecurityManagement.Repositories;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Threading.Tasks;
 
 namespace Cause.SecurityManagement.Services
 {
-    public class AuthenticationService<TUser>(
+    public class UserAuthenticator<TUser>(
         ICurrentUserService currentUserService,
         IUserRepository<TUser> userRepository,
         IUserManagementService<TUser> userManagementService,
         IAuthenticationMultiFactorHandler<TUser> multiFactorHandler,
-        ITokenReader tokenReader,
         ITokenGenerator generator,
         IUserTokenGenerator userTokenGenerator,
         IOptions<SecurityConfiguration> configuration)
-        : IAuthenticationService
+        : IUserAuthenticator
         where TUser : User, new()
     {
         private readonly SecurityConfiguration configuration = configuration.Value;
@@ -45,7 +43,7 @@ namespace Cause.SecurityManagement.Services
         protected virtual async Task<(UserToken token, TUser user)> GenerateTokenIfUserCanLogInAsync(TUser userFound, string role)
         {
             var user = CanLogIn(userFound) ?
-                (userTokenGenerator.GenerateUserToken(userFound, role), userFound) :
+                (await userTokenGenerator.GenerateUserTokenAsync(userFound, role), userFound) :
                 (null, null);
             await multiFactorHandler.SendValidationCodeWhenNeededAsync(user.userFound);
             return user;
@@ -56,17 +54,17 @@ namespace Cause.SecurityManagement.Services
             var (userFound, roles) = GetUser(currentUserService.GetUserId());
             if (userFound != null && await multiFactorHandler.CodeIsValidAsync(userFound, validationInformation.ValidationCode, ValidationCodeType.MultiFactorLogin))
             {
-                return (userTokenGenerator.GenerateUserToken(userFound, roles), userFound);
+                return (await userTokenGenerator.GenerateUserTokenAsync(userFound, roles), userFound);
             }
             throw new InvalidValidationCodeException($"Validation code {validationInformation.ValidationCode} is invalid for this user.");
         }
 
-        public virtual UserToken GenerateUserRecoveryToken(Guid userId)
+        public virtual async Task<UserToken> GenerateUserRecoveryTokenAsync(Guid userId)
         {
             var userFound = userRepository.GetUserById(userId);
             if (userFound != null)
             {
-                return userTokenGenerator.GenerateUserToken(userFound, SecurityRoles.UserRecovery);
+                return await userTokenGenerator.GenerateUserTokenAsync(userFound, SecurityRoles.UserRecovery);
             }
             return null;
         }
@@ -123,47 +121,6 @@ namespace Cause.SecurityManagement.Services
         {
             return string.IsNullOrWhiteSpace(configuration.RequiredPermissionForLogin)
                 || userManagementService.HasPermission(user.Id, configuration.RequiredPermissionForLogin);
-        }
-
-        public async Task<string> RefreshUserTokenAsync(string token, string refreshToken)
-        {
-            ThrowExceptionWhenTokenHasNoValue(token, refreshToken);
-
-            var userId = GetIdFromExpiredToken(token);
-            var userToken = userRepository.GetToken(userId, refreshToken);
-            var user = userRepository.GetUserById(userId);
-
-            ThrowExceptionIfUserHasNotBeenFound(token, refreshToken, userId, user);
-            tokenReader.ThrowExceptionWhenTokenIsNotValid(refreshToken, userToken);
-
-            var newAccessToken = generator.GenerateAccessToken(user.Id.ToString(), user.UserName, SecurityRoles.User);
-            // ReSharper disable once PossibleNullReferenceException
-            userToken.AccessToken = newAccessToken;
-            await userRepository.SaveChangesAsync();
-
-            return newAccessToken;
-        }
-
-        private static void ThrowExceptionWhenTokenHasNoValue(string token, string refreshToken)
-        {
-            if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(refreshToken))
-            {
-                throw new SecurityTokenException("Invalid token.");
-            }
-        }
-
-        private Guid GetIdFromExpiredToken(string token)
-        {
-            var id = tokenReader.GetSidFromExpiredToken(token);
-            if (Guid.TryParse(id, out Guid userId))
-                return userId;
-            return Guid.Empty;
-        }
-
-        private static void ThrowExceptionIfUserHasNotBeenFound(string token, string refreshToken, Guid userId, TUser user)
-        {
-            if (user == null)
-                throw new InvalidTokenUserException(token, refreshToken, userId.ToString());
         }
 
         public async Task SendNewCodeAsync()

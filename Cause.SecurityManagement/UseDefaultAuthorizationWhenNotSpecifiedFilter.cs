@@ -6,12 +6,8 @@ using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace Cause.SecurityManagement
 {
-    public class UseDefaultAuthorizationWhenNotSpecifiedFilter : AuthorizeFilter
+    public class UseDefaultAuthorizationWhenNotSpecifiedFilter(AuthorizationPolicy policy) : AuthorizeFilter(policy)
     {
-        public UseDefaultAuthorizationWhenNotSpecifiedFilter(AuthorizationPolicy policy) : base(policy)
-        {
-        }
-
         public override Task OnAuthorizationAsync(AuthorizationFilterContext context)
         {
             // If there is another authorize filter, do nothing

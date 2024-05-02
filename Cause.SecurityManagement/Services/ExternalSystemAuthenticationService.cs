@@ -5,22 +5,12 @@ using System.Threading.Tasks;
 
 namespace Cause.SecurityManagement.Services
 {
-    public class ExternalSystemAuthenticationService : IExternalSystemAuthenticationService
+    public class ExternalSystemAuthenticationService(
+        IExternalSystemRepository repository,
+        ITokenReader tokenReader,
+        ITokenGenerator generator)
+        : IExternalSystemAuthenticationService
     {
-        private readonly IExternalSystemRepository repository;
-        private readonly ITokenReader tokenReader;
-        private readonly ITokenGenerator generator;
-
-        public ExternalSystemAuthenticationService(
-            IExternalSystemRepository repository,
-            ITokenReader tokenReader,
-            ITokenGenerator generator)
-        {
-            this.repository = repository;
-            this.tokenReader = tokenReader;
-            this.generator = generator;
-        }
-
         public async Task<string> RefreshAccessTokenAsync(string token, string refreshToken)
         {
             var externalSystemId = GetIdFromExpiredToken(token);
@@ -66,9 +56,7 @@ namespace Cause.SecurityManagement.Services
         private Guid GetIdFromExpiredToken(string token)
         {
             var id = tokenReader.GetSidFromExpiredToken(token);
-            if (Guid.TryParse(id, out Guid userId))
-                return userId;
-            return Guid.Empty;
+            return Guid.TryParse(id, out var userId) ? userId : Guid.Empty;
         }
     }
 }

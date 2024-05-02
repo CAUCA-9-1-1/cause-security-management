@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Text.Json;
 using Cause.SecurityManagement.Controllers;
@@ -13,6 +14,8 @@ using NSubstitute;
 using NUnit.Framework;
 using System.Threading.Tasks;
 using Cause.SecurityManagement.Authentication.MultiFactor;
+using NSubstitute.ExceptionExtensions;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Cause.SecurityManagement.Tests.Controllers
 {
@@ -20,7 +23,8 @@ namespace Cause.SecurityManagement.Tests.Controllers
     public class AuthenticationControllerTests
     {
         private ICurrentUserService currentUserService;
-        private IAuthenticationService authenticationService;
+        private IUserAuthenticator userAuthenticator;
+        private IUserTokenRefresher userTokenRefresher;
         private IExternalSystemAuthenticationService externalSystemAuthenticationService;
         private IMobileVersionService mobileVersionService;
         private ILogger<AuthenticationController> logger;
@@ -40,11 +44,18 @@ namespace Cause.SecurityManagement.Tests.Controllers
         public void SetUpTest()
         {
             currentUserService = Substitute.For<ICurrentUserService>();
-            authenticationService = Substitute.For<IAuthenticationService>();
+            userAuthenticator = Substitute.For<IUserAuthenticator>();
+            userTokenRefresher = Substitute.For<IUserTokenRefresher>();
             externalSystemAuthenticationService = Substitute.For<IExternalSystemAuthenticationService>();
             mobileVersionService = Substitute.For<IMobileVersionService>();
             logger = Substitute.For<ILogger<AuthenticationController>>();
-            controller = new AuthenticationController(currentUserService, authenticationService, externalSystemAuthenticationService, mobileVersionService, logger);
+            controller = new AuthenticationController(currentUserService, userAuthenticator, userTokenRefresher, externalSystemAuthenticationService, mobileVersionService, logger)
+            {
+                ControllerContext = new ControllerContext
+                {
+                    HttpContext = new DefaultHttpContext()
+                }
+            };
         }
 
         [Test]
@@ -53,13 +64,13 @@ namespace Cause.SecurityManagement.Tests.Controllers
             var result = await controller.SendNewCodeAsync();
 
             result.Should().BeOfType<OkResult>();
-            await authenticationService.Received(1).SendNewCodeAsync();
+            await userAuthenticator.Received(1).SendNewCodeAsync();
         }
 
         [Test]
         public async Task UserWithoutKnownValidationCode_WhenRequestingNewValidationCode_ShouldReturnError()
         {
-            authenticationService.When(mock => mock.SendNewCodeAsync()).Do((_) => throw new UserValidationCodeNotFoundException());
+            userAuthenticator.When(mock => mock.SendNewCodeAsync()).Do((_) => throw new UserValidationCodeNotFoundException());
 
             var result = await controller.SendNewCodeAsync();
 
@@ -93,7 +104,7 @@ namespace Cause.SecurityManagement.Tests.Controllers
 
             var result = await controller.Logon(null, loginInformations);
 
-            await authenticationService.Received(1).LoginAsync(Arg.Is(loginInformations.UserName), Arg.Is(loginInformations.Password));
+            await userAuthenticator.Received(1).LoginAsync(Arg.Is(loginInformations.UserName), Arg.Is(loginInformations.Password));
             result.Should().BeOfType<ActionResult<LoginResult>>();
             result.Result.Should().Be(null);
             result.Value.Should().BeOfType<LoginResult>();
@@ -107,7 +118,7 @@ namespace Cause.SecurityManagement.Tests.Controllers
 
             var result = await controller.Logon(loginInformationHeader, null);
 
-            await authenticationService.Received(1).LoginAsync(Arg.Is(loginInformations.UserName), Arg.Is(loginInformations.Password));
+            await userAuthenticator.Received(1).LoginAsync(Arg.Is(loginInformations.UserName), Arg.Is(loginInformations.Password));
             result.Should().BeOfType<ActionResult<LoginResult>>();
             result.Result.Should().Be(null);
             result.Value.Should().BeOfType<LoginResult>();
@@ -197,6 +208,43 @@ namespace Cause.SecurityManagement.Tests.Controllers
             result.Value.Should().BeOfType<LoginResult>();
         }
 
+        [Test]
+        public async Task WithValidInformation_WhenGettingNewAccessToken_ShouldReturnNewToken()
+        {
+            var requestData = new TokenRefreshResult { AccessToken = "oldToken", RefreshToken = "SomeRefreshToken" };
+            var newAccessToken = "newToken";
+            userTokenRefresher.GetNewAccessTokenAsync(Arg.Is(requestData.AccessToken), Arg.Is(requestData.RefreshToken)).Returns(newAccessToken);
+
+            var result = await controller.GetNewAccessTokenAsync(requestData);
+
+            result.Should().BeOfType<OkObjectResult>();
+            (result as OkObjectResult)!.Value.Should().BeEquivalentTo(new { AccessToken = newAccessToken, RefreshToken = requestData.RefreshToken });
+        }
+
+        public static IEnumerable<TestCaseData> PossibleRefreshingExceptions
+        {
+            get
+            {
+                yield return new TestCaseData(new InvalidTokenException("bla", new Exception()), "Token-Invalid", "true");
+                yield return new TestCaseData(new SecurityTokenExpiredException("bla", new Exception()), "Refresh-Token-Expired", "true");
+                yield return new TestCaseData(new SecurityTokenException("bla", new Exception()), "Token-Invalid", "true");
+                yield return new TestCaseData(new InvalidTokenUserException("bla", "blo", "bli"), "Token-Invalid", "true");
+            }
+        }
+
+        [TestCaseSource(nameof(PossibleRefreshingExceptions))]
+        public async Task WithInvalidInformation_WhenGettingNewAccessToken_ShouldBeUnauthorized(Exception exception, string expectedHeader, string expectedHeaderValue)
+        {
+            var requestData = new TokenRefreshResult { AccessToken = "oldToken", RefreshToken = "SomeRefreshToken" };
+            userTokenRefresher.GetNewAccessTokenAsync(Arg.Is(requestData.AccessToken), Arg.Is(requestData.RefreshToken)).ThrowsAsync(exception);
+
+            var result = await controller.GetNewAccessTokenAsync(requestData);
+
+            result.Should().BeOfType<UnauthorizedResult>();
+            controller.Response.Headers.TryGetValue(expectedHeader, out var resultHeaderValue);
+            resultHeaderValue.Should().BeEquivalentTo(expectedHeaderValue);
+        }
+
         private void SetupValidExternalSystemLogin()
         {
             var aToken = new ExternalSystemToken();
@@ -210,7 +258,7 @@ namespace Cause.SecurityManagement.Tests.Controllers
             var aUserToken = new UserToken();
             var aUser = new User();
 
-            authenticationService.LoginAsync(Arg.Any<string>(), Arg.Any<string>()).Returns((aUserToken, aUser));
+            userAuthenticator.LoginAsync(Arg.Any<string>(), Arg.Any<string>()).Returns((aUserToken, aUser));
         }
 
         private void SetAuthorizationHeader(string value)

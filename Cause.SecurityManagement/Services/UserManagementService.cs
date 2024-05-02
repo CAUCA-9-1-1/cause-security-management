@@ -9,36 +9,20 @@ using Microsoft.Extensions.Options;
 
 namespace Cause.SecurityManagement.Services
 {
-	public class UserManagementService<TUser> : IUserManagementService<TUser> where TUser : User, new() 
-	{
-        private readonly IEmailForUserModificationSender emailSender;
-        private readonly IUserGroupRepository userGroupRepository;
-		private readonly IUserPermissionRepository userPermissionRepository;
-        private readonly IUserRepository<TUser> userRepository;
-        private readonly IUserGroupPermissionService userGroupPermissionService;
-        private readonly IUserPermissionService userPermissionService;
-        protected readonly SecurityConfiguration SecurityConfiguration;
+	public class UserManagementService<TUser>(
+        IOptions<SecurityConfiguration> securityOptions,
+        IUserGroupRepository userGroupRepository,
+        IUserPermissionRepository userPermissionRepository,
+        IUserRepository<TUser> userRepository,
+        IUserGroupPermissionService userGroupPermissionService,
+        IUserPermissionService userPermissionService,
+        IEmailForUserModificationSender emailSender = null)
+        : IUserManagementService<TUser>
+        where TUser : User, new()
+    {
+        protected readonly SecurityConfiguration SecurityConfiguration = securityOptions.Value;
 
-        public UserManagementService(
-            IOptions<SecurityConfiguration> securityOptions,
-            IUserGroupRepository userGroupRepository,
-            IUserPermissionRepository userPermissionRepository,
-			IUserRepository<TUser> userRepository,
-            IUserGroupPermissionService userGroupPermissionService,
-            IUserPermissionService userPermissionService,
-            IEmailForUserModificationSender emailSender = null)
-		{
-            this.emailSender = emailSender;
-            this.userGroupRepository = userGroupRepository;
-            this.userPermissionRepository = userPermissionRepository;
-            this.userRepository = userRepository;
-            this.userGroupPermissionService = userGroupPermissionService;
-            this.userPermissionService = userPermissionService;
-
-            SecurityConfiguration = securityOptions.Value;
-        }
-
-		public virtual List<TUser> GetActiveUsers()
+        public virtual List<TUser> GetActiveUsers()
         {
             return userRepository.GetActiveUsers().ToList();
 		}
@@ -109,7 +93,7 @@ namespace Cause.SecurityManagement.Services
 
             dbUserGroups.ForEach(userGroup =>
             {
-                if (userGroups.Any(g => g.Id == userGroup.Id) == false && userGroupPermissionService.CurrentUserHasRequiredPermissionForGroupsAccess(userGroup.IdGroup))
+                if (!userGroups.Exists(g => g.Id == userGroup.Id) && userGroupPermissionService.CurrentUserHasRequiredPermissionForGroupsAccess(userGroup.IdGroup))
                 {
                     userGroupRepository.Remove(userGroup);
                 }
@@ -138,7 +122,7 @@ namespace Cause.SecurityManagement.Services
 
             dbUserPermissions.ForEach(userPermission =>
             {
-                if (userPermissions.Any(p => p.Id == userPermission.Id) == false)
+                if (!userPermissions.Exists(p => p.Id == userPermission.Id))
                 {
                     userPermissionRepository.Remove(userPermission);
                 }
@@ -155,13 +139,13 @@ namespace Cause.SecurityManagement.Services
             });
         }
 
-        public virtual bool ChangePassword(Guid userId, string newPassword, bool userMustResetPasswwordAtNextLogin)
+        public virtual bool ChangePassword(Guid userId, string newPassword, bool userMustResetPasswordAtNextLogin)
         {
             var user = userRepository.Get(userId);
             if (user != null)
             {
                 user.Password = new PasswordGenerator().EncodePassword(newPassword, SecurityConfiguration.PackageName);
-				user.PasswordMustBeResetAfterLogin = userMustResetPasswwordAtNextLogin;
+				user.PasswordMustBeResetAfterLogin = userMustResetPasswordAtNextLogin;
                 userRepository.SaveChanges();
                 if (user.IsActive)
                 {

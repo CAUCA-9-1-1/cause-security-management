@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace Cause.SecurityManagement.Services;
 
 public interface IDeviceManager
 {
-    Guid CreateNewDevice(Guid userId);
+    Task<Guid> CreateNewDeviceAsync(Guid userId);
+    Task<Guid> GetCurrentDeviceId(Guid userId);
 }

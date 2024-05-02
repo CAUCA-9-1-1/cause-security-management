@@ -5,37 +5,34 @@ using System.Linq;
 
 namespace Cause.SecurityManagement.Services
 {
-    public class AdministratorUserGenerator<TUser>
+    public class AdministratorUserGenerator<TUser>(
+        ISecurityContext<TUser> context,
+        IOptions<SecurityConfiguration> options)
         : IAdministratorUserGenerator
         where TUser : User, new()
     {
-        private readonly ISecurityContext<TUser> context;
-        private readonly SecurityConfiguration configuration;
-
-        public AdministratorUserGenerator(
-            ISecurityContext<TUser> context,
-            IOptions<SecurityConfiguration> options)
-        {
-            this.context = context;
-            configuration = options.Value;
-        }
+        private readonly SecurityConfiguration configuration = options.Value;
 
         public void EnsureAdminIsCreated()
         {
             if (!context.Users.Any(user => user.UserName == "admin"))
             {
-                var user = new TUser
-                {
-                    Email = "dev@cauca.ca",
-                    FirstName = "Admin",
-                    LastName = "Cauca",
-                    UserName = "admin",
-                    IsActive = true,
-                    Password = new PasswordGenerator().EncodePassword("admincauca", configuration.PackageName)
-                };
-                context.Add(user);
+                context.Add(GenerateAdminUser());
                 context.SaveChanges();
             }
+        }
+
+        private TUser GenerateAdminUser()
+        {
+            return new TUser
+            {
+                Email = "dev@cauca.ca",
+                FirstName = "Admin",
+                LastName = "Cauca",
+                UserName = "admin",
+                IsActive = true,
+                Password = new PasswordGenerator().EncodePassword("admincauca", configuration.PackageName)
+            };
         }
     }
 }

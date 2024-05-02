@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Data;
+using System.Threading.Tasks;
 using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Models.Configuration;
 using Cause.SecurityManagement.Repositories;
@@ -18,18 +18,18 @@ public class UserTokenGeneratorTestsWithoutDeviceManagement : BaseUserTokenGener
     public void SetUpTest()
     {
         GenerateSubstitutes();
-        Generator = new UserTokenGenerator(Options.Create(Configuration), TokenGenerator, Repository);
+        Generator = new UserTokenGenerator<User>(Options.Create(Configuration), TokenGenerator, Repository);
     }
 
     [TestCase(SecurityRoles.UserPasswordSetup)]
     [TestCase(SecurityRoles.UserCreation)]
     [TestCase(SecurityRoles.UserLoginWithMultiFactor)]
     [TestCase(SecurityRoles.UserRecovery)]
-    public void SomeUser_WhenGeneratingTemporaryToken_ShouldNotGenerateDevice(string role)
+    public async Task SomeUser_WhenGeneratingTemporaryToken_ShouldNotGenerateDevice(string role)
     {
         TokenGenerator.GenerateAccessToken(Arg.Is(SomeUser.Id.ToString()), Arg.Is(SomeUser.UserName), Arg.Is(role)).Returns(ExpectedAccessToken);
         
-        var result = Generator.GenerateUserToken(SomeUser, role);
+        var result = await Generator.GenerateUserTokenAsync(SomeUser, role);
 
         result.IdUser.Should().Be(SomeUser.Id);
         result.SpecificDeviceId.Should().Be(null);
@@ -43,11 +43,11 @@ public class UserTokenGeneratorTestsWithoutDeviceManagement : BaseUserTokenGener
     }
 
     [Test]
-    public void SomeUser_WhenGeneratingTokenWithRegularRole_ShouldNotGenerateDevice()
+    public async Task SomeUser_WhenGeneratingTokenWithRegularRole_ShouldNotGenerateDevice()
     {
         TokenGenerator.GenerateAccessToken(Arg.Is(SomeUser.Id.ToString()), Arg.Is(SomeUser.UserName), Arg.Is(SecurityRoles.User)).Returns(ExpectedAccessToken);
         
-        var result = Generator.GenerateUserToken(SomeUser, SecurityRoles.User);
+        var result = await Generator.GenerateUserTokenAsync(SomeUser, SecurityRoles.User);
 
         result.IdUser.Should().Be(SomeUser.Id);
         result.SpecificDeviceId.Should().Be(null);
@@ -71,19 +71,19 @@ public class UserTokenGeneratorTestsWithDeviceManagement : BaseUserTokenGenerato
     {
         GenerateSubstitutes();
         deviceManager = Substitute.For<IDeviceManager>();
-        Generator = new UserTokenGenerator(Options.Create(Configuration), TokenGenerator, Repository, deviceManager);
+        Generator = new UserTokenGenerator<User>(Options.Create(Configuration), TokenGenerator, Repository, deviceManager);
     }
 
     [TestCase(SecurityRoles.UserPasswordSetup)]
     [TestCase(SecurityRoles.UserCreation)]
     [TestCase(SecurityRoles.UserLoginWithMultiFactor)]
     [TestCase(SecurityRoles.UserRecovery)]
-    public void SomeUser_WhenGeneratingTemporaryToken_ShouldNotGenerateDevice(string role)
+    public async Task SomeUser_WhenGeneratingTemporaryToken_ShouldNotGenerateDevice(string role)
     {
-        TokenGenerator.GenerateAccessToken(Arg.Is(SomeUser.Id.ToString()), Arg.Is(SomeUser.UserName), Arg.Is(role)).Returns(ExpectedAccessToken);
-        deviceManager.CreateNewDevice(Arg.Is(SomeUser.Id)).Returns(NewDeviceId);
+        TokenGenerator.GenerateAccessToken(Arg.Is(SomeUser.Id.ToString()), Arg.Is(SomeUser.UserName), Arg.Is(role), Arg.Is<CustomClaims[]>(claims => claims.Length == 0)).Returns(ExpectedAccessToken);
+        deviceManager.CreateNewDeviceAsync(Arg.Is(SomeUser.Id)).Returns(NewDeviceId);
 
-        var result = Generator.GenerateUserToken(SomeUser, role);
+        var result = await Generator.GenerateUserTokenAsync(SomeUser, role);
 
         result.IdUser.Should().Be(SomeUser.Id);
         result.SpecificDeviceId.Should().Be(null);
@@ -92,17 +92,18 @@ public class UserTokenGeneratorTestsWithDeviceManagement : BaseUserTokenGenerato
         result.RefreshToken.Should().BeEmpty();
         result.Role.Should().Be(role);
         Repository.Received(1).AddToken(Arg.Is(result));
-        deviceManager.DidNotReceive().CreateNewDevice(Arg.Any<Guid>());
+        await deviceManager.DidNotReceive().CreateNewDeviceAsync(Arg.Any<Guid>());
         TokenGenerator.Received(1).GenerateRefreshTokenExpirationDate();
     }
 
     [Test]
-    public void SomeUser_WhenGeneratingTokenWithRegularRole_ShouldGenerateDevice()
+    public async Task SomeUser_WhenGeneratingTokenWithRegularRole_ShouldGenerateDevice()
     {
-        TokenGenerator.GenerateAccessToken(Arg.Is(SomeUser.Id.ToString()), Arg.Is(SomeUser.UserName), Arg.Is(SecurityRoles.User)).Returns(ExpectedAccessToken);
-        deviceManager.CreateNewDevice(Arg.Is(SomeUser.Id)).Returns(NewDeviceId);
+        var expectedCustomClaims = new CustomClaims(AdditionalClaimsGenerator.DeviceIdType, NewDeviceId.ToString());
+        TokenGenerator.GenerateAccessToken(Arg.Is(SomeUser.Id.ToString()), Arg.Is(SomeUser.UserName), Arg.Is(SecurityRoles.User), Arg.Is<CustomClaims>(claim => claim.Type == expectedCustomClaims.Type && claim.Value == expectedCustomClaims.Value)).Returns(ExpectedAccessToken);
+        deviceManager.CreateNewDeviceAsync(Arg.Is(SomeUser.Id)).Returns(NewDeviceId);
 
-        var result = Generator.GenerateUserToken(SomeUser, SecurityRoles.User);
+        var result = await Generator.GenerateUserTokenAsync(SomeUser, SecurityRoles.User);
 
         result.IdUser.Should().Be(SomeUser.Id);
         result.SpecificDeviceId.Should().Be(NewDeviceId);
@@ -111,7 +112,7 @@ public class UserTokenGeneratorTestsWithDeviceManagement : BaseUserTokenGenerato
         result.RefreshToken.Should().Be(ExpectedRefreshToken);
         result.Role.Should().Be(SecurityRoles.User);
         Repository.Received(1).AddToken(Arg.Is(result));
-        deviceManager.Received(1).CreateNewDevice(Arg.Is(SomeUser.Id));
+        await deviceManager.Received(1).CreateNewDeviceAsync(Arg.Is(SomeUser.Id));
         TokenGenerator.Received(1).GenerateRefreshTokenExpirationDate();
     }
 }
@@ -126,7 +127,7 @@ public abstract class BaseUserTokenGeneratorTest
     protected readonly DateTime ExpectedExpirationDate = new(2099, 1, 1, 0, 0, 0, DateTimeKind.Local);
 
     protected ITokenGenerator TokenGenerator;
-    protected UserTokenGenerator Generator;
+    protected UserTokenGenerator<User> Generator;
     protected IUserRepository<User> Repository;
     
     protected void GenerateSubstitutes()

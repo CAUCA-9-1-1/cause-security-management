@@ -28,7 +28,7 @@ namespace Cause.SecurityManagement
         }
 
         public void SetAuthenticationService<TService, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TImplementation>()
-            where TService : IAuthenticationService
+            where TService : IUserAuthenticator
             where TImplementation : class, TService
         {
             CustomAuthenticationService = (typeof(TService), typeof(TImplementation));

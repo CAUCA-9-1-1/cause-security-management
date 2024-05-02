@@ -58,7 +58,7 @@ namespace Cause.SecurityManagement.Tests.Services
         public void TokenGeneratedWithSecret_WhenGettingClaimValue_ShouldBeAbleToReadIt()
         {
             var someUserId = "someUserId";
-            var someRole = (Type: "some", Value: "role");
+            var someRole = new CustomClaims("some", "role");
             var generator = new TokenGenerator(Options.Create(configuration));
             var token = generator.GenerateAccessToken(someUserId, "user", "test", someRole);
 
@@ -71,7 +71,7 @@ namespace Cause.SecurityManagement.Tests.Services
         public void TokenGeneratedWithPreviousSecret_WhenGettingClaimValue_ShouldBeAbleToReadIt()
         {
             var someUserId = "someUserId";
-            var someRole = (Type: "some", Value: "role");
+            var someRole = new CustomClaims("some", "role");
             var generator = new TokenGenerator(Options.Create(configuration));
             var token = generator.GenerateAccessToken(someUserId, "user", "test", someRole);
             configuration.AllowTokenRefreshWithPreviousSecretKey = true;

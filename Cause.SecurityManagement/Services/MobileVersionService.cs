@@ -4,23 +4,16 @@ using System;
 
 namespace Cause.SecurityManagement.Services
 {
-    public class MobileVersionService : IMobileVersionService
+    public class MobileVersionService(IOptions<SecurityConfiguration> securityOptions) : IMobileVersionService
     {
-        private readonly SecurityConfiguration securityConfiguration;
-
-        public MobileVersionService(IOptions<SecurityConfiguration> securityOptions)
-        {
-            securityConfiguration = securityOptions.Value;
-        }
+        private readonly SecurityConfiguration securityConfiguration = securityOptions.Value;
 
         public bool IsMobileVersionLatest(string mobileVersion)
         {
             var mobile = new Version(mobileVersion);
             var latestVersion = new Version(securityConfiguration.LatestVersion);
 
-            if (mobile.CompareTo(latestVersion) < 0)
-                return false;
-            return true;
+            return mobile.CompareTo(latestVersion) >= 0;
         }
 
         public bool IsMobileVersionValid(string mobileVersion)
@@ -28,9 +21,7 @@ namespace Cause.SecurityManagement.Services
             var mobile = new Version(mobileVersion);
             var minVersion = new Version(securityConfiguration.MinimalVersion);
 
-            if (mobile.CompareTo(minVersion) < 0)
-                return false;
-            return true;
+            return mobile.CompareTo(minVersion) >= 0;
         }
     }
 }

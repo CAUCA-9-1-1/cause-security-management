@@ -7,16 +7,11 @@ using System.Collections.Generic;
 namespace Cause.SecurityManagement.Controllers
 {
 	[Route("api/groups")]
-	public abstract class BaseGroupManagementController : Controller
+	public abstract class BaseGroupManagementController(IGroupManagementService groupService) : Controller
     {
-		protected IGroupManagementService GroupService;
+		protected IGroupManagementService GroupService = groupService;
 
-		protected BaseGroupManagementController(IGroupManagementService groupService)
-		{
-            GroupService = groupService;
-		}
-
-		[HttpGet]
+        [HttpGet]
 		public virtual ActionResult<List<Group>> GetGroups()
 		{
 			return GroupService.GetActiveGroups();

@@ -5,12 +5,11 @@ using System.Threading.Tasks;
 
 namespace Cause.SecurityManagement.Services
 {
-    public interface IAuthenticationService
+    public interface IUserAuthenticator
     {
         Task<(UserToken token, User user)> LoginAsync(string userName, string password);
-        Task<string> RefreshUserTokenAsync(string token, string refreshToken);
         UserToken GenerateUserCreationToken(Guid userId);
-        UserToken GenerateUserRecoveryToken(Guid userId);
+        Task<UserToken> GenerateUserRecoveryTokenAsync(Guid userId);
         Task<(UserToken token, User user)> ValidateMultiFactorCodeAsync(ValidationInformation validationInformation);
         Task SendNewCodeAsync();
         bool MustValidateCode(User user);

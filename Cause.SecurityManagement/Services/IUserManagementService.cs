@@ -15,7 +15,7 @@ namespace Cause.SecurityManagement.Services
         bool ChangePassword(Guid userId, string newPassword, bool userMustResetPasswordAtNextLogin);
         bool DeactivateUser(Guid userId);
         List<UserGroup> GetGroups(Guid userId);
-        bool AddGroup(UserGroup group);
+        bool AddGroup(UserGroup userGroup);
         bool RemoveGroup(Guid userGroupId);
         bool UpdatePermission(UserPermission permission);
         bool RemovePermission(Guid userPermissionId);
