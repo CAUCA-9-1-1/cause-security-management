@@ -118,5 +118,11 @@ namespace Cause.SecurityManagement.Repositories
             return context.GetModifieObjects();
         }
 
+        public async Task RemoveExistingTokenAsync(Guid userId, string issuer)
+        {
+            await context.UserTokens
+                .Where(userToken => userToken.IdUser == userId && (userToken.ForIssuer == issuer || string.IsNullOrEmpty(userToken.ForIssuer)))
+                .ExecuteDeleteAsync();
+        }
     }
 }

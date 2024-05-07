@@ -75,7 +75,7 @@ public class UserTokenRefresher<TUser>(
         if (token.SpecificDeviceId != null || deviceManager == null)
             return;
 
-        token.SpecificDeviceId = await deviceManager.GetCurrentDeviceId(token.IdUser);
+        token.SpecificDeviceId = await deviceManager.GetCurrentDeviceIdAsync(token.IdUser);
     }
 
     private static void ThrowExceptionIfUserHasNotBeenFound(string token, string refreshToken, Guid userId, TUser user)

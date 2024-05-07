@@ -19,9 +19,23 @@ public class UserTokenGenerator<TUser>(
         var specificDeviceId = await GenerateDeviceWhenNecessaryIdAsync(user.Id, SecurityRoles.IsTemporaryRole(role));
         var accessToken = generator.GenerateAccessToken(user.Id.ToString(), user.UserName, role, AdditionalClaimsGenerator.GetCustomClaims(specificDeviceId));
         var refreshToken = SecurityRoles.IsTemporaryRole(role) ? "" : generator.GenerateRefreshToken();
+        await RemoveExistingTokenWhenNeededAsync(user, role);
         var token = GenerateUserToken(user.Id, accessToken, refreshToken, role, specificDeviceId);
         repository.AddToken(token);
         return token;
+    }
+
+    private async Task RemoveExistingTokenWhenNeededAsync(User user, string role)
+    {
+        if (MustRemoveExistingToken(role))
+        {
+            await repository.RemoveExistingTokenAsync(user.Id, configuration.Value.Issuer);
+        }
+    }
+
+    private bool MustRemoveExistingToken(string role)
+    {
+        return MustGenerateNewDevice(SecurityRoles.IsTemporaryRole(role));
     }
 
     public UserToken GenerateUserToken(Guid userId, string accessToken, string refreshToken, string role, Guid? specificDeviceId = null)
@@ -40,11 +54,11 @@ public class UserTokenGenerator<TUser>(
 
     private async Task<Guid?> GenerateDeviceWhenNecessaryIdAsync(Guid userId, bool isTemporaryRole)
     {
-        return MustGenerateNewDevice(isTemporaryRole) ? null : await deviceManager.CreateNewDeviceAsync(userId);
+        return MustGenerateNewDevice(isTemporaryRole) ? await deviceManager.CreateNewDeviceAsync(userId) : null;
     }
 
     private bool MustGenerateNewDevice(bool isTemporaryRole)
     {
-        return isTemporaryRole || deviceManager == null;
+        return !(isTemporaryRole || deviceManager == null);
     }
 }

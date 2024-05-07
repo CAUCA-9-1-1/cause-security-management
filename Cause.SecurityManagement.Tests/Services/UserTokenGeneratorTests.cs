@@ -40,6 +40,7 @@ public class UserTokenGeneratorTestsWithoutDeviceManagement : BaseUserTokenGener
         Repository.Received(1).AddToken(Arg.Is(result));
         TokenGenerator.Received(1).GenerateRefreshTokenExpirationDate();
         TokenGenerator.Received(1).GenerateAccessToken(Arg.Is(SomeUser.Id.ToString()), Arg.Is(SomeUser.UserName), Arg.Is(role));
+        await Repository.DidNotReceive().RemoveExistingTokenAsync(Arg.Is(SomeUser.Id), Arg.Is(Configuration.Issuer));
     }
 
     [Test]
@@ -58,6 +59,7 @@ public class UserTokenGeneratorTestsWithoutDeviceManagement : BaseUserTokenGener
         Repository.Received(1).AddToken(Arg.Is(result));
         TokenGenerator.Received(1).GenerateRefreshTokenExpirationDate();
         TokenGenerator.Received(1).GenerateAccessToken(Arg.Is(SomeUser.Id.ToString()), Arg.Is(SomeUser.UserName), Arg.Is(SecurityRoles.User));
+        await Repository.DidNotReceive().RemoveExistingTokenAsync(Arg.Is(SomeUser.Id), Arg.Is(Configuration.Issuer));
     }
 }
 
@@ -94,6 +96,7 @@ public class UserTokenGeneratorTestsWithDeviceManagement : BaseUserTokenGenerato
         Repository.Received(1).AddToken(Arg.Is(result));
         await deviceManager.DidNotReceive().CreateNewDeviceAsync(Arg.Any<Guid>());
         TokenGenerator.Received(1).GenerateRefreshTokenExpirationDate();
+        await Repository.DidNotReceive().RemoveExistingTokenAsync(Arg.Is(SomeUser.Id), Arg.Is(Configuration.Issuer));
     }
 
     [Test]
@@ -114,6 +117,7 @@ public class UserTokenGeneratorTestsWithDeviceManagement : BaseUserTokenGenerato
         Repository.Received(1).AddToken(Arg.Is(result));
         await deviceManager.Received(1).CreateNewDeviceAsync(Arg.Is(SomeUser.Id));
         TokenGenerator.Received(1).GenerateRefreshTokenExpirationDate();
+        await Repository.Received(1).RemoveExistingTokenAsync(Arg.Is(SomeUser.Id), Arg.Is(Configuration.Issuer));
     }
 }
 

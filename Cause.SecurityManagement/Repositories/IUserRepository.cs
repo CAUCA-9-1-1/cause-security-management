@@ -27,5 +27,6 @@ namespace Cause.SecurityManagement.Repositories
         void SaveChanges();
         Task SaveChangesAsync();
         List<EntityEntry> GetModifieEntities();
+        Task RemoveExistingTokenAsync(Guid userId, string issuer);
     }
 }
