@@ -110,7 +110,7 @@ public class UserTokenRefresherWithDeviceManagerTests
         var someUserToken = new UserToken { ForIssuer = null, AccessToken = someAccessToken, RefreshToken = someRefreshToken, IdUser = someUserId };
         var someUser = new User { Id = someUserId, UserName = "Papouche128" };
         var someDeviceId = Guid.NewGuid();
-        deviceManager.GetCurrentDeviceId(Arg.Is(someUserId)).Returns(someDeviceId);
+        deviceManager.GetCurrentDeviceIdAsync(Arg.Is(someUserId)).Returns(someDeviceId);
         repository.GetUserById(Arg.Is(someUserId)).Returns(someUser);
         repository.GetToken(Arg.Is(someUserId), Arg.Is(someRefreshToken)).Returns(someUserToken);
         tokenReader.GetSidFromExpiredToken(Arg.Is(someAccessToken)).Returns(someUserId.ToString());

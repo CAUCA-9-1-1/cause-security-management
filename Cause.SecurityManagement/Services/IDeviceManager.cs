@@ -6,5 +6,5 @@ namespace Cause.SecurityManagement.Services;
 public interface IDeviceManager
 {
     Task<Guid> CreateNewDeviceAsync(Guid userId);
-    Task<Guid> GetCurrentDeviceId(Guid userId);
+    Task<Guid> GetCurrentDeviceIdAsync(Guid userId);
 }
