@@ -10,7 +10,6 @@ using Cause.SecurityManagement.Repositories;
 namespace Cause.SecurityManagement.Services
 {
     public class CurrentUserService(
-        ITokenReader reader,
         IHttpContextAccessor contextAccessor,
         IUserPermissionRepository userPermissionRepository)
         : ICurrentUserService

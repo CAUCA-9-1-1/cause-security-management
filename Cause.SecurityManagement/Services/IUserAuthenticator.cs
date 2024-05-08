@@ -13,5 +13,6 @@ namespace Cause.SecurityManagement.Services
         Task<(UserToken token, User user)> ValidateMultiFactorCodeAsync(ValidationInformation validationInformation);
         Task SendNewCodeAsync();
         bool MustValidateCode(User user);
+        bool IsLoggedIn(string refreshToken);
     }
 }

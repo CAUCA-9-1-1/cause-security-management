@@ -221,6 +221,28 @@ namespace Cause.SecurityManagement.Tests.Controllers
             (result as OkObjectResult)!.Value.Should().BeEquivalentTo(new { AccessToken = newAccessToken, RefreshToken = requestData.RefreshToken });
         }
 
+        [Test]
+        public void AuthorizedUser_WhenCheckingState_ShouldBeAuthorized()
+        {
+            var someRefreshToken = "twi108";
+            userAuthenticator.IsLoggedIn(Arg.Is(someRefreshToken)).Returns(false);
+
+            var result = controller.GetAuthenticationState(new() { RefreshToken = someRefreshToken });
+
+            result.Should().BeFalse();
+        }
+
+        [Test]
+        public void UnauthorizedUser_WhenCheckingState_ShouldNotBeAuthorized()
+        {
+            var someRefreshToken = "twi108";
+            userAuthenticator.IsLoggedIn(Arg.Is(someRefreshToken)).Returns(true);
+
+            var result = controller.GetAuthenticationState(new() { RefreshToken = someRefreshToken });
+
+            result.Should().BeTrue();
+        }
+
         public static IEnumerable<TestCaseData> PossibleRefreshingExceptions
         {
             get
