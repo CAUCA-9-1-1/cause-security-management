@@ -222,7 +222,7 @@ namespace Cause.SecurityManagement.Tests.Controllers
         }
 
         [Test]
-        public void AuthorizedUser_WhenCheckingState_ShouldBeAuthorized()
+        public void UnauthorizedUser_WhenCheckingState_ShouldNotBeAuthorized()
         {
             var someRefreshToken = "twi108";
             userAuthenticator.IsLoggedIn(Arg.Is(someRefreshToken)).Returns(false);
@@ -233,7 +233,7 @@ namespace Cause.SecurityManagement.Tests.Controllers
         }
 
         [Test]
-        public void UnauthorizedUser_WhenCheckingState_ShouldNotBeAuthorized()
+        public void AuthorizedUser_WhenCheckingState_ShouldBeAuthorized()
         {
             var someRefreshToken = "twi108";
             userAuthenticator.IsLoggedIn(Arg.Is(someRefreshToken)).Returns(true);
