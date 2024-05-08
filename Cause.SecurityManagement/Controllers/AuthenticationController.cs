@@ -200,5 +200,12 @@ namespace Cause.SecurityManagement.Controllers
         {
             return Ok(await currentUserService.GetPermissionsAsync());
         }
+
+        [HttpPost, Route("State")]
+        [ProducesResponseType(200)]
+        public bool GetAuthenticationState([FromBody]AuthenticationStateRequest requestBody)
+        {
+            return userAuthenticator.IsLoggedIn(requestBody.RefreshToken);
+        }
     }
 }

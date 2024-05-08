@@ -63,6 +63,12 @@ namespace Cause.SecurityManagement.Repositories
             return userToken;
         }
 
+        public bool HasToken(Guid idUser, string refreshToken)
+        {
+            return context.UserTokens
+                .Any(t => t.IdUser == idUser && t.RefreshToken == refreshToken);
+        }
+
         public string GetPassword(Guid userId)
         {
             return context.Users.AsNoTracking()

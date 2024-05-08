@@ -16,6 +16,7 @@ namespace Cause.SecurityManagement.Repositories
         TUser GetUser(string userName, string password);
         void AddToken(UserToken token);
         UserToken GetToken(Guid idUser, string refreshToken);
+        bool HasToken(Guid idUser, string refreshToken);
         string GetPassword(Guid userId);
         bool UserNameAlreadyUsed(TUser user);
         bool EmailIsAlreadyInUse(string email, Guid idUserToIgnore);

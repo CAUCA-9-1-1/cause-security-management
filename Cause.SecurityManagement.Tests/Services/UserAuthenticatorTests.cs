@@ -120,4 +120,17 @@ public class UserAuthenticatorTests
 
         await multiAuthHandler.Received(1).SendNewValidationCodeAsync(Arg.Is(someUser));
     }
+
+    [TestCase(true)]
+    [TestCase(false)]
+    public void SomeUser_WhenVerifyingAuthenticationState_ShouldCheckInDatabaseIfTokenIsStillValid(bool isLoggedIn)
+    {
+        var someToken = "hey ho!";
+        currentUserService.GetUserId().Returns(someUserId);
+        repository.HasToken(Arg.Is(someUserId), Arg.Is(someToken)).Returns(isLoggedIn);
+
+        var result = service.IsLoggedIn(someToken);
+
+        result.Should().Be(isLoggedIn);
+    }
 }

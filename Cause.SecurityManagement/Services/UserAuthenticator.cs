@@ -112,6 +112,11 @@ namespace Cause.SecurityManagement.Services
             return SecurityManagementOptions.MultiFactorAuthenticationIsActivated && user.TwoFactorAuthenticatorEnabled;
         }
 
+        public bool IsLoggedIn(string refreshToken)
+        {
+            return userRepository.HasToken(currentUserService.GetUserId(), refreshToken);
+        }
+
         protected virtual bool CanLogIn(User user)
         {
             return user != null && HasRequiredPermissionToLogIn(user);
