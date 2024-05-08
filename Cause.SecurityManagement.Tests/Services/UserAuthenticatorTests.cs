@@ -132,5 +132,6 @@ public class UserAuthenticatorTests
         var result = service.IsLoggedIn(someToken);
 
         result.Should().Be(isLoggedIn);
+        repository.Received(1).HasToken(Arg.Is(someUserId), Arg.Is(someToken));
     }
 }
