@@ -40,7 +40,7 @@ public class UserTokenRefresherWithoutDeviceManagerTests
         var someUserId = Guid.NewGuid();
         var someUserToken = new UserToken { ForIssuer = null, AccessToken = someAccessToken, RefreshToken = someRefreshToken, IdUser = someUserId };
         var someUser = new User { Id = someUserId, UserName = "Papouche128" };
-        repository.GetUserById(Arg.Is(someUserId)).Returns(someUser);
+        repository.GetEntityById(Arg.Is(someUserId)).Returns(someUser);
         repository.GetToken(Arg.Is(someUserId), Arg.Is(someRefreshToken)).Returns(someUserToken);
         tokenReader.GetSidFromExpiredToken(Arg.Is(someAccessToken)).Returns(someUserId.ToString());
 
@@ -88,7 +88,7 @@ public class UserTokenRefresherWithDeviceManagerTests
         var someUserToken = new UserToken { ForIssuer = null, AccessToken = someAccessToken, RefreshToken = someRefreshToken, IdUser = someUserId, SpecificDeviceId = someDeviceId };
         var someUser = new User { Id = someUserId, UserName = "Papouche128" };
 
-        repository.GetUserById(Arg.Is(someUserId)).Returns(someUser);
+        repository.GetEntityById(Arg.Is(someUserId)).Returns(someUser);
         repository.GetToken(Arg.Is(someUserId), Arg.Is(someRefreshToken)).Returns(someUserToken);
         tokenReader.GetSidFromExpiredToken(Arg.Is(someAccessToken)).Returns(someUserId.ToString());
 
@@ -111,7 +111,7 @@ public class UserTokenRefresherWithDeviceManagerTests
         var someUser = new User { Id = someUserId, UserName = "Papouche128" };
         var someDeviceId = Guid.NewGuid();
         deviceManager.GetCurrentDeviceIdAsync(Arg.Is(someUserId)).Returns(someDeviceId);
-        repository.GetUserById(Arg.Is(someUserId)).Returns(someUser);
+        repository.GetEntityById(Arg.Is(someUserId)).Returns(someUser);
         repository.GetToken(Arg.Is(someUserId), Arg.Is(someRefreshToken)).Returns(someUserToken);
         tokenReader.GetSidFromExpiredToken(Arg.Is(someAccessToken)).Returns(someUserId.ToString());
 

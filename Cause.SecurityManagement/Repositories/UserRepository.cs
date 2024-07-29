@@ -32,19 +32,19 @@ namespace Cause.SecurityManagement.Repositories
                 .Include(u => u.Permissions);
         }
 
-        public TUser GetUserById(Guid idUser)
+        public TUser GetEntityById(Guid idUser)
         {
             return context.Users
                     .SingleOrDefault(user => user.Id == idUser && user.IsActive);
         }
 
-        public TUser GetUserWithTemporaryPassword(string userName, string password)
+        public TUser GetEntityWithTemporaryPassword(string userName, string password)
         {
             return context.Users
                 .FirstOrDefault(user => user.UserName == userName && user.Password == password && user.PasswordMustBeResetAfterLogin && user.IsActive);
         }
 
-        public TUser GetUser(string userName, string password)
+        public TUser GetEntity(string userName, string password)
         {
             return context.Users
                 .SingleOrDefault(user => user.UserName == userName && user.Password.ToUpper() == password && user.IsActive);
@@ -63,10 +63,10 @@ namespace Cause.SecurityManagement.Repositories
             return userToken;
         }
 
-        public bool HasToken(Guid idUser, string refreshToken)
+        public bool HasToken(Guid entityId, string refreshToken)
         {
             return context.UserTokens
-                .Any(t => t.IdUser == idUser && t.RefreshToken == refreshToken);
+                .Any(t => t.IdUser == entityId && t.RefreshToken == refreshToken);
         }
 
         public string GetPassword(Guid userId)
@@ -124,10 +124,10 @@ namespace Cause.SecurityManagement.Repositories
             return context.GetModifieObjects();
         }
 
-        public async Task RemoveExistingTokenAsync(Guid userId, string issuer)
+        public async Task RemoveExistingTokenAsync(Guid entityId, string issuer)
         {
             await context.UserTokens
-                .Where(userToken => userToken.IdUser == userId && (userToken.ForIssuer == issuer || string.IsNullOrEmpty(userToken.ForIssuer)))
+                .Where(userToken => userToken.IdUser == entityId && (userToken.ForIssuer == issuer || string.IsNullOrEmpty(userToken.ForIssuer)))
                 .ExecuteDeleteAsync();
         }
     }

@@ -2,7 +2,9 @@
 
 namespace Cause.SecurityManagement.Services;
 
-public interface IUserTokenRefresher
+public interface IUserTokenRefresher : IEntityTokenRefresher;
+
+public interface IEntityTokenRefresher
 {
     Task<string> GetNewAccessTokenAsync(string token, string refreshToken);
 }
