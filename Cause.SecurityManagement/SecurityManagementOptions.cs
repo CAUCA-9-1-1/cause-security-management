@@ -57,6 +57,11 @@ namespace Cause.SecurityManagement
             ValidationCodeValidator = typeof(TCheckerImplementation);
         }
 
+        public void UseMultiFactorAuthentication()
+        {
+            MultiFactorAuthenticationIsActivated = true;
+        }
+
         public void SendEmailWhenUserAreBeingModified<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TImplementation>()
             where TImplementation : IEmailForUserModificationSender
         {
