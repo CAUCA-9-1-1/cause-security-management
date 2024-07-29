@@ -34,7 +34,7 @@ namespace Cause.SecurityManagement
         {
             services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddScoped<IAuthenticationMultiFactorHandler<TUser>, AuthenticationMultiFactorHandler<TUser>>();
-            services.AddScoped<IMobileVersionService, MobileVersionService>();            
+            services.AddScoped<IMobileVersionService, MobileVersionService>();
             services.AddScoped<IUserAuthenticator, UserAuthenticator<TUser>>();
             services.AddScoped<ITokenGenerator, TokenGenerator>();
             services.AddScoped<ITokenReader, TokenReader>();

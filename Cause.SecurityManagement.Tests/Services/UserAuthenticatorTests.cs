@@ -16,7 +16,7 @@ namespace Cause.SecurityManagement.Tests.Services;
 public class UserAuthenticatorTests
 {
     private IUserRepository<User> repository;
-    private IUserManagementService<User> managementService;
+    private IUserPermissionService managementService;
     private ITokenGenerator generator;
     private ICurrentUserService currentUserService;
     private IAuthenticationMultiFactorHandler<User> multiAuthHandler;
@@ -33,7 +33,7 @@ public class UserAuthenticatorTests
         multiAuthHandler = Substitute.For<IAuthenticationMultiFactorHandler<User>>();
         currentUserService = Substitute.For<ICurrentUserService>();           
         repository = Substitute.For<IUserRepository<User>>();
-        managementService = Substitute.For<IUserManagementService<User>>();
+        managementService = Substitute.For<IUserPermissionService>();
         generator = Substitute.For<ITokenGenerator>();
         userTokenGenerator = Substitute.For<IUserTokenGenerator>();
         service = new UserAuthenticator<User>(currentUserService, repository, managementService, multiAuthHandler, generator, userTokenGenerator, Options.Create(configuration));
@@ -45,13 +45,12 @@ public class UserAuthenticatorTests
     {
         var someUserName = "asdlkfj";
         var somePassword = "aclkvjb";
-        repository.GetUserWithTemporaryPassword(Arg.Is(someUserName), Arg.Is(somePassword)).Returns((User)null);
-        repository.GetUser(Arg.Is(someUserName), Arg.Is(somePassword)).Returns((User)null);
+        repository.GetEntityWithTemporaryPassword(Arg.Is(someUserName), Arg.Is(somePassword)).Returns((User)null);
+        repository.GetEntity(Arg.Is(someUserName), Arg.Is(somePassword)).Returns((User)null);
 
-        var (token, system) = await service.LoginAsync(someUserName, somePassword);
+        var result = await service.LoginAsync(someUserName, somePassword);
 
-        token.Should().BeNull();
-        system.Should().BeNull();
+        result.Should().BeNull();
         repository.DidNotReceive().AddToken(Arg.Any<UserToken>());
     }
 
@@ -62,14 +61,15 @@ public class UserAuthenticatorTests
         var somePassword = "aclkvjb";
         var someUser = new User { UserName = "asdf", PasswordMustBeResetAfterLogin = true };
         var expectedUserToken = new UserToken { AccessToken = "asldkfj", RefreshToken = "alskdjf", IdUser = someUser.Id, ForIssuer = configuration.Issuer};
-        userTokenGenerator.GenerateUserTokenAsync(Arg.Is(someUser), Arg.Is(SecurityRoles.UserPasswordSetup)).Returns(expectedUserToken);
-        repository.GetUserWithTemporaryPassword(Arg.Is(someUserName), Arg.Is(somePassword)).Returns(someUser);
+        userTokenGenerator.GenerateEntityTokenAsync(Arg.Is(someUser), Arg.Is(SecurityRoles.UserPasswordSetup)).Returns(expectedUserToken);
+        repository.GetEntityWithTemporaryPassword(Arg.Is(someUserName), Arg.Is(somePassword)).Returns(someUser);
 
-        var (userTokenGenerated, userFound) = await service.LoginAsync(someUserName, somePassword);
+        var result = await service.LoginAsync(someUserName, somePassword);
 
-        await userTokenGenerator.Received(1).GenerateUserTokenAsync(Arg.Is(someUser), Arg.Is(SecurityRoles.UserPasswordSetup));
-        userFound.PasswordMustBeResetAfterLogin.Should().Be(true);
-        userTokenGenerated.Should().BeEquivalentTo(expectedUserToken);
+        await userTokenGenerator.Received(1).GenerateEntityTokenAsync(Arg.Is(someUser), Arg.Is(SecurityRoles.UserPasswordSetup));
+        result.MustChangePassword.Should().BeTrue();
+        result.AccessToken.Should().Be(expectedUserToken.AccessToken);
+        result.RefreshToken.Should().Be(expectedUserToken.RefreshToken);
     }
 
     [Test]
@@ -79,15 +79,16 @@ public class UserAuthenticatorTests
         var somePassword = "aclkvjb";
         var someUser = new User { UserName = "asdf", PasswordMustBeResetAfterLogin = false };
         var expectedUserToken = new UserToken { AccessToken = "asldkfj", RefreshToken = "alskdjf", IdUser = someUser.Id, ForIssuer = configuration.Issuer };
-        repository.GetUserWithTemporaryPassword(Arg.Is(someUserName), Arg.Is(somePassword)).Returns((User)null);
-        repository.GetUser(Arg.Is(someUserName), Arg.Any<string>()).Returns(someUser);
-        userTokenGenerator.GenerateUserTokenAsync(Arg.Is(someUser), Arg.Is(SecurityRoles.User)).Returns(expectedUserToken);
+        repository.GetEntityWithTemporaryPassword(Arg.Is(someUserName), Arg.Is(somePassword)).Returns((User)null);
+        repository.GetEntity(Arg.Is(someUserName), Arg.Any<string>()).Returns(someUser);
+        userTokenGenerator.GenerateEntityTokenAsync(Arg.Is(someUser), Arg.Is(SecurityRoles.User)).Returns(expectedUserToken);
 
-        var (userTokenGenerated, userFound) = await service.LoginAsync(someUserName, somePassword);
+        var result = await service.LoginAsync(someUserName, somePassword);
 
-        await userTokenGenerator.Received(1).GenerateUserTokenAsync(Arg.Is(someUser), Arg.Is(SecurityRoles.User));
-        userFound.PasswordMustBeResetAfterLogin.Should().Be(false);
-        userTokenGenerated.Should().BeEquivalentTo(expectedUserToken);
+        await userTokenGenerator.Received(1).GenerateEntityTokenAsync(Arg.Is(someUser), Arg.Is(SecurityRoles.User));
+        result.MustChangePassword.Should().BeFalse();
+        result.AccessToken.Should().Be(expectedUserToken.AccessToken);
+        result.RefreshToken.Should().Be(expectedUserToken.RefreshToken);
     }
 
     [Test]
@@ -98,15 +99,16 @@ public class UserAuthenticatorTests
         var somePassword = "aclkvjb";
         var someUser = new User { UserName = "asdf", PasswordMustBeResetAfterLogin = false };
         var expectedUserToken = new UserToken();
-        repository.GetUserWithTemporaryPassword(Arg.Is(someUserName), Arg.Is(somePassword)).Returns((User)null);
-        repository.GetUser(Arg.Is(someUserName), Arg.Any<string>()).Returns(someUser);
-        userTokenGenerator.GenerateUserTokenAsync(Arg.Is(someUser), Arg.Is(SecurityRoles.UserLoginWithMultiFactor)).Returns(expectedUserToken);
+        repository.GetEntityWithTemporaryPassword(Arg.Is(someUserName), Arg.Is(somePassword)).Returns((User)null);
+        repository.GetEntity(Arg.Is(someUserName), Arg.Any<string>()).Returns(someUser);
+        userTokenGenerator.GenerateEntityTokenAsync(Arg.Is(someUser), Arg.Is(SecurityRoles.UserLoginWithMultiFactor)).Returns(expectedUserToken);
 
-        var (userTokenGenerated, userFound) = await service.LoginAsync(someUserName, somePassword);
+        var result = await service.LoginAsync(someUserName, somePassword);
 
-        userTokenGenerated.Should().BeEquivalentTo(expectedUserToken);
-        userFound.PasswordMustBeResetAfterLogin.Should().Be(false);
-        await userTokenGenerator.Received(1).GenerateUserTokenAsync(Arg.Is(someUser), Arg.Is(SecurityRoles.UserLoginWithMultiFactor));
+        result.AccessToken.Should().Be(expectedUserToken.AccessToken);
+        result.RefreshToken.Should().Be(expectedUserToken.RefreshToken);
+        result.MustChangePassword.Should().BeFalse();
+        await userTokenGenerator.Received(1).GenerateEntityTokenAsync(Arg.Is(someUser), Arg.Is(SecurityRoles.UserLoginWithMultiFactor));
     }
 
     [Test]
@@ -114,7 +116,7 @@ public class UserAuthenticatorTests
     {
         var someUser = new User();
         currentUserService.GetUserId().Returns(someUserId);
-        repository.GetUserById(Arg.Is(someUserId)).Returns(someUser);
+        repository.GetEntityById(Arg.Is(someUserId)).Returns(someUser);
 
         await service.SendNewCodeAsync();
 

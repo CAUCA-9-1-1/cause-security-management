@@ -4,11 +4,11 @@ using System.Threading.Tasks;
 
 namespace Cause.SecurityManagement.Authentication.MultiFactor
 {
-    public interface IAuthenticationMultiFactorHandler<TUser>
-        where TUser : User, new()
+    public interface IAuthenticationMultiFactorHandler<in T>
+        where T : IAuthenticableEntity
     {
-        Task SendValidationCodeWhenNeededAsync(TUser user);
-        Task<bool> CodeIsValidAsync(TUser user, string validationCode, ValidationCodeType type);
-        Task SendNewValidationCodeAsync(TUser user);
+        Task SendValidationCodeWhenNeededAsync(T entity);
+        Task<bool> CodeIsValidAsync(T entity, string validationCode, ValidationCodeType type);
+        Task SendNewValidationCodeAsync(T entity);
     }
 }

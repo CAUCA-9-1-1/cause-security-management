@@ -10,5 +10,6 @@ namespace Cause.SecurityManagement.Models
         public DateTime LoggedOn { get; set; } = DateTime.Now;
         public string ForIssuer { get; set; }
         public string Role { get; set; }
+        public Guid? SpecificDeviceId { get; set; }
     }
 }

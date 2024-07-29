@@ -218,7 +218,7 @@ namespace Cause.SecurityManagement.Tests.Controllers
             var result = await controller.GetNewAccessTokenAsync(requestData);
 
             result.Should().BeOfType<OkObjectResult>();
-            (result as OkObjectResult)!.Value.Should().BeEquivalentTo(new { AccessToken = newAccessToken, RefreshToken = requestData.RefreshToken });
+            (result as OkObjectResult)!.Value.Should().BeEquivalentTo(new { AccessToken = newAccessToken, requestData.RefreshToken });
         }
 
         [Test]
@@ -277,10 +277,9 @@ namespace Cause.SecurityManagement.Tests.Controllers
 
         private void SetupValidUserLogin()
         {
-            var aUserToken = new UserToken();
-            var aUser = new User();
+            var someLoginResult = new LoginResult();
 
-            userAuthenticator.LoginAsync(Arg.Any<string>(), Arg.Any<string>()).Returns((aUserToken, aUser));
+            userAuthenticator.LoginAsync(Arg.Any<string>(), Arg.Any<string>()).Returns(someLoginResult);
         }
 
         private void SetAuthorizationHeader(string value)
