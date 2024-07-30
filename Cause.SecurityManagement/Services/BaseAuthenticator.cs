@@ -38,6 +38,7 @@ public abstract class BaseAuthenticator<TEntity, TEntityToken>(
             MustVerifyCode = MustValidateCode(entity),
             MustChangePassword = entity.PasswordMustBeResetAfterLogin,
             Name = entity.FirstName + " " + entity.LastName,
+            Username = entity.UserName,
         };
     }
 
@@ -76,6 +77,7 @@ public abstract class BaseAuthenticator<TEntity, TEntityToken>(
                 MustVerifyCode = false,
                 MustChangePassword = entity.PasswordMustBeResetAfterLogin,
                 Name = entity.FirstName + " " + entity.LastName,
+                Username = entity.UserName,
             };
         }
         throw new InvalidValidationCodeException($"Validation code {validationInformation.ValidationCode} is invalid for this entity.");

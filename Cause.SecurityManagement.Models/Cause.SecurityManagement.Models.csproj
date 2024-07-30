@@ -4,7 +4,7 @@
 	  <IsPackable>true</IsPackable>
 	  <TargetFramework>net8</TargetFramework>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <Version>8.2.0</Version>
+    <Version>8.2.1</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 	  <RepositoryUrl>https://github.com/CAUCA-9-1-1/cause-security-management</RepositoryUrl>
 	  <PackageProjectUrl>https://github.com/CAUCA-9-1-1/cause-security-management</PackageProjectUrl>
