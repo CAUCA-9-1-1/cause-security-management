@@ -21,6 +21,7 @@ public abstract class BaseAuthenticator<TEntity, TEntityToken>(
     where TEntityToken : BaseToken
 {
     private readonly SecurityConfiguration configuration = configuration.Value;
+    protected readonly IAuthenticationMultiFactorHandler<TEntity> MultiFactorHandler = multiFactorHandler;
 
     public virtual async Task<LoginResult> LoginAsync(string userName, string password)
     {
@@ -55,14 +56,14 @@ public abstract class BaseAuthenticator<TEntity, TEntityToken>(
     protected virtual async Task<(TEntityToken token, TEntity entity)> GenerateTokenIfEntityCanLogInAsync(TEntity entityFound, string role)
     {
         var entity = CanLogIn(entityFound) ? (await entityTokenGenerator.GenerateEntityTokenAsync(entityFound, role), entityFound) : (null, null);
-        await multiFactorHandler.SendValidationCodeWhenNeededAsync(entity.entityFound);
+        await MultiFactorHandler.SendValidationCodeWhenNeededAsync(entity.entityFound);
         return entity;
     }
 
     public async Task<LoginResult> ValidateMultiFactorCodeAsync(ValidationInformation validationInformation)
     {
         var (entityFound, roles) = GetEntity(currentUserService.GetUserId());
-        if (entityFound != null && await multiFactorHandler.CodeIsValidAsync(entityFound, validationInformation.ValidationCode, ValidationCodeType.MultiFactorLogin))
+        if (entityFound != null && await MultiFactorHandler.CodeIsValidAsync(entityFound, validationInformation.ValidationCode, ValidationCodeType.MultiFactorLogin))
         {
             var (token, entity) = (await entityTokenGenerator.GenerateEntityTokenAsync(entityFound, roles), entityFound);
             if (token == null)
@@ -148,6 +149,6 @@ public abstract class BaseAuthenticator<TEntity, TEntityToken>(
     public async Task SendNewCodeAsync()
     {
         var user = repository.GetEntityById(currentUserService.GetUserId());
-        await multiFactorHandler.SendNewValidationCodeAsync(user);
+        await MultiFactorHandler.SendNewValidationCodeAsync(user);
     }
 }

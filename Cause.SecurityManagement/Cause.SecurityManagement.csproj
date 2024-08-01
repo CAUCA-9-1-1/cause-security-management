@@ -15,10 +15,10 @@
     <Copyright>CAUCA 9-1-1 (c) 2024</Copyright>
     <PackageTags>Cause Security Management AspNetCore Api Client Cauca</PackageTags>
     <PackageReleaseNotes>Add optional device management.</PackageReleaseNotes>
-    <Version>8.2.1</Version>
+    <Version>8.2.2</Version>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <AssemblyVersion>8.2.1</AssemblyVersion>
-    <FileVersion>8.2.1</FileVersion>
+    <AssemblyVersion>8.2.2</AssemblyVersion>
+    <FileVersion>8.2.2</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
