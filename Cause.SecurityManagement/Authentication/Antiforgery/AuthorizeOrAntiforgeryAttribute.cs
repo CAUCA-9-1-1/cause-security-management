@@ -54,7 +54,7 @@ namespace Cause.SecurityManagement.Authentication.Antiforgery
 
         private static bool IsAuthorize(ActionExecutingContext filterContext)
         {
-            if (filterContext.Controller is Controller controller)
+            if (filterContext.Controller is ControllerBase controller)
             {
                 return controller.User.HasClaim(claim => claim.Type == JwtRegisteredClaimNames.Sid);
             }
