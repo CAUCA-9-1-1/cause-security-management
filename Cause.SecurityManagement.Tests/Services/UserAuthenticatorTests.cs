@@ -9,6 +9,7 @@ using NSubstitute;
 using NUnit.Framework;
 using System;
 using System.Threading.Tasks;
+using Cause.SecurityManagement.Models.ValidationCode;
 
 namespace Cause.SecurityManagement.Tests.Services;
 
@@ -121,6 +122,30 @@ public class UserAuthenticatorTests
         await service.SendNewCodeAsync();
 
         await multiAuthHandler.Received(1).SendNewValidationCodeAsync(Arg.Is(someUser));
+    }
+
+    [Test]
+    public async Task SomeUserWithoutSpecificCommunicationType_WhenRequestingNewActivationCode_ShouldAskHandlerToSendItBySms()
+    {
+        var someUser = new User();
+        currentUserService.GetUserId().Returns(someUserId);
+        repository.GetEntityById(Arg.Is(someUserId)).Returns(someUser);
+
+        await service.SendNewCodeAsync();
+
+        await multiAuthHandler.Received(1).SendNewValidationCodeAsync(Arg.Is(someUser), Arg.Is(ValidationCodeCommunicationType.Sms));
+    }
+
+    [Test]
+    public async Task SomeUserWithVoiceCommunicationType_WhenRequestingNewActivationCode_ShouldAskHandlerToSendItByVoice()
+    {
+        var someUser = new User();
+        currentUserService.GetUserId().Returns(someUserId);
+        repository.GetEntityById(Arg.Is(someUserId)).Returns(someUser);
+
+        await service.SendNewCodeAsync(ValidationCodeCommunicationType.Voice);
+
+        await multiAuthHandler.Received(1).SendNewValidationCodeAsync(Arg.Is(someUser), Arg.Is(ValidationCodeCommunicationType.Voice));
     }
 
     [TestCase(true)]

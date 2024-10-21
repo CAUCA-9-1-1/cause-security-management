@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System;
 using Cause.SecurityManagement.Authentication.MultiFactor;
+using Cause.SecurityManagement.Models.ValidationCode;
 using Microsoft.AspNetCore.Http;
 using Microsoft.IdentityModel.Tokens;
 
@@ -47,11 +48,11 @@ public abstract class BaseAuthenticationController(
     }
 
     [Route("validationCode"), HttpGet, Authorize(Roles = SecurityRoles.UserLoginWithMultiFactor)]
-    public async Task<ActionResult> SendNewCodeAsync()
+    public async Task<ActionResult> SendNewCodeAsync([FromQuery]ValidationCodeCommunicationType communicationType = ValidationCodeCommunicationType.Sms)
     {
         try
         {
-            await authenticator.SendNewCodeAsync();
+            await authenticator.SendNewCodeAsync(communicationType);
             return Ok();
         }
         catch (UserValidationCodeNotFoundException)

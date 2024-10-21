@@ -146,9 +146,9 @@ public abstract class BaseAuthenticator<TEntity, TEntityToken>(
         return true;
     }
 
-    public async Task SendNewCodeAsync()
+    public async Task SendNewCodeAsync(ValidationCodeCommunicationType communicationType = ValidationCodeCommunicationType.Sms)
     {
         var user = repository.GetEntityById(currentUserService.GetUserId());
-        await MultiFactorHandler.SendNewValidationCodeAsync(user);
+        await MultiFactorHandler.SendNewValidationCodeAsync(user, communicationType);
     }
 }

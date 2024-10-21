@@ -6,22 +6,12 @@ using System.Threading.Tasks;
 
 namespace Cause.SecurityManagement.Authentication.MultiFactor
 {
-    public class AuthenticationMultiFactorHandler<TUser> : IAuthenticationMultiFactorHandler<TUser>
+    public class AuthenticationMultiFactorHandler<TUser>(
+        IUserValidationCodeRepository repository,
+        IAuthenticationValidationCodeSender<TUser> sender = null,
+        IAuthenticationValidationCodeValidator<TUser> validator = null) : IAuthenticationMultiFactorHandler<TUser>
         where TUser : User, new()
     {
-        private readonly IUserValidationCodeRepository repository;
-        private readonly IAuthenticationValidationCodeSender<TUser> sender;
-        private readonly IAuthenticationValidationCodeValidator<TUser> validator;
-
-        public AuthenticationMultiFactorHandler(
-            IUserValidationCodeRepository repository,
-            IAuthenticationValidationCodeSender<TUser> sender = null,
-            IAuthenticationValidationCodeValidator<TUser> validator = null)
-        {
-            this.repository = repository;
-            this.sender = sender;
-            this.validator = validator;
-        }
 
         public async Task SendValidationCodeWhenNeededAsync(TUser user)
         {
@@ -43,7 +33,7 @@ namespace Cause.SecurityManagement.Authentication.MultiFactor
                 && SecurityManagementOptions.MultiFactorAuthenticationIsActivated;
         }
 
-        private async Task SendValidationCodeAsync(TUser user, ValidationCodeType type)
+        private async Task SendValidationCodeAsync(TUser user, ValidationCodeType type, ValidationCodeCommunicationType communicationType = ValidationCodeCommunicationType.Sms)
         {
             var code = new UserValidationCode
             {
@@ -55,7 +45,7 @@ namespace Cause.SecurityManagement.Authentication.MultiFactor
             repository.SaveNewValidationCode(code);
 
             if (sender == null) throw new AuthenticationValidationCodeSenderNotFoundException();
-            await sender.SendCodeAsync(user, code.Code, code.ExpiresOn);
+            await sender.SendCodeAsync(user, code.Code, code.ExpiresOn, communicationType);
         }
 
         private static string GenerateValidationCode()
@@ -80,14 +70,14 @@ namespace Cause.SecurityManagement.Authentication.MultiFactor
             return false;
         }
 
-        public async Task SendNewValidationCodeAsync(TUser user)
+        public async Task SendNewValidationCodeAsync(TUser user, ValidationCodeCommunicationType communicationType = ValidationCodeCommunicationType.Sms)
         {
             if (!await SendWithExternalSenderWhenExternalValidatorIsActive(user))
             {
                 var existingCode = user != null ? repository.GetLastCode(user.Id) : null;
                 ThrowExceptionIfNoCodeHasBeenFound(existingCode);
                 repository.DeleteExistingValidationCode(user.Id);
-                await SendValidationCodeAsync(user, existingCode.Type);
+                await SendValidationCodeAsync(user, existingCode.Type, communicationType);
             }
         }
 
