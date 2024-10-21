@@ -9,6 +9,6 @@ namespace Cause.SecurityManagement.Authentication.MultiFactor
     {
         Task SendValidationCodeWhenNeededAsync(T entity);
         Task<bool> CodeIsValidAsync(T entity, string validationCode, ValidationCodeType type);
-        Task SendNewValidationCodeAsync(T entity);
+        Task SendNewValidationCodeAsync(T entity, ValidationCodeCommunicationType communicationType = ValidationCodeCommunicationType.Sms);
     }
 }
