@@ -14,6 +14,7 @@ using NSubstitute;
 using NUnit.Framework;
 using System.Threading.Tasks;
 using Cause.SecurityManagement.Authentication.MultiFactor;
+using Cause.SecurityManagement.Models.ValidationCode;
 using NSubstitute.ExceptionExtensions;
 using Microsoft.IdentityModel.Tokens;
 
@@ -64,7 +65,16 @@ namespace Cause.SecurityManagement.Tests.Controllers
             var result = await controller.SendNewCodeAsync();
 
             result.Should().BeOfType<OkResult>();
-            await userAuthenticator.Received(1).SendNewCodeAsync();
+            await userAuthenticator.Received(1).SendNewCodeAsync(Arg.Is(ValidationCodeCommunicationType.Sms));
+        }
+
+        [Test]
+        public async Task SomeUserWithVoiceCommunicationType_WhenRequestingNewValidationCode_ShouldAskAuthenticationServiceToSendCode()
+        {
+            var result = await controller.SendNewCodeAsync(ValidationCodeCommunicationType.Voice);
+
+            result.Should().BeOfType<OkResult>();
+            await userAuthenticator.Received(1).SendNewCodeAsync(Arg.Is(ValidationCodeCommunicationType.Voice));
         }
 
         [Test]
