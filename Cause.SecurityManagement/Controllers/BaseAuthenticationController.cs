@@ -11,6 +11,7 @@ using Cause.SecurityManagement.Authentication.MultiFactor;
 using Cause.SecurityManagement.Models.ValidationCode;
 using Microsoft.AspNetCore.Http;
 using Microsoft.IdentityModel.Tokens;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Cause.SecurityManagement.Controllers;
 
@@ -112,5 +113,36 @@ public abstract class BaseAuthenticationController(
         }
 
         return Unauthorized();
+    }
+
+    [HttpPost, Route("RecoverAccount"), AllowAnonymous]
+    [SwaggerOperation(Summary = "Recover account")]
+    [SwaggerResponse(StatusCodes.Status204NoContent, "Recovery email has perharps been sent")]
+    public async Task<ActionResult> RecoverAccountAsync([FromBody] AccountRecoveryRequest request)
+    {
+        await authenticator.RecoverAccountAsync(request.Email);
+        return NoContent();
+    }
+
+    [HttpPost, Route("RecoverAccountValidation"), AllowAnonymous]
+    [SwaggerOperation(Summary = "Validate account recovery")]
+    [SwaggerResponse(StatusCodes.Status200OK, "Account validated", type: typeof(LoginResult))]
+    [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid code")]
+    public async Task<ActionResult> ValidateRecoverAccount([FromBody] AccountRecoveryValidationRequest request)
+    {
+        var result = await authenticator.ValidateAccountRecoveryAsync(request.Email, request.ValidationCode);
+        return result == null ? BadRequest() : Ok(result);
+    }
+
+    [HttpPost, Route("PasswordSetup"), AuthorizeByRoles(SecurityRoles.User, SecurityRoles.UserPasswordSetup, SecurityRoles.UserRecovery)]
+    [SwaggerOperation(
+        Summary = "Set password for user",
+        Description = "Requires an anthenticated user, user in password setup or user in recovery")]
+    [SwaggerResponse(StatusCodes.Status204NoContent, "Password has been set")]
+    [SwaggerResponse(StatusCodes.Status401Unauthorized, "Unauthorized")]
+    public ActionResult UpdatePassword([FromBody] PasswordChangeRequest request)
+    {
+        authenticator.ChangePassword(request.NewPassword);
+        return NoContent();
     }
 }

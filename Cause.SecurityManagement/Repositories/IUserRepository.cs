@@ -18,7 +18,6 @@ namespace Cause.SecurityManagement.Repositories
         void Add(TUser user);
         void Remove(TUser user);
         void Update(TUser user);
-        void SaveChanges();
         List<EntityEntry> GetModifieEntities();
     }
 }

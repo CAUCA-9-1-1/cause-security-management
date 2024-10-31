@@ -69,6 +69,12 @@ namespace Cause.SecurityManagement.Repositories
                 .Any(t => t.IdUser == entityId && t.RefreshToken == refreshToken);
         }
 
+        public TUser GetEntityByUsername(string userName)
+        {
+            return context.Users
+                .FirstOrDefault(user => (user.UserName == userName || user.Email == userName) && user.IsActive);
+        }
+
         public string GetPassword(Guid userId)
         {
             return context.Users.AsNoTracking()

@@ -13,4 +13,7 @@ public interface IEntityAuthenticator
     Task<LoginResult> ValidateMultiFactorCodeAsync(ValidationInformation validationInformation);
     Task SendNewCodeAsync(ValidationCodeCommunicationType communicationType = ValidationCodeCommunicationType.Sms);
     bool IsLoggedIn(string refreshToken);
+    Task RecoverAccountAsync(string usernameOrEmail);
+    Task<LoginResult> ValidateAccountRecoveryAsync(string usernameOrEmail, string validationCode);
+    void ChangePassword(string newPassword);
 }

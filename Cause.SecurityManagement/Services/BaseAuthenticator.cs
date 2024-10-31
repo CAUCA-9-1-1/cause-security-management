@@ -136,6 +136,14 @@ public abstract class BaseAuthenticator<TEntity, TEntityToken>(
         return repository.HasToken(currentUserService.GetUserId(), refreshToken);
     }
 
+    public void ChangePassword(string newPassword)
+    {
+        var entity = repository.GetEntityById(currentUserService.GetUserId());
+        entity.Password = new PasswordGenerator().EncodePassword(newPassword, configuration.PackageName);
+        entity.PasswordMustBeResetAfterLogin = false;
+        repository.SaveChanges();
+    }
+
     protected virtual bool CanLogIn(TEntity entity)
     {
         return entity != null && HasRequiredPermissionToLogIn(entity);
@@ -150,5 +158,46 @@ public abstract class BaseAuthenticator<TEntity, TEntityToken>(
     {
         var user = repository.GetEntityById(currentUserService.GetUserId());
         await MultiFactorHandler.SendNewValidationCodeAsync(user, communicationType);
+    }
+
+    public async Task RecoverAccountAsync(string usernameOrEmail)
+    {
+        var entity = repository.GetEntityByUsername(usernameOrEmail.Trim());
+        if (entity == null)
+            return;
+        await MultiFactorHandler.SendNewValidationCodeAsync(entity);
+    }
+
+    public async Task<LoginResult> ValidateAccountRecoveryAsync(string usernameOrEmail, string validationCode)
+    {
+        var entity = repository.GetEntityByUsername(usernameOrEmail.Trim());
+        return entity == null ? null : await GetValidationResultAsync(validationCode, entity);
+    }
+
+    private async Task<LoginResult> GetValidationResultAsync(string validationCode, TEntity entity)
+    {
+        if (await MultiFactorHandler.CodeIsValidAsync(entity, validationCode, ValidationCodeType.AccountRecovery))
+        {
+            var token = await GenerateRecoveryTokenAsync(entity.Id);
+            return GenerateRecoveryResult(token, entity);
+        }
+
+        return null;
+    }
+
+    private static LoginResult GenerateRecoveryResult(BaseToken token, TEntity entity)
+    {
+        return new LoginResult
+        {
+            AccessToken = token.AccessToken,
+            RefreshToken = token.RefreshToken,
+            AuthorizationType = "Bearer",
+            Name = entity.FirstName + " " + entity.LastName,
+            ExpiredOn = token.ExpiresOn,
+            IdUser = entity.Id,
+            MustChangePassword = true,
+            MustVerifyCode = false,
+            Username = entity.UserName,
+        };
     }
 }

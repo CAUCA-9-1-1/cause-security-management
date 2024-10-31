@@ -24,6 +24,8 @@
   <ItemGroup>
     <PackageReference Include="Cause.Core.DataLayerExtensions" Version="8.0.*" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.7" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.7.1" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.7.1" />
   </ItemGroup>
   
   <ItemGroup>

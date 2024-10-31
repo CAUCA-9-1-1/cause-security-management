@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.Json;
 using Cause.SecurityManagement.Controllers;
-using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Models.DataTransferObjects;
 using Cause.SecurityManagement.Services;
 using FluentAssertions;
@@ -26,7 +25,6 @@ namespace Cause.SecurityManagement.Tests.Controllers
         private ICurrentUserService currentUserService;
         private IUserAuthenticator userAuthenticator;
         private IUserTokenRefresher userTokenRefresher;
-        private IExternalSystemAuthenticationService externalSystemAuthenticationService;
         private IMobileVersionService mobileVersionService;
         private ILogger<AuthenticationController> logger;
         private AuthenticationController controller;
@@ -36,10 +34,6 @@ namespace Cause.SecurityManagement.Tests.Controllers
             UserName = "aUserName",
             Password = "aPassword",
         };
-        private readonly ExternalSystemLoginInformations externalSystemLoginInformations = new()
-        {
-            Apikey = "anApiKey"
-        };
 
         [SetUp]
         public void SetUpTest()
@@ -47,10 +41,9 @@ namespace Cause.SecurityManagement.Tests.Controllers
             currentUserService = Substitute.For<ICurrentUserService>();
             userAuthenticator = Substitute.For<IUserAuthenticator>();
             userTokenRefresher = Substitute.For<IUserTokenRefresher>();
-            externalSystemAuthenticationService = Substitute.For<IExternalSystemAuthenticationService>();
             mobileVersionService = Substitute.For<IMobileVersionService>();
             logger = Substitute.For<ILogger<AuthenticationController>>();
-            controller = new AuthenticationController(currentUserService, userAuthenticator, userTokenRefresher, externalSystemAuthenticationService, mobileVersionService, logger)
+            controller = new AuthenticationController(currentUserService, userAuthenticator, userTokenRefresher, mobileVersionService, logger)
             {
                 ControllerContext = new ControllerContext
                 {
@@ -161,64 +154,6 @@ namespace Cause.SecurityManagement.Tests.Controllers
         }
 
         [Test]
-        public void WithoutLoginInformations_WhenLogonForExternalSystem_ShouldReturnUnauthorize()
-        {
-            var result = controller.LogonForExternalSystem(null);
-
-            result.Should().BeOfType<ActionResult<LoginResult>>();
-            result.Result.Should().BeOfType<UnauthorizedResult>();
-            result.Value.Should().Be(null);
-        }
-
-        [Test]
-        public void WithInvalidLoginInformations_WhenLogonForExternalSystem_ShouldReturnUnauthorize()
-        {
-            var result = controller.LogonForExternalSystem(externalSystemLoginInformations);
-
-            result.Should().BeOfType<ActionResult<LoginResult>>();
-            result.Result.Should().BeOfType<UnauthorizedResult>();
-            result.Value.Should().Be(null);
-        }
-
-        [Test]
-        public void WithoutHeaderAuthorization_WhenLogonForExternalSystem_ShouldBeAccepted()
-        {
-            SetupValidExternalSystemLogin();
-
-            var result = controller.LogonForExternalSystem(externalSystemLoginInformations);
-
-            result.Should().BeOfType<ActionResult<LoginResult>>();
-            result.Result.Should().Be(null);
-            result.Value.Should().BeOfType<LoginResult>();
-        }
-
-        [Test]
-        public void WithValidHeaderAuthorization_WhenLogonForExternalSystem_ShouldBeAccepted()
-        {
-            SetAuthorizationHeader("Bearer aToken");
-            SetupValidExternalSystemLogin();
-
-            var result = controller.LogonForExternalSystem(externalSystemLoginInformations);
-
-            result.Should().BeOfType<ActionResult<LoginResult>>();
-            result.Result.Should().Be(null);
-            result.Value.Should().BeOfType<LoginResult>();
-        }
-
-        [Test]
-        public void WithInvalidHeaderAuthorization_WhenLogonForExternalSystem_ShouldBeAccepted()
-        {
-            SetAuthorizationHeader("aToken");
-            SetupValidExternalSystemLogin();
-
-            var result = controller.LogonForExternalSystem(externalSystemLoginInformations);
-
-            result.Should().BeOfType<ActionResult<LoginResult>>();
-            result.Result.Should().Be(null);
-            result.Value.Should().BeOfType<LoginResult>();
-        }
-
-        [Test]
         public async Task WithValidInformation_WhenGettingNewAccessToken_ShouldReturnNewToken()
         {
             var requestData = new TokenRefreshResult { AccessToken = "oldToken", RefreshToken = "SomeRefreshToken" };
@@ -253,6 +188,59 @@ namespace Cause.SecurityManagement.Tests.Controllers
             result.Should().BeTrue();
         }
 
+        [Test]
+        public void SomeUser_WhenChangingTemporaryPassword_ShouldUpdateIt()
+        {
+            var somePassword = "aPassword";
+            var someUserId = Guid.NewGuid();
+            var someRequest = new PasswordChangeRequest { NewPassword = somePassword };
+            currentUserService.GetUserId().Returns(someUserId);
+
+            var result = controller.UpdatePassword(someRequest);
+
+            userAuthenticator.Received(1).ChangePassword(Arg.Is(somePassword));
+            result.Should().BeOfType<NoContentResult>();
+        }
+
+        [Test]
+        public async Task SomeUser_WhenRecoveringAccount_ShouldSendRecoveryEmail()
+        {
+            var someEmail = "anEmail";
+            var someRequest = new AccountRecoveryRequest { Email = someEmail };
+
+            var result = await controller.RecoverAccountAsync(someRequest);
+
+            await userAuthenticator.Received(1).RecoverAccountAsync(Arg.Is(someEmail));
+            result.Should().BeOfType<NoContentResult>();
+        }
+
+        [Test]
+        public async Task SomeUser_WhenValidatingRecoveryAccountWithValidCode_ShouldReturnLoginResult()
+        {
+            var someEmail = "anEmail";
+            var someValidationCode = "aCode";
+            var someRequest = new AccountRecoveryValidationRequest { Email = someEmail, ValidationCode = someValidationCode };
+            var someLoginResult = new LoginResult();
+            userAuthenticator.ValidateAccountRecoveryAsync(Arg.Is(someEmail), Arg.Is(someValidationCode)).Returns(someLoginResult);
+
+            var result = await controller.ValidateRecoverAccount(someRequest);
+
+            result.Should().BeOfType<OkObjectResult>().Which.Value.Should().Be(someLoginResult);
+        }
+
+        [Test]
+        public async Task SomeUser_WhenValidatingRecoveryAccountWithInvalidCode_ShouldReturnBadRequest()
+        {
+            var someEmail = "anEmail";
+            var someValidationCode = "aCode";
+            var someRequest = new AccountRecoveryValidationRequest { Email = someEmail, ValidationCode = someValidationCode };
+            userAuthenticator.ValidateAccountRecoveryAsync(Arg.Is(someEmail), Arg.Is(someValidationCode)).Returns((LoginResult)null);
+
+            var result = await controller.ValidateRecoverAccount(someRequest);
+
+            result.Should().BeOfType<BadRequestResult>();
+        }
+
         public static IEnumerable<TestCaseData> PossibleRefreshingExceptions
         {
             get
@@ -275,14 +263,6 @@ namespace Cause.SecurityManagement.Tests.Controllers
             result.Should().BeOfType<UnauthorizedResult>();
             controller.Response.Headers.TryGetValue(expectedHeader, out var resultHeaderValue);
             resultHeaderValue.Should().BeEquivalentTo(expectedHeaderValue);
-        }
-
-        private void SetupValidExternalSystemLogin()
-        {
-            var aToken = new ExternalSystemToken();
-            var aExternalSystem = new ExternalSystem();
-
-            externalSystemAuthenticationService.Login(Arg.Any<string>()).Returns((aToken, aExternalSystem));
         }
 
         private void SetupValidUserLogin()

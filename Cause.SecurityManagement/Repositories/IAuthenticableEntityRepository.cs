@@ -9,4 +9,6 @@ public interface IAuthenticableEntityRepository<out T> where T : IAuthenticableE
     T GetEntityWithTemporaryPassword(string userName, string password);
     T GetEntity(string userName, string password);
     bool HasToken(Guid entityId, string refreshToken);
+    T GetEntityByUsername(string userName);
+    void SaveChanges();
 }
