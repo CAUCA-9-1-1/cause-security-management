@@ -14,10 +14,10 @@ public class ExternalSystemAuthenticationController(
     IExternalSystemAuthenticationService externalSystemAuthenticationService,
     ILogger<ExternalSystemAuthenticationController> logger) : ControllerBase
 {
-    [Route("[Action]"), Route("/api/Authentication/[Action]"), HttpPost, AllowAnonymous]
+    [Route("[Action]"), Route("/api/Authentication/LogonForExternalSystem"), HttpPost, AllowAnonymous]
     [ProducesResponseType(typeof(LoginResult), 200)]
     [ProducesResponseType(typeof(UnauthorizedResult), 401)]
-    public ActionResult<LoginResult> LogonForExternalSystem([FromBody] ExternalSystemLoginInformations login)
+    public ActionResult<LoginResult> Logon([FromBody] ExternalSystemLoginInformations login)
     {
         var (token, system) = externalSystemAuthenticationService.Login(login?.Apikey);
         if (system == null || token == null)
@@ -34,7 +34,7 @@ public class ExternalSystemAuthenticationController(
         };
     }
 
-    [Route("/api/Authentication/RefreshForExternalSystem"), Route("RefreshForExternalSystem"), HttpPost, AllowAnonymous]
+    [Route("/api/Authentication/RefreshForExternalSystem"), Route("Refresh"), HttpPost, AllowAnonymous]
     public async Task<ActionResult> RefreshForExternalSystemAsync([FromBody] TokenRefreshResult tokens)
     {
         try
