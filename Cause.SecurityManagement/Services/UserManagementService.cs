@@ -139,11 +139,17 @@ namespace Cause.SecurityManagement.Services
             });
         }
 
-        public virtual bool ChangePassword(Guid userId, string newPassword, bool userMustResetPasswordAtNextLogin)
+        public virtual bool ChangePassword(Guid userId, string newPassword, bool userMustResetPasswordAtNextLogin, string currentPassword = null)
         {
             var user = userRepository.Get(userId);
             if (user != null)
             {
+	            if (SecurityManagementOptions.ValidateCurrentPasswordOnPasswordChange)
+	            {
+		            currentPassword = new PasswordGenerator().EncodePassword(currentPassword, SecurityConfiguration.PackageName);
+		            if (user.Password != currentPassword) return false;
+	            }
+	            
                 user.Password = new PasswordGenerator().EncodePassword(newPassword, SecurityConfiguration.PackageName);
 				user.PasswordMustBeResetAfterLogin = userMustResetPasswordAtNextLogin;
                 userRepository.SaveChanges();

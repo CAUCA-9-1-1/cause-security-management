@@ -14,10 +14,12 @@ namespace Cause.SecurityManagement
         internal Type EmailForUserModificationSender { get; set; }
         internal Type DeviceManager { get; set; }
         internal static bool MultiFactorAuthenticationIsActivated { get; set; }
+        public static bool ValidateCurrentPasswordOnPasswordChange { get; set; }
 
         public SecurityManagementOptions()
         {
             MultiFactorAuthenticationIsActivated = false;
+            ValidateCurrentPasswordOnPasswordChange = false;
         }
 
         public void SetCustomUserManagementService<TUser, TService, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TImplementation>()

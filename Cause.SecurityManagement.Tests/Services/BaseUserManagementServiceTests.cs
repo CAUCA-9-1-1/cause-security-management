@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using Microsoft.Extensions.Options;
 using Cause.SecurityManagement.Models.Configuration;
 using Cause.SecurityManagement.Repositories;
+using FluentAssertions;
 
 namespace Cause.SecurityManagement.Tests.Services
 {
@@ -34,6 +35,7 @@ namespace Cause.SecurityManagement.Tests.Services
         [SetUp]
         public void SetUp()
         {
+            securityConfiguration.PackageName = "Cause.SecurityManagement";
             configuration = Options.Create(securityConfiguration);
             userGroupRepository = Substitute.For<IUserGroupRepository>();
             userPermissionRepository = Substitute.For<IUserPermissionRepository>();
@@ -57,6 +59,53 @@ namespace Cause.SecurityManagement.Tests.Services
             userGroupRepository.DidNotReceive().Remove(Arg.Is(userGroupNotAssignableByAllUsers));
         }
 
+        [Test]
+        public void ValidateCurrentPasswordActivated_WhenChangingPassword_ShouldReturnFalseWhenCurrentPasswordIsNotTheSame()
+        {
+            SecurityManagementOptions.ValidateCurrentPasswordOnPasswordChange = true;
+            var currentPassword = "currentPassword";
+            var encodedPassword = new PasswordGenerator().EncodePassword(currentPassword, securityConfiguration.PackageName);
+            var user = new User { Password = encodedPassword };
+            userRepository.Get(Arg.Is(user.Id)).Returns(user);
+            var newPassword = "newPassword";
+
+            var result= userManagementService.ChangePassword(user.Id, newPassword, false, "wrongPassword");
+
+            result.Should().BeFalse();
+            userRepository.DidNotReceive().SaveChanges();
+        }
+        
+        [Test]
+        public void ValidateCurrentPasswordActivated_WhenChangingPassword_ShouldSaveNewPasswordWhenCurrentPasswordIsTheSame()
+        {
+            SecurityManagementOptions.ValidateCurrentPasswordOnPasswordChange = true;
+            var currentPassword = "currentPassword";
+            var encodedPassword = new PasswordGenerator().EncodePassword(currentPassword, securityConfiguration.PackageName);
+            var user = new User { Password = encodedPassword };
+            userRepository.Get(Arg.Is(user.Id)).Returns(user);
+            var newPassword = "newPassword";
+
+            var result= userManagementService.ChangePassword(user.Id, newPassword, false, currentPassword);
+
+            result.Should().BeTrue();
+            user.Password.Should().Be(new PasswordGenerator().EncodePassword(newPassword, securityConfiguration.PackageName)); 
+            userRepository.Received(1).SaveChanges();
+        }
+        
+        [Test]
+        public void ValidateCurrentPasswordNotActivated_WhenChangingPassword_ShouldSaveUserWithNewPassword()
+        {
+            SecurityManagementOptions.ValidateCurrentPasswordOnPasswordChange = false;
+            var user = new User { Password = "" };
+            var newPassword = "newPassword";
+            userRepository.Get(Arg.Is(user.Id)).Returns(user);
+
+            var result= userManagementService.ChangePassword(user.Id, newPassword, false);
+
+            result.Should().BeTrue();
+            user.Password.Should().Be(new PasswordGenerator().EncodePassword(newPassword, securityConfiguration.PackageName));
+            userRepository.Received(1).SaveChanges();
+        }
 
         private void SetupRepository(List<UserGroup> userGroups)
         {
