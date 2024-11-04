@@ -64,6 +64,11 @@ namespace Cause.SecurityManagement
             MultiFactorAuthenticationIsActivated = true;
         }
 
+        public void UseCurrentPasswordValidationOnPasswordChange()
+        {
+            ValidateCurrentPasswordOnPasswordChange = true;
+        }
+
         public void SendEmailWhenUserAreBeingModified<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TImplementation>()
             where TImplementation : IEmailForUserModificationSender
         {
