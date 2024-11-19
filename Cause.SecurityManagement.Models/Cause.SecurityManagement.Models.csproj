@@ -2,18 +2,18 @@
 
   <PropertyGroup>
 	  <IsPackable>true</IsPackable>
-	  <TargetFramework>net8</TargetFramework>
+	  <TargetFramework>net9.0</TargetFramework>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <Version>8.3.3</Version>
+    <Version>9.0.0</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 	  <RepositoryUrl>https://github.com/CAUCA-9-1-1/cause-security-management</RepositoryUrl>
 	  <PackageProjectUrl>https://github.com/CAUCA-9-1-1/cause-security-management</PackageProjectUrl>
-    <AssemblyVersion>8.3.3</AssemblyVersion>
-    <FileVersion>8.3.3</FileVersion>
+    <AssemblyVersion>9.0.0</AssemblyVersion>
+    <FileVersion>9.0.0</FileVersion>
     <Authors>Fred Catellier</Authors>
     <Description>Base models for the Causee.SecurityManagement's library.</Description>
-    <Copyright>CAUCA 9-1-1 2024</Copyright>
-    <PackageReleaseNotes>Update to DotNet 8.</PackageReleaseNotes>
+    <Copyright>CAUCA 9-1-1 2025</Copyright>
+    <PackageReleaseNotes>Update to DotNet 9.</PackageReleaseNotes>
     <Company>CAUCA 9-1-1</Company>
   </PropertyGroup>
 
