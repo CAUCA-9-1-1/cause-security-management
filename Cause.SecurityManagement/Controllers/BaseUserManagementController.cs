@@ -88,7 +88,7 @@ public abstract class BaseUserManagementController<TService, TUser>(TService use
     {
         if (userPassword.PasswordConfirmation != userPassword.Password)
             return BadRequest("Password confirmation is different from password.");
-        if (UserService.ChangePassword(userPassword.Id, userPassword.Password, false))
+        if (UserService.ChangePassword(userPassword.Id, userPassword.Password, false, userPassword.CurrentPassword))
             return NoContent();
         return NotFound();
     }

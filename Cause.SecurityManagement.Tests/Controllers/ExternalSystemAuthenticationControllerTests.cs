@@ -31,7 +31,7 @@ public class ExternalSystemAuthenticationControllerTests
     [Test]
     public void WithoutLoginInformations_WhenLogonForExternalSystem_ShouldReturnUnauthorize()
     {
-        var result = controller.LogonForExternalSystem(null);
+        var result = controller.Logon(null);
 
         result.Should().BeOfType<ActionResult<LoginResult>>();
         result.Result.Should().BeOfType<UnauthorizedResult>();
@@ -41,7 +41,7 @@ public class ExternalSystemAuthenticationControllerTests
     [Test]
     public void WithInvalidLoginInformations_WhenLogonForExternalSystem_ShouldReturnUnauthorize()
     {
-        var result = controller.LogonForExternalSystem(externalSystemLoginInformations);
+        var result = controller.Logon(externalSystemLoginInformations);
 
         result.Should().BeOfType<ActionResult<LoginResult>>();
         result.Result.Should().BeOfType<UnauthorizedResult>();
@@ -53,7 +53,7 @@ public class ExternalSystemAuthenticationControllerTests
     {
         SetupValidExternalSystemLogin();
 
-        var result = controller.LogonForExternalSystem(externalSystemLoginInformations);
+        var result = controller.Logon(externalSystemLoginInformations);
 
         result.Should().BeOfType<ActionResult<LoginResult>>();
         result.Result.Should().Be(null);
@@ -66,7 +66,7 @@ public class ExternalSystemAuthenticationControllerTests
         SetAuthorizationHeader("Bearer aToken");
         SetupValidExternalSystemLogin();
 
-        var result = controller.LogonForExternalSystem(externalSystemLoginInformations);
+        var result = controller.Logon(externalSystemLoginInformations);
 
         result.Should().BeOfType<ActionResult<LoginResult>>();
         result.Result.Should().Be(null);
@@ -79,7 +79,7 @@ public class ExternalSystemAuthenticationControllerTests
         SetAuthorizationHeader("aToken");
         SetupValidExternalSystemLogin();
 
-        var result = controller.LogonForExternalSystem(externalSystemLoginInformations);
+        var result = controller.Logon(externalSystemLoginInformations);
 
         result.Should().BeOfType<ActionResult<LoginResult>>();
         result.Result.Should().Be(null);
