@@ -15,17 +15,17 @@
     <Copyright>CAUCA 9-1-1 (c) 2025</Copyright>
     <PackageTags>Cause Security Management AspNetCore Api Client Cauca</PackageTags>
     <PackageReleaseNotes>Bump to DotNet 9.</PackageReleaseNotes>
-    <Version>9.0.0</Version>
+    <Version>9.0.2</Version>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <AssemblyVersion>9.0.0</AssemblyVersion>
-    <FileVersion>9.0.0</FileVersion>
+    <AssemblyVersion>9.0.2</AssemblyVersion>
+    <FileVersion>9.0.2</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Cause.Core.DataLayerExtensions" Version="9.0.*" />
+    <PackageReference Include="Cause.Core.DataLayerExtensions" Version="9.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.*" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="7.0.*" />
-    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="7.0.*" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="7.3.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="7.3.0" />
   </ItemGroup>
   
   <ItemGroup>
