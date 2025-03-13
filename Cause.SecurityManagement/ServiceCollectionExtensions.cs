@@ -3,6 +3,7 @@ using Cause.SecurityManagement.Authentication.MultiFactor;
 using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Repositories;
 using Cause.SecurityManagement.Services;
+using Cause.SecurityManagement.VersionManagement;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
@@ -34,7 +35,7 @@ namespace Cause.SecurityManagement
         {
             services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddScoped<IAuthenticationMultiFactorHandler<TUser>, AuthenticationMultiFactorHandler<TUser>>();
-            services.AddScoped<IMobileVersionService, MobileVersionService>();
+            services.AddScoped<IMobileVersionValidator, MobileVersionValidator>();
             services.AddScoped<IUserAuthenticator, UserAuthenticator<TUser>>();
             services.AddScoped<ITokenGenerator, TokenGenerator>();
             services.AddScoped<ITokenReader, TokenReader>();

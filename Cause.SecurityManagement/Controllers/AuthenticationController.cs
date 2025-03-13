@@ -11,7 +11,7 @@ public class AuthenticationController(
     ICurrentUserService currentUserService,
     IUserAuthenticator userAuthenticator,
     IUserTokenRefresher userTokenRefresher,
-    IMobileVersionService mobileVersionService,
+    IMobileVersionValidator mobileVersionValidator,
     ILogger<AuthenticationController> logger)
     : BaseAuthenticationController (userAuthenticator, userTokenRefresher, logger)
 {
@@ -19,14 +19,14 @@ public class AuthenticationController(
     [ProducesResponseType(200)]
     public ActionResult MobileVersionIsLatest(string mobileVersion)
     {
-        return Ok(mobileVersionService.IsMobileVersionLatest(mobileVersion));
+        return Ok(mobileVersionValidator.IsMobileVersionLatest(mobileVersion));
     }
 
     [HttpGet, Route("VersionValidator/{mobileVersion}"), AllowAnonymous]
     [ProducesResponseType(200)]
     public ActionResult MobileVersionIsValid(string mobileVersion)
     {
-        return Ok(mobileVersionService.IsMobileVersionValid(mobileVersion));
+        return Ok(mobileVersionValidator.IsMobileVersionValid(mobileVersion));
     }
 
     [HttpGet, Route("Permissions")]

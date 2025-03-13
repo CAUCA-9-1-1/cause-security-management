@@ -25,7 +25,7 @@ namespace Cause.SecurityManagement.Tests.Controllers
         private ICurrentUserService currentUserService;
         private IUserAuthenticator userAuthenticator;
         private IUserTokenRefresher userTokenRefresher;
-        private IMobileVersionService mobileVersionService;
+        private IMobileVersionValidator mobileVersionValidator;
         private ILogger<AuthenticationController> logger;
         private AuthenticationController controller;
 
@@ -41,9 +41,9 @@ namespace Cause.SecurityManagement.Tests.Controllers
             currentUserService = Substitute.For<ICurrentUserService>();
             userAuthenticator = Substitute.For<IUserAuthenticator>();
             userTokenRefresher = Substitute.For<IUserTokenRefresher>();
-            mobileVersionService = Substitute.For<IMobileVersionService>();
+            mobileVersionValidator = Substitute.For<IMobileVersionValidator>();
             logger = Substitute.For<ILogger<AuthenticationController>>();
-            controller = new AuthenticationController(currentUserService, userAuthenticator, userTokenRefresher, mobileVersionService, logger)
+            controller = new AuthenticationController(currentUserService, userAuthenticator, userTokenRefresher, mobileVersionValidator, logger)
             {
                 ControllerContext = new ControllerContext
                 {
