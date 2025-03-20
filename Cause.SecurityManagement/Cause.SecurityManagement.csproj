@@ -14,19 +14,19 @@
     <Description>Security Management for Asp.Net Core projects.</Description>
     <Copyright>CAUCA 9-1-1 (c) 2025</Copyright>
     <PackageTags>Cause Security Management AspNetCore Api Client Cauca</PackageTags>
-    <PackageReleaseNotes>Use semantic versioning for version comparison.</PackageReleaseNotes>
-    <Version>9.0.3</Version>
+    <PackageReleaseNotes>Better, cleaner, faster, stronger. And support for keycloak!</PackageReleaseNotes>
+    <Version>9.1.2</Version>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <AssemblyVersion>9.0.3</AssemblyVersion>
-    <FileVersion>9.0.3</FileVersion>
+    <AssemblyVersion>9.1.2</AssemblyVersion>
+    <FileVersion>9.1.2</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Cause.Core.DataLayerExtensions" Version="9.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.*" />
     <PackageReference Include="Semver" Version="3.0.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="7.3.1" />
-    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="7.3.1" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="8.0.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="8.0.0" />
   </ItemGroup>
   
   <ItemGroup>

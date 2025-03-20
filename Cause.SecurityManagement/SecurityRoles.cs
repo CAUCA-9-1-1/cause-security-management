@@ -4,6 +4,7 @@ namespace Cause.SecurityManagement
 {
     public static class SecurityRoles
     {
+        public const string Administrator = "Administrator";
         public const string ExternalSystem = "ExternalSystem";
         public const string User = "RegularUser";
         public const string UserCreation = "UserCreation";
