@@ -9,3 +9,15 @@ public class AuthorizeByRolesAttribute : AuthorizeAttribute
         Roles = string.Join(",", roles);
     }
 }
+
+public class AuthorizeByPoliciesAttribute : AuthorizeAttribute
+{
+    public AuthorizeByPoliciesAttribute(params string[] policies)
+    {
+        Policy = string.Join(",", policies);
+    }
+}
+
+public class AuthorizeForAdministratorRoleAttribute() : AuthorizeByRolesAttribute(SecurityRoles.Administrator);
+public class AuthorizeForUserAndAdministratorRolesAttribute() : AuthorizeByRolesAttribute(SecurityRoles.User, SecurityRoles.Administrator);
+public class AuthorizeForUserRolesAttributes() : AuthorizeByRolesAttribute(SecurityRoles.User);

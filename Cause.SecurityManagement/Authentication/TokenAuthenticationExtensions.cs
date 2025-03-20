@@ -1,73 +1,54 @@
 ﻿using Cause.SecurityManagement.Models.Configuration;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.IdentityModel.Tokens;
-using System;
 using System.IdentityModel.Tokens.Jwt;
-using System.Text;
-using System.Threading.Tasks;
+using System.Linq;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Net.Http.Headers;
 
-namespace Cause.SecurityManagement.Authentication
+namespace Cause.SecurityManagement.Authentication;
+
+public static class TokenAuthenticationExtensions
 {
-    public static class TokenAuthenticationExtensions
+    public static IServiceCollection AddTokenAuthentication(this IServiceCollection services, SecurityConfiguration configuration, KeycloakConfiguration keycloakConfiguration = null)
     {
-        public static IServiceCollection AddTokenAuthentication(this IServiceCollection services, SecurityConfiguration configuration)
+        JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+
+        services
+            .AddScoped<IClaimsTransformation, MultiJwtClaimsTransformer>()
+            .AddAuthenticationWithScheme()
+            .AddRegularUserJwtBearer(configuration)
+            .AddKeycloakAuthenticationBuilderWhenNeeded(keycloakConfiguration)
+            .AddCustomPolicyScheme(keycloakConfiguration);
+        return services.AddRedirectionCustomizationOnUnauthorized();
+    }
+
+    public static IServiceCollection AddSimpleTokenAuthentication(this IServiceCollection services, SecurityConfiguration configuration)
+    {
+        JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+        services
+            .AddSimpleAuthentication()
+            .AddSimpleAuthentication(configuration);
+        return services.AddRedirectionCustomizationOnUnauthorized();
+    }
+
+    internal static AuthenticationBuilder AddCustomPolicyScheme(this AuthenticationBuilder builder, KeycloakConfiguration configuration)
+    {
+        return builder.AddPolicyScheme(CustomAuthSchemes.RegularUserOrKeycloakScheme, CustomAuthSchemes.RegularUserOrKeycloakScheme, options =>
         {
-            var secretKey = configuration.SecretKey;
-            var issuer = configuration.Issuer;
-            var appName = configuration.PackageName;
+            options.ForwardDefaultSelector = context => GetSchemeToUse(configuration, context);
+        });
+    }
 
-            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
-
-            services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            }).AddJwtBearer(config =>
-            {
-                config.RequireHttpsMetadata = false;
-                config.SaveToken = true;
-                config.TokenValidationParameters = GetAuthenticationParameters(secretKey, issuer, appName);
-                config.Events = new JwtBearerEvents
-                {
-                    OnAuthenticationFailed = context =>
-                    {
-                        context.Response.StatusCode = 401;
-                        if (context.Exception.GetType() == typeof(SecurityTokenException))
-                            context.Response.Headers.Append("Token-Expired", "true");
-                        else if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
-                            context.Response.Headers.Append("Token-Expired", "true");
-                        return Task.CompletedTask;
-                    },
-                };
-            });
-            services.ConfigureApplicationCookie(options =>
-            {
-                options.Events.OnRedirectToLogin = context =>
-                {
-                    context.Response.StatusCode = 401;
-                    return Task.CompletedTask;
-                };
-            });
-            return services;
-        }
-
-        private static TokenValidationParameters GetAuthenticationParameters(string secretKey, string issuer, string appName)
+    private static string GetSchemeToUse(KeycloakConfiguration configuration, HttpContext context)
+    {
+        string authorization = context.Request.Headers[HeaderNames.Authorization];
+        if (configuration != null && !string.IsNullOrEmpty(authorization) && authorization.StartsWith("Bearer "))
         {
-            var tokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
-                ValidateIssuer = true,
-                ValidIssuer = issuer,
-                ValidateAudience = true,
-                ValidAudience = appName,
-                ValidateLifetime = true,
-                ClockSkew = TimeSpan.Zero
-            };
-            return tokenValidationParameters;
+            var token = authorization.Substring("Bearer ".Length).Trim();
+            var jwtHandler = new JwtSecurityTokenHandler();
+            return jwtHandler.ReadJwtToken(token).Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Iss)?.Value == configuration.ValidIssuer ? CustomAuthSchemes.KeycloakAuthentication : CustomAuthSchemes.RegularUserAuthentication;
         }
+        return CustomAuthSchemes.RegularUserAuthentication;
     }
 }

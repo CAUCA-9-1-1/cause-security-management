@@ -25,7 +25,7 @@ public class ExternalSystemAuthenticationController(
 
         return new LoginResult
         {
-            AuthorizationType = "Bearer",
+            AuthorizationType = SecurityManagementOptions.AuthenticationScheme,
             ExpiredOn = token.ExpiresOn,
             AccessToken = token.AccessToken,
             RefreshToken = token.RefreshToken,
