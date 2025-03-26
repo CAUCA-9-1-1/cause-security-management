@@ -30,6 +30,7 @@ public class AuthenticationController(
     }
 
     [HttpGet, Route("Permissions")]
+    [AuthorizeForUserAndAdministratorRoles]
     [ProducesResponseType(200)]
     [ProducesResponseType(401)]
     public async Task<ActionResult> GetPermissionsAsync()
