@@ -22,6 +22,22 @@ namespace Cause.SecurityManagement.Services
             return Guid.TryParse(id, out var userId) ? userId : Guid.Empty;
         }
 
+        public Guid? GetExternalSystemId()
+        {
+            if (contextAccessor.HttpContext == null)
+                return null;
+            var hasExternalSystemRole = contextAccessor.HttpContext.User.IsInRole(SecurityRoles.ExternalSystem);
+            if (hasExternalSystemRole)
+            {
+                var sidClaim = contextAccessor.HttpContext.User.Claims.FirstOrDefault(claim => claim.Type == JwtRegisteredClaimNames.Sid)?.Value;
+                if (Guid.TryParse(sidClaim, out var parsedId))
+                {
+                    return parsedId;
+                }
+            }
+            return null;
+        }
+
         public Guid? GetUserDeviceId()
         {
             var value = GetCustomClaimValue(AdditionalClaimsGenerator.DeviceIdType);
@@ -37,6 +53,11 @@ namespace Cause.SecurityManagement.Services
         public string GetUserIpAddress()
         {
             return contextAccessor.HttpContext?.Connection.RemoteIpAddress?.MapToIPv4().ToString();
+        }
+
+        public string GetAuthentifiedUserIdentifier()
+        {
+            return GetCustomClaimValue(JwtRegisteredClaimNames.UniqueName);
         }
 
         public async Task<List<AuthenticationUserPermission>> GetPermissionsAsync()

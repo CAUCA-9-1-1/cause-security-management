@@ -3,13 +3,14 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Cause.SecurityManagement.Services
+namespace Cause.SecurityManagement.Services;
+
+public interface ICurrentUserService
 {
-    public interface ICurrentUserService
-    {
-        Guid GetUserId();
-        string GetUserIpAddress();
-        Task<List<AuthenticationUserPermission>> GetPermissionsAsync();
-        Guid? GetUserDeviceId();
-    }
+    Guid GetUserId();
+    Guid? GetExternalSystemId();
+    string GetUserIpAddress();
+    Task<List<AuthenticationUserPermission>> GetPermissionsAsync();
+    Guid? GetUserDeviceId();
+    string GetAuthentifiedUserIdentifier();
 }

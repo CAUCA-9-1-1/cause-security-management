@@ -9,4 +9,5 @@ public static class SecurityPolicy
     public const string UserCreation = "UserCreationPolicy";
     public const string ApiCertificate = "ApiCertificatePolicy";
     public const string Metrics = "MetricsPolicy";
+    public const string ExternalSystem = "ExternalSystemPolicy";
 }

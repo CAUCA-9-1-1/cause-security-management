@@ -9,8 +9,7 @@ public static class ServiceCollectionAuthorizationExtensions
     {
         return services.AddAuthorizationCore(options =>
         {
-            options.AddPolicy(SecurityPolicy.Metrics,
-                policy => policy.RequireAssertion(_ => true));
+            options.AddMetricsPolicy();
             options.FallbackPolicy = new AuthorizationPolicyBuilder()
                 .RequireAuthenticatedUser()
                 .AddAuthenticationSchemes(CustomAuthSchemes.KeycloakAuthentication, CustomAuthSchemes.RegularUserAuthentication)
@@ -19,22 +18,63 @@ public static class ServiceCollectionAuthorizationExtensions
         });
     }
 
+    public static IServiceCollection AddAuthorizationForRegularUserAndExternalSystem(this IServiceCollection services)
+    {
+        return services.AddAuthorizationCore(options =>
+        {
+            options
+                .AddUserRecoveryPolicy()
+                .AddUserCreationPolicy()
+                .AddMetricsPolicy()
+                .AddExternalSystemPolicy()
+                .FallbackPolicy = new AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser()
+                .RequireRole(SecurityRoles.User).Build();
+        });
+    }
+
     public static IServiceCollection AddAuthorizationForRegularUser(this IServiceCollection services)
     {
         return services.AddAuthorizationCore(options =>
         {
-            options.AddPolicy(SecurityPolicy.UserRecovery, policy => policy
-                .RequireAuthenticatedUser()
-                .RequireRole(SecurityRoles.UserAndUserRecovery));
-            options.AddPolicy(SecurityPolicy.UserCreation, policy => policy
-                .RequireAuthenticatedUser()
-                .RequireRole(SecurityRoles.UserAndUserCreation));
-            options.AddPolicy(SecurityPolicy.Metrics, policy => policy
-                .RequireAssertion(_ => true));
-
-            options.FallbackPolicy = new AuthorizationPolicyBuilder()
+            options
+                .AddUserRecoveryPolicy()
+                .AddUserCreationPolicy()
+                .AddMetricsPolicy()
+                .FallbackPolicy = new AuthorizationPolicyBuilder()
                 .RequireAuthenticatedUser()
                 .RequireRole(SecurityRoles.User).Build();
         });
+    }
+
+    private static AuthorizationOptions AddExternalSystemPolicy(this AuthorizationOptions options)
+    {
+        options.AddPolicy(SecurityPolicy.ExternalSystem, policy => policy
+            .RequireAuthenticatedUser()
+            .RequireRole(SecurityRoles.ExternalSystem));
+        return options;
+    }
+
+    private static AuthorizationOptions AddMetricsPolicy(this AuthorizationOptions options)
+    {
+        options.AddPolicy(SecurityPolicy.Metrics, policy => policy
+            .RequireAssertion(_ => true));
+        return options;
+    }
+
+    private static AuthorizationOptions AddUserCreationPolicy(this AuthorizationOptions options)
+    {
+        options.AddPolicy(SecurityPolicy.UserCreation, policy => policy
+            .RequireAuthenticatedUser()
+            .RequireRole(SecurityRoles.UserAndUserCreation));
+        return options;
+    }
+
+    private static AuthorizationOptions AddUserRecoveryPolicy(this AuthorizationOptions options)
+    {
+        options.AddPolicy(SecurityPolicy.UserRecovery, policy => policy
+            .RequireAuthenticatedUser()
+            .RequireRole(SecurityRoles.UserAndUserRecovery));
+        return options;
     }
 }
