@@ -25,6 +25,7 @@ public static class ServiceCollectionAuthorizationExtensions
             options
                 .AddUserRecoveryPolicy()
                 .AddUserCreationPolicy()
+                .AddUserPasswordSetupPolicy()
                 .AddMetricsPolicy()
                 .AddExternalSystemPolicy()
                 .FallbackPolicy = new AuthorizationPolicyBuilder()
@@ -40,6 +41,7 @@ public static class ServiceCollectionAuthorizationExtensions
             options
                 .AddUserRecoveryPolicy()
                 .AddUserCreationPolicy()
+                .AddUserPasswordSetupPolicy()
                 .AddMetricsPolicy()
                 .FallbackPolicy = new AuthorizationPolicyBuilder()
                 .RequireAuthenticatedUser()
@@ -75,6 +77,14 @@ public static class ServiceCollectionAuthorizationExtensions
         options.AddPolicy(SecurityPolicy.UserRecovery, policy => policy
             .RequireAuthenticatedUser()
             .RequireRole(SecurityRoles.UserAndUserRecovery));
+        return options;
+    }
+
+    private static AuthorizationOptions AddUserPasswordSetupPolicy(this AuthorizationOptions options)
+    {
+        options.AddPolicy(SecurityPolicy.UserPasswordSetup, policy => policy
+            .RequireAuthenticatedUser()
+            .RequireRole(SecurityRoles.UserPasswordSetup));
         return options;
     }
 }
