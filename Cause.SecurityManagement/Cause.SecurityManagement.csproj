@@ -15,10 +15,10 @@
     <Copyright>CAUCA 9-1-1 (c) 2025</Copyright>
     <PackageTags>Cause Security Management AspNetCore Api Client Cauca</PackageTags>
     <PackageReleaseNotes>Better, cleaner, faster, stronger. And support for keycloak!</PackageReleaseNotes>
-    <Version>9.1.6</Version>
+    <Version>9.1.7</Version>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <AssemblyVersion>9.1.6</AssemblyVersion>
-    <FileVersion>9.1.6</FileVersion>
+    <AssemblyVersion>9.1.7</AssemblyVersion>
+    <FileVersion>9.1.7</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
