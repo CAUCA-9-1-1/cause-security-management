@@ -25,7 +25,7 @@ public abstract class BaseAuthenticationController(
     [Route("[Action]"), HttpPost, AllowAnonymous]
     [ProducesResponseType(typeof(LoginResult), 200)]
     [ProducesResponseType(typeof(UnauthorizedResult), 401)]
-    public async Task<ActionResult<LoginResult>> Logon([FromHeader(Name = "auth")] string authorizationHeader, [FromBody] LoginInformations loginInformations)
+    public async Task<ActionResult<LoginResult>> Logon([FromHeader(Name = "auth")] string authorizationHeader, [FromBody] LoginInformations loginInformations = null)
     {
         var login = GetLoginFromHeader(authorizationHeader) ?? loginInformations;
         if (login == null)
