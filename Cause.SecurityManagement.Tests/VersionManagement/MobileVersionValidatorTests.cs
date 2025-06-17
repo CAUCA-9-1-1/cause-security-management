@@ -1,6 +1,6 @@
 ﻿using Cause.SecurityManagement.Models.Configuration;
 using Cause.SecurityManagement.VersionManagement;
-using FluentAssertions;
+using AwesomeAssertions;
 using Microsoft.Extensions.Options;
 using NUnit.Framework;
 

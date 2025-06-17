@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using NUnit.Framework;
 using Cause.SecurityManagement.Models.Configuration;
-using FluentAssertions;
+using AwesomeAssertions;
 
 namespace Cause.SecurityManagement.Tests.Controllers;
 

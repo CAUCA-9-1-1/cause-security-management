@@ -1,6 +1,6 @@
 ﻿using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Models.Configuration;
-using FluentAssertions;
+using AwesomeAssertions;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using NUnit.Framework;

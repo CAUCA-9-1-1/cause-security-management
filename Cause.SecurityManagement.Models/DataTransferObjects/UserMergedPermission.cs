@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Cause.SecurityManagement.Models.DataTransferObjects
+﻿namespace Cause.SecurityManagement.Models.DataTransferObjects
 {
 	public class UserMergedPermission
 	{

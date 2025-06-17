@@ -1,6 +1,6 @@
 ﻿using System;
 using Cause.SecurityManagement.Services;
-using FluentAssertions;
+using AwesomeAssertions;
 using NUnit.Framework;
 
 namespace Cause.SecurityManagement.Tests.Services;

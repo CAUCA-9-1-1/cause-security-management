@@ -1,14 +1,9 @@
-using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
-using System.Net.Http;
 using System.Security.Claims;
-using System.Security.Principal;
 using System.Threading.Tasks;
 using Cause.SecurityManagement.Authentication.Antiforgery;
-using Cause.SecurityManagement.Models;
-using FluentAssertions;
+using AwesomeAssertions;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -18,24 +13,16 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Net.Http.Headers;
-using Newtonsoft.Json.Linq;
 using NSubstitute;
 using NUnit.Framework;
 
 namespace Cause.SecurityManagement.Tests.Authentication.Antiforgery
 {
     [AuthorizeOrAntiforgery]
-    public class TestController : Controller
-    {
-    }
+    public class TestController : Controller;
 
 	public class AuthorizeOrAntiforgeryAttributeTests
     {
-        public AuthorizeOrAntiforgeryAttributeTests()
-        {
-        }
-
         [Test]
         public void AsAnonymousUserWithToken_WhenAccessController_ShouldAccessController()
         {
@@ -99,8 +86,10 @@ namespace Cause.SecurityManagement.Tests.Authentication.Antiforgery
             if (!string.IsNullOrEmpty(headerAuthorization))
             {
                 controller = new TestController();
-                controller.ControllerContext = new ControllerContext();
-                controller.ControllerContext.HttpContext = new DefaultHttpContext { User = GetUser(headerAuthorization) };
+                controller.ControllerContext = new ControllerContext
+                {
+                    HttpContext = new DefaultHttpContext { User = GetUser(headerAuthorization) }
+                };
             }
 
             return new ActionExecutingContext(
@@ -112,21 +101,21 @@ namespace Cause.SecurityManagement.Tests.Authentication.Antiforgery
                 ),
                 new List<IFilterMetadata>(),
                 new Dictionary<string, object>(),
-                controller
+                controller!
             );
         }
 
-        private ClaimsPrincipal GetUser(string headerAuthorization)
+        private static ClaimsPrincipal GetUser(string headerAuthorization)
         {
-            var identity = new ClaimsIdentity(new[] {
-                    new Claim(JwtRegisteredClaimNames.Sid, headerAuthorization),
-                }, "basic");
+            var identity = new ClaimsIdentity([
+                new Claim(JwtRegisteredClaimNames.Sid, headerAuthorization)
+            ], "basic");
             var claimsPrincipal = new ClaimsPrincipal(identity);
 
             return claimsPrincipal;
         }
 
-        private HttpContext GenerateBasicHttpContext(string environmentName = "", bool validAntiforgery = false, bool validMobileAndToken = false)
+        private static HttpContext GenerateBasicHttpContext(string environmentName = "", bool validAntiforgery = false, bool validMobileAndToken = false)
         {
             var antiforgery = Substitute.For<IAntiforgery>();
 

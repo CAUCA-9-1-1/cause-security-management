@@ -1,10 +1,9 @@
 ﻿using Microsoft.AspNetCore.Http;
 
-namespace Cause.SecurityManagement.Authentication.Certificate
+namespace Cause.SecurityManagement.Authentication.Certificate;
+
+public interface ICertificateValidator
 {
-    public interface ICertificateValidator
-    {
-        void ValidateCertificate(IHeaderDictionary headers);
-        string GetUserDn();
-    }
+    void ValidateCertificate(IHeaderDictionary certificateHeaders);
+    string GetUserDn();
 }

@@ -2,7 +2,7 @@ namespace Cause.SecurityManagement.Tests.Services
 {
     using Cause.SecurityManagement.Services;
     using NUnit.Framework;
-    using FluentAssertions;
+    using AwesomeAssertions;
     using NSubstitute;
     using System.Collections.Generic;
     using Cause.SecurityManagement.Models;

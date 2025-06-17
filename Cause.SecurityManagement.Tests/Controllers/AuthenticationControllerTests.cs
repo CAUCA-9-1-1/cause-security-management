@@ -5,7 +5,7 @@ using System.Text.Json;
 using Cause.SecurityManagement.Controllers;
 using Cause.SecurityManagement.Models.DataTransferObjects;
 using Cause.SecurityManagement.Services;
-using FluentAssertions;
+using AwesomeAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;

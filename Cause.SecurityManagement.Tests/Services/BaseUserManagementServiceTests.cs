@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using Microsoft.Extensions.Options;
 using Cause.SecurityManagement.Models.Configuration;
 using Cause.SecurityManagement.Repositories;
-using FluentAssertions;
+using AwesomeAssertions;
 
 namespace Cause.SecurityManagement.Tests.Services
 {

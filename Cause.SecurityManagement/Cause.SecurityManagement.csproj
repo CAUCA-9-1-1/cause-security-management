@@ -15,18 +15,18 @@
     <Copyright>CAUCA 9-1-1 (c) 2025</Copyright>
     <PackageTags>Cause Security Management AspNetCore Api Client Cauca</PackageTags>
     <PackageReleaseNotes>Better, cleaner, faster, stronger. And support for keycloak!</PackageReleaseNotes>
-    <Version>9.1.7</Version>
+    <Version>9.1.8</Version>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <AssemblyVersion>9.1.7</AssemblyVersion>
-    <FileVersion>9.1.7</FileVersion>
+    <AssemblyVersion>9.1.8</AssemblyVersion>
+    <FileVersion>9.1.8</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Cause.Core.DataLayerExtensions" Version="9.0.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.*" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.6" />
     <PackageReference Include="Semver" Version="3.0.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="8.1.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.1" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="9.0.1" />
   </ItemGroup>
   
   <ItemGroup>

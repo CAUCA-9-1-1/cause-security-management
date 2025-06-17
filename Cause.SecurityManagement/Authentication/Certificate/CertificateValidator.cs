@@ -2,23 +2,21 @@ using System.Linq;
 using Cause.SecurityManagement.Authentication.Exceptions;
 using Cause.SecurityManagement.Models.Configuration;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Cause.SecurityManagement.Authentication.Certificate
 {
-    public class CertificateValidator : ICertificateValidator
+    public class CertificateValidator(
+        ILogger<CertificateValidator> logger,
+        IOptions<SecurityConfiguration> configuration) : ICertificateValidator
     {
-        private readonly SecurityConfiguration configuration;
+        private readonly SecurityConfiguration configuration = configuration.Value;
         private IHeaderDictionary headers;
 
-        public CertificateValidator(IOptions<SecurityConfiguration> configuration)
+        public void ValidateCertificate(IHeaderDictionary certificateHeaders)
         {
-            this.configuration = configuration.Value;
-        }
-
-        public void ValidateCertificate(IHeaderDictionary headers)
-        {
-            this.headers = headers;
+            headers = certificateHeaders;
             ValidateAllCertificateInformation();
         }
 
@@ -42,7 +40,9 @@ namespace Cause.SecurityManagement.Authentication.Certificate
 
             if (!sslClientSubjectDn.ToString().Contains("CN="))
             {
-                throw new CertificateNotValid();
+                var error = $"ssl-client-subject-dn header does not contains a CN. Current value is '{sslClientSubjectDn.ToString()}'.";
+                logger.LogInformation("ssl-client-subject-dn header does not contains a CN. Current value is {SslclientSubjectDn}", sslClientSubjectDn.ToString());
+                throw new CertificateNotValidException(error);
             }
         }
 
@@ -56,7 +56,9 @@ namespace Cause.SecurityManagement.Authentication.Certificate
             }
             if (!configuration.CertificateIssuers.Any(issuer => sslClientIssuerDn.ToString().EndsWith(issuer)))
             {
-                throw new CertificateNotValid();
+                var error = $"ssl_client_issuer-dn is not one of the allowed issuer.  Received issuer is '{sslClientIssuerDn.ToString()}'.";
+                logger.LogInformation("ssl_client_issuer-dn is not one of the allowed issuer.  Received issuer is '{SslClientIssuerDn}'.", sslClientIssuerDn.ToString());
+                throw new CertificateNotValidException(error);
             }
         }
 
@@ -66,11 +68,13 @@ namespace Cause.SecurityManagement.Authentication.Certificate
 
             if (string.IsNullOrEmpty(sslClientVerify) || sslClientVerify.ToString() == "NONE")
             {
-                throw new CertificateNotPresent();
+                throw new CertificateNotPresentException();
             }
             else if (sslClientVerify.ToString() != "SUCCESS")
             {
-                throw new CertificateNotValid();
+                var error = $"ssl-client-verify is not 'SUCCESS'.  Received status is '{sslClientVerify.ToString()}'.";
+                logger.LogInformation("ssl-client-verify is not 'SUCCESS'.  Received status is '{SslClientVerify}'.", sslClientVerify.ToString());
+                throw new CertificateNotValidException(error);
             }
         }
     }

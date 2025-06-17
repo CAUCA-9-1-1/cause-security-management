@@ -8,54 +8,45 @@ using System.Security.Claims;
 using Cause.SecurityManagement.Repositories;
 using Cause.SecurityManagement.Authentication.Exceptions;
 
-namespace Cause.SecurityManagement.Authentication.Certificate
+namespace Cause.SecurityManagement.Authentication.Certificate;
+
+public class CertificateAuthenticationHandler(
+    IOptionsMonitor<CertificateAuthenticationOptions> options,
+    ILoggerFactory logger,
+    UrlEncoder encoder,
+    ICertificateValidator certificateValidator,
+    IExternalSystemRepository repository)
+    : AuthenticationHandler<CertificateAuthenticationOptions>(options, logger, encoder)
 {
-    public class CertificateAuthenticationHandler : AuthenticationHandler<CertificateAuthenticationOptions>
+    protected override Task<AuthenticateResult> HandleAuthenticateAsync()
+    { 
+        try
+        {
+            certificateValidator.ValidateCertificate(Request.Headers);
+            return Task.FromResult(AuthenticateResult.Success(GenerateTicket()));
+        }
+        catch (Exception)
+        {
+            return Task.FromResult(AuthenticateResult.NoResult());
+        }
+    }
+
+    private AuthenticationTicket GenerateTicket()
     {
-        private readonly ICertificateValidator certificateValidator;
-        private readonly IExternalSystemRepository repository;
-
-        public CertificateAuthenticationHandler(
-            IOptionsMonitor<CertificateAuthenticationOptions> options, ILoggerFactory logger, UrlEncoder encoder,
-            ICertificateValidator certificateValidator,
-            IExternalSystemRepository repository
-        ) : base(options, logger, encoder)
+        var externalSystem = repository.GetByCertificateSubject(certificateValidator.GetUserDn());
+        if (externalSystem == null)
         {
-            this.certificateValidator = certificateValidator;
-            this.repository = repository;
+            throw new ExternalSystemNotFound();
         }
 
-        protected override Task<AuthenticateResult> HandleAuthenticateAsync()
-        { 
-            try
-            {
-                certificateValidator.ValidateCertificate(Request.Headers);
-
-                return Task.FromResult(AuthenticateResult.Success(GenerateTicket()));
-            }
-            catch (Exception)
-            {
-                return Task.FromResult(AuthenticateResult.NoResult());
-            }
-        }
-
-        private AuthenticationTicket GenerateTicket()
+        var claims = new[]
         {
-            var externalSystem = repository.GetByCertificateSubject(certificateValidator.GetUserDn());
-            if (externalSystem == null)
-            {
-                throw new ExternalSystemNotFound();
-            }
+            new Claim(ClaimTypes.Role, SecurityRoles.ExternalSystem),
+            new Claim(ClaimTypes.Sid, externalSystem.Id.ToString()),
+            new Claim(ClaimTypes.GivenName, externalSystem.Name),
+        };
 
-            var claims = new[]
-            {
-                new Claim(ClaimTypes.Role, SecurityRoles.ExternalSystem),
-                new Claim(ClaimTypes.Sid, externalSystem.Id.ToString()),
-                new Claim(ClaimTypes.GivenName, externalSystem.Name),
-            };
-
-            var claimsIdentity = new ClaimsIdentity(claims, nameof(CertificateAuthenticationHandler));
-            return new AuthenticationTicket(new ClaimsPrincipal(claimsIdentity), nameof(CertificateAuthenticationHandler));
-        }
+        var claimsIdentity = new ClaimsIdentity(claims, nameof(CertificateAuthenticationHandler));
+        return new AuthenticationTicket(new ClaimsPrincipal(claimsIdentity), nameof(CertificateAuthenticationHandler));
     }
 }

@@ -1,7 +1,7 @@
 ﻿using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Repositories;
 using Cause.SecurityManagement.Services;
-using FluentAssertions;
+using AwesomeAssertions;
 using NSubstitute;
 using NUnit.Framework;
 
@@ -55,7 +55,7 @@ namespace Cause.SecurityManagement.Tests.Services
             token.RefreshToken.Should().Be(someRefreshToken);
             token.IdExternalSystem.Should().Be(someExternalSystem.Id);
             system.Should().Be(someExternalSystem);
-            repository.Received(1).AddToken(Arg.Is<ExternalSystemToken>(token => token.IdExternalSystem == someExternalSystem.Id && token.AccessToken == someAccessToken && token.RefreshToken == someRefreshToken));
+            repository.Received(1).AddToken(Arg.Is<ExternalSystemToken>(systemToken => systemToken.IdExternalSystem == someExternalSystem.Id && systemToken.AccessToken == someAccessToken && systemToken.RefreshToken == someRefreshToken));
         }
     }
 }

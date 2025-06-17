@@ -1,5 +1,5 @@
 ﻿using Cause.SecurityManagement.VersionManagement;
-using FluentAssertions;
+using AwesomeAssertions;
 using NUnit.Framework;
 using Semver;
 

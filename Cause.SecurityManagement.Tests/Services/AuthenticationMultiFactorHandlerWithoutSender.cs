@@ -2,7 +2,7 @@
 using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Models.ValidationCode;
 using Cause.SecurityManagement.Repositories;
-using FluentAssertions;
+using AwesomeAssertions;
 using NSubstitute;
 using NUnit.Framework;
 using System;
