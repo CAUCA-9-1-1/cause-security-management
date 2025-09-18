@@ -1,11 +1,12 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Cause.SecurityManagement.Models.DataTransferObjects;
+using Cause.SecurityManagement.Repositories;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
-using Cause.SecurityManagement.Models.DataTransferObjects;
-using Cause.SecurityManagement.Repositories;
 
 namespace Cause.SecurityManagement.Services
 {
@@ -57,7 +58,9 @@ namespace Cause.SecurityManagement.Services
 
         public string GetAuthentifiedUserIdentifier()
         {
-            return GetCustomClaimValue(JwtRegisteredClaimNames.UniqueName);
+            return GetCustomClaimValue(ClaimTypes.Name) ??
+                   GetCustomClaimValue(JwtRegisteredClaimNames.Name) ?? 
+                   GetCustomClaimValue(JwtRegisteredClaimNames.UniqueName);
         }
 
         public async Task<List<AuthenticationUserPermission>> GetPermissionsAsync()
