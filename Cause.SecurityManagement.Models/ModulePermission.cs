@@ -4,6 +4,7 @@ namespace Cause.SecurityManagement.Models
 {
 	public class ModulePermission : BaseModel
 	{
+		public int Sequence { get; set; }
 		public string Name { get; set; }
 		public string Tag { get; set; }
 		public bool? DefaultIsAllowed { get; set; }
