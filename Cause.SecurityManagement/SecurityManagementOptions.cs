@@ -8,6 +8,7 @@ namespace Cause.SecurityManagement;
 public class SecurityManagementOptions
 {
     internal (Type serviceType, Type implementationType)? CustomAuthenticationService { get; set; }
+    internal (Type serviceType, Type implementationType)? CustomUserTokenRefresher { get; set; }
     internal (Type serviceType, Type implementationType)? CustomUserManagementService { get; set; }
     internal (Type serviceType, Type implementationType)? CustomCurrentUserService { get; set; }
     internal Type ValidationCodeSender { get; set; }
@@ -31,11 +32,18 @@ public class SecurityManagementOptions
         CustomUserManagementService = (typeof(TService), typeof(TImplementation));
     }
 
-    public void SetAuthenticationService<TService, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TImplementation>()
+    public void SetUserAuthenticationService<TService, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TImplementation>()
         where TService : IUserAuthenticator
         where TImplementation : class, TService
     {
         CustomAuthenticationService = (typeof(TService), typeof(TImplementation));
+    }
+
+    public void SetUserTokenRefresher<TService, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TImplementation>()
+        where TService : IUserTokenRefresher
+        where TImplementation : class, TService
+    {
+        CustomUserTokenRefresher = (typeof(TService), typeof(TImplementation));
     }
 
     public void SetCurrentUserService<TService, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TImplementation>()

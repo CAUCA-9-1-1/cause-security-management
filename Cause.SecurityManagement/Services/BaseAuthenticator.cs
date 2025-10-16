@@ -15,8 +15,7 @@ public abstract class BaseAuthenticator<TEntity, TEntityToken>(
     IAuthenticableEntityRepository<TEntity> repository,
     IAuthenticationMultiFactorHandler<TEntity> multiFactorHandler,
     IEntityTokenGenerator<TEntityToken> entityTokenGenerator,
-    IOptions<SecurityConfiguration> configuration
-) : IEntityAuthenticator
+    IOptions<SecurityConfiguration> configuration) : IEntityAuthenticator
     where TEntity : class, IAuthenticableEntity
     where TEntityToken : BaseToken
 {
@@ -25,6 +24,8 @@ public abstract class BaseAuthenticator<TEntity, TEntityToken>(
 
     public virtual async Task<LoginResult> LoginAsync(string userName, string password)
     {
+        if (!HasLoginInformation(userName, password))
+            return null;
         var (entityFound, roles) = GetEntityWithTemporaryPassword(userName, password) ?? GetEntity(userName, password);
         var (token, entity) = await GenerateTokenIfEntityCanLogInAsync(entityFound, roles);
         if (entity == null || token == null)
@@ -42,6 +43,8 @@ public abstract class BaseAuthenticator<TEntity, TEntityToken>(
             Username = entity.UserName,
         };
     }
+
+    private static bool HasLoginInformation(string userName, string password) => !string.IsNullOrWhiteSpace(userName) && !string.IsNullOrWhiteSpace(password);
 
     protected virtual (TEntity entity, string role)? GetEntityWithTemporaryPassword(string userName, string password)
     {

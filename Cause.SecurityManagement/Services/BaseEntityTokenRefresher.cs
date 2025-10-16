@@ -39,7 +39,11 @@ public abstract class BaseEntityTokenRefresher<TEntity, TEntityToken>(
     {
         ThrowExceptionIfUserHasNotBeenFound(token, refreshToken, userId, entity);
         tokenReader.ThrowExceptionWhenTokenIsNotValid(refreshToken, entityToken);
+        if (!CanRefreshToken(entity))
+            throw new InvalidTokenUserException(token, refreshToken, userId.ToString());
     }
+
+    protected virtual bool CanRefreshToken(TEntity entity) => true;
 
     private async Task<string> GenerateNewAccessToken(TEntity entity, TEntityToken entityToken)
     {

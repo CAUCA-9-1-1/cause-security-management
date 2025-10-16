@@ -23,6 +23,7 @@ public static class ServiceCollectionExtensions
             .AddBaseConfiguration<TUser>()
             .AddScopedCustomServiceOrDefault<IUserManagementService<TUser>>(managementOptions.CustomUserManagementService, () => services.AddScoped<IUserManagementService<TUser>, UserManagementService<TUser>>())
             .AddScopedCustomServiceOrDefault<IUserAuthenticator>(managementOptions.CustomAuthenticationService, () => services.AddScoped<IUserAuthenticator, UserAuthenticator<TUser>>())
+            .AddScopedCustomServiceOrDefault<IUserTokenRefresher>(managementOptions.CustomUserTokenRefresher, () => services.AddScoped<IUserTokenRefresher, UserTokenRefresher<TUser>>())
             .AddScopedCustomServiceOrDefault<ICurrentUserService>(managementOptions.CustomCurrentUserService, () => services.AddScoped<ICurrentUserService, CurrentUserService>())
             .AddScopedWhenImplementationIsKnown<IAuthenticationValidationCodeSender<TUser>>(managementOptions.ValidationCodeSender)
             .AddScopedWhenImplementationIsKnown<IAuthenticationValidationCodeValidator<TUser>>(managementOptions.ValidationCodeValidator)
@@ -35,7 +36,6 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
         services.AddScoped<IAuthenticationMultiFactorHandler<TUser>, AuthenticationMultiFactorHandler<TUser>>();
         services.AddScoped<IMobileVersionValidator, MobileVersionValidator>();
-        services.AddScoped<IUserAuthenticator, UserAuthenticator<TUser>>();
         services.AddScoped<ITokenGenerator, TokenGenerator>();
         services.AddScoped<ITokenReader, TokenReader>();
         services.AddScoped<IExternalSystemAuthenticationService, ExternalSystemAuthenticationService>();
@@ -54,7 +54,6 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IScopedDbContextProvider<TUser>, ScopedDbContextProvider<TUser>>();
         services.AddScoped<ICertificateValidator, CertificateValidator>();
         services.AddScoped<IUserTokenGenerator, UserTokenGenerator<TUser>>();
-        services.AddScoped<IUserTokenRefresher, UserTokenRefresher<TUser>>();
         return services;
     }
 
