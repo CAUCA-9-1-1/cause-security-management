@@ -13,4 +13,5 @@ public interface ICurrentUserService
     Task<List<AuthenticationUserPermission>> GetPermissionsAsync();
     Guid? GetUserDeviceId();
     string GetAuthentifiedUserIdentifier();
+    string GetRole();
 }
