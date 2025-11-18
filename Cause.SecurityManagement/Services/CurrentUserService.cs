@@ -67,5 +67,11 @@ namespace Cause.SecurityManagement.Services
         {
             return await userPermissionRepository.GetUserPermissionsAsync(GetUserId());
         }
+
+        public string GetRole()
+        {
+            return contextAccessor.HttpContext?.User.Claims
+                .FirstOrDefault(claim => claim.Type == ClaimTypes.Role)?.Value;
+        }
     }
 }
