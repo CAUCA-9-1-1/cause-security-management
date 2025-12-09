@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Cause.SecurityManagement.Controllers;
 
@@ -15,8 +16,10 @@ public class ExternalSystemAuthenticationController(
     ILogger<ExternalSystemAuthenticationController> logger) : ControllerBase
 {
     [Route("[Action]"), Route("/api/Authentication/LogonForExternalSystem"), HttpPost, AllowAnonymous]
-    [ProducesResponseType(typeof(LoginResult), 200)]
-    [ProducesResponseType(typeof(UnauthorizedResult), 401)]
+    [ProducesResponseType<LoginResult>(StatusCodes.Status200OK)]
+    [SwaggerResponse(StatusCodes.Status200OK, "The login result with tokens", typeof(LoginResult))]
+    [SwaggerResponse(StatusCodes.Status401Unauthorized, "Unauthorized")]
+    [SwaggerOperation(Summary = "Authenticates an external system using an API key")]
     public ActionResult<LoginResult> Logon([FromBody] ExternalSystemLoginInformations login)
     {
         var (token, system) = externalSystemAuthenticationService.Login(login?.Apikey);
@@ -35,6 +38,10 @@ public class ExternalSystemAuthenticationController(
     }
 
     [Route("/api/Authentication/RefreshForExternalSystem"), Route("Refresh"), HttpPost, AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [SwaggerResponse(StatusCodes.Status200OK, "The new access token and refresh token")]
+    [SwaggerResponse(StatusCodes.Status401Unauthorized, "Unauthorized")]
+    [SwaggerOperation(Summary = "Refreshes the access token for an external system")]
     public async Task<ActionResult> RefreshForExternalSystemAsync([FromBody] TokenRefreshResult tokens)
     {
         try

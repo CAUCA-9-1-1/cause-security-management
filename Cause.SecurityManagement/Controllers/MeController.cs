@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Cause.SecurityManagement.Controllers;
@@ -8,7 +11,12 @@ namespace Cause.SecurityManagement.Controllers;
 public class MeController : ControllerBase
 {
     [HttpGet]
-    [AuthorizeForUserAndAdministratorRoles]
+    [AuthorizeForUserAdministratorAndCertificateRoles]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [SwaggerResponse(StatusCodes.Status200OK, "The user claims and information")]
+    [SwaggerOperation(
+        Summary = "Retrieves the claims and information of the currently authenticated user",
+        Description = "Requires one of the following roles: RegularUser, Administrator, Console")]
     public ActionResult Get()
     {
         return Ok(this.HttpContext.User.Claims

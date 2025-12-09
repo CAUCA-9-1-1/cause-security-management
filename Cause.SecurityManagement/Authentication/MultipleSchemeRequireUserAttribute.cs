@@ -21,7 +21,7 @@ public class MultipleSchemeRequireUserAttribute : ActionFilterAttribute
         }
     }
 
-    private bool UserIsAuthenticated(ClaimsPrincipal claims)
+    private static bool UserIsAuthenticated(ClaimsPrincipal claims)
     {
         var isTokenAuthenticated = claims.HasClaim(claim => claim.Type == JwtRegisteredClaimNames.Sid);
         var isCertificateAuthenticated = claims.HasClaim(claim => claim.Type == ClaimTypes.Sid);

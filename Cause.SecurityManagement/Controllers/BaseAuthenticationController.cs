@@ -16,15 +16,18 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace Cause.SecurityManagement.Controllers;
 
 public abstract class BaseAuthenticationController(
-    IEntityAuthenticator authenticator, 
+    IEntityAuthenticator authenticator,
     IEntityTokenRefresher tokenRefresher,
     ILogger<AuthenticationController> logger) : Controller
 {
     protected readonly ILogger<AuthenticationController> Logger = logger;
+    private static readonly JsonSerializerOptions SerializationOptions = new() { PropertyNameCaseInsensitive = true };
 
     [Route("[Action]"), HttpPost, AllowAnonymous]
-    [ProducesResponseType(typeof(LoginResult), 200)]
-    [ProducesResponseType(typeof(UnauthorizedResult), 401)]
+    [ProducesResponseType<LoginResult>(StatusCodes.Status200OK)]
+    [SwaggerResponse(StatusCodes.Status200OK, "The login result with tokens", typeof(LoginResult))]
+    [SwaggerResponse(StatusCodes.Status401Unauthorized, "Unauthorized")]
+    [SwaggerOperation(Summary = "Authenticates a user and returns a login result with tokens")]
     public async Task<ActionResult<LoginResult>> Logon([FromHeader(Name = "auth")] string authorizationHeader, [FromBody] LoginInformations loginInformations = null)
     {
         var login = GetLoginFromHeader(authorizationHeader) ?? loginInformations;
@@ -38,7 +41,7 @@ public abstract class BaseAuthenticationController(
         if (string.IsNullOrWhiteSpace(authorizationHeader))
             return null;
         var decodedHeader = Uri.UnescapeDataString(Encoding.Default.GetString(Convert.FromBase64String(authorizationHeader)));
-        var login = JsonSerializer.Deserialize<LoginInformations>(decodedHeader, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        var login = JsonSerializer.Deserialize<LoginInformations>(decodedHeader, SerializationOptions);
         return login;
     }
 
@@ -49,7 +52,13 @@ public abstract class BaseAuthenticationController(
     }
 
     [Route("validationCode"), HttpGet, Authorize(Roles = SecurityRoles.UserLoginWithMultiFactor)]
-    public async Task<ActionResult> SendNewCodeAsync([FromQuery]ValidationCodeCommunicationType communicationType = ValidationCodeCommunicationType.Sms)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [SwaggerResponse(StatusCodes.Status200OK, "Validation code sent successfully")]
+    [SwaggerResponse(StatusCodes.Status401Unauthorized, "Unauthorized")]
+    [SwaggerOperation(
+        Summary = "Sends a new validation code for multi-factor authentication via the specified communication type",
+        Description = "Requires one of the following roles: UserLoginWithMultiFactor")]
+    public async Task<ActionResult> SendNewCodeAsync([FromQuery] ValidationCodeCommunicationType communicationType = ValidationCodeCommunicationType.Sms)
     {
         try
         {
@@ -63,6 +72,12 @@ public abstract class BaseAuthenticationController(
     }
 
     [Route("ValidationCode"), HttpPost, Authorize(Roles = SecurityRoles.UserLoginWithMultiFactor)]
+    [ProducesResponseType<LoginResult>(StatusCodes.Status200OK)]
+    [SwaggerResponse(StatusCodes.Status200OK, "The login result with tokens", typeof(LoginResult))]
+    [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid validation code")]
+    [SwaggerOperation(
+        Summary = "Verifies the multi-factor authentication code provided by the user",
+        Description = "Requires one of the following roles: UserLoginWithMultiFactor")]
     public async Task<ActionResult<LoginResult>> VerifyCode([FromBody] ValidationInformation validationInformation)
     {
         try
@@ -76,13 +91,19 @@ public abstract class BaseAuthenticationController(
     }
 
     [HttpPost, Route("State")]
-    [ProducesResponseType(200)]
+    [ProducesResponseType<bool>(StatusCodes.Status200OK)]
+    [SwaggerResponse(StatusCodes.Status200OK, "True if the refresh token is valid, false otherwise", typeof(bool))]
+    [SwaggerOperation(Summary = "Checks if the provided refresh token corresponds to a logged-in session")]
     public bool GetAuthenticationState([FromBody] AuthenticationStateRequest requestBody)
     {
         return authenticator.IsLoggedIn(requestBody.RefreshToken);
     }
 
     [Route("Refresh"), HttpPost, AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [SwaggerResponse(StatusCodes.Status200OK, "The new access token and refresh token")]
+    [SwaggerResponse(StatusCodes.Status401Unauthorized, "Unauthorized")]
+    [SwaggerOperation(Summary = "Refreshes the user's access token using a valid refresh token")]
     public async Task<ActionResult> GetNewAccessTokenAsync([FromBody] TokenRefreshResult tokens)
     {
         try
@@ -100,7 +121,6 @@ public abstract class BaseAuthenticationController(
             HttpContext.Response.Headers.Append("Refresh-Token-Expired", "true");
             Logger.LogWarning(exception, $"Could not refresh external system's acess token - SecurityTokenExpiredException.  Refresh token: '{tokens?.RefreshToken}'.  Access token: '{tokens?.AccessToken}'");
         }
-
         catch (SecurityTokenException exception)
         {
             HttpContext.Response.Headers.Append("Token-Invalid", "true");
@@ -116,6 +136,7 @@ public abstract class BaseAuthenticationController(
     }
 
     [HttpPost, Route("RecoverAccount"), AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     [SwaggerOperation(Summary = "Recover account")]
     [SwaggerResponse(StatusCodes.Status204NoContent, "Recovery email has perharps been sent")]
     public async Task<ActionResult> RecoverAccountAsync([FromBody] AccountRecoveryRequest request)
@@ -125,6 +146,7 @@ public abstract class BaseAuthenticationController(
     }
 
     [HttpPost, Route("RecoverAccountValidation"), AllowAnonymous]
+    [ProducesResponseType<LoginResult>(StatusCodes.Status200OK)]
     [SwaggerOperation(Summary = "Validate account recovery")]
     [SwaggerResponse(StatusCodes.Status200OK, "Account validated", type: typeof(LoginResult))]
     [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid code")]
@@ -135,9 +157,10 @@ public abstract class BaseAuthenticationController(
     }
 
     [HttpPost, Route("PasswordSetup"), AuthorizeByRoles(SecurityRoles.User, SecurityRoles.UserPasswordSetup, SecurityRoles.UserRecovery)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     [SwaggerOperation(
         Summary = "Set password for user",
-        Description = "Requires an anthenticated user, user in password setup or user in recovery")]
+        Description = "Requires one of the following roles: RegularUser, UserPasswordSetup, UserRecovery")]
     [SwaggerResponse(StatusCodes.Status204NoContent, "Password has been set")]
     [SwaggerResponse(StatusCodes.Status401Unauthorized, "Unauthorized")]
     public ActionResult UpdatePassword([FromBody] PasswordChangeRequest request)

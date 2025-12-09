@@ -10,8 +10,16 @@ Some configuration needs to be added:
  "APIConfig": {
       "Issuer": "http://www.somewebsite.com/",
       "PackageName": "My-Application-Name",
-      "SecretKey": "MySuperSecretEncodingKey"	  
+      "SecretKey": "MySuperSecretEncodingKey",
+      "CertificateIssuers": [],
+      "MinimalVersion": "1.0.0",
   },
+  "KeycloakConfig": {
+      "Url": "https://keycloak.example.com",
+      "Realm": "my-realm",
+      "ClientId": "my-client",
+      "ClientSecret": "my-secret"
+  }
 ```
 You can change any of of these values to anything you want.  
 
@@ -19,6 +27,11 @@ Three more settings can also be added in the APIConfig section when needed and h
 - "AccessTokenLifeTimeInMinutes": 540
 - "RefreshTokenLifeTimeInMinutes": 60
 - "RefreshTokenCanExpire": true
+- "AllowRefreshWithExpiredToken": true
+
+You can also specify a permission to allow a user to login:
+- "RequiredPermissionForLogin": "permissionName".
+
 
 ### Models
 You need to have a `User` model that inherits from `SecurityManagement.Models.User`.  You can add whatever you need to your model.
@@ -104,4 +117,80 @@ You can then use this function as an option when calling `AddMvc` from `Configur
 services.AddMvc(options => AskForAuthorizationByDefault(options));
 ```
 > Note: you can use the `AllowAnonymous` attribute on any controller's function if you want to allow anonymous usage.
+
+# Service Collection Extensions
+
+The library provides several extension methods to simplify the configuration of security services, authentication, and authorization.
+
+## Core Services
+
+### `InjectSecurityServices<TUser>`
+Injects the core security services required by the library, including user management, authentication services, repositories, and validators. 
+
+```csharp
+services.InjectSecurityServices<User>(options => {
+    options.UseMultiFactorAuthentication();
+    options.SetValidationCodeSender<MySmsSender>();
+});
+```
+
+You can customize specific services via the `SecurityManagementOptions` delegate:
+*   `UseMultiFactorAuthentication()`: Activates MFA.
+*   `SetValidationCodeSender<T>()`: Sets the service to send validation codes.
+*   `SetValidationCodeValidator<T>()`: Sets the service to validate codes.
+*   `SetEmailForUserModificationSender<T>()`: Sets the service to send emails when users are modified.
+*   `SetCustomUserManagementService<T>()`: Overrides the default user management service.
+*   `SetCustomAuthenticationService<T>()`: Overrides the default user authentication service.
+
+## Authentication
+
+### `AddTokenAuthentication`
+Adds dual token authentication support: Keycloak and internal user. It configures JWT bearer authentication for both schemes.
+
+### `AddTokenAuthenticationWithCertificates`
+Adds triple token authentication support: Keycloak, internal user, and console certificates. It configures JWT bearer authentication and allows specifying a custom authentication handler for certificates.
+
+### `AddSimpleTokenAuthentication`
+Adds simple token authentication using JWT bearer based on the provided security configuration.
+
+### `AddExternalCertificateAuthentication`
+Adds certificate authentication for external systems using the default handler.
+
+## Authorization
+
+### `AddAuthorizationForRegularUser`
+Adds authorization policies specifically for regular users, including policies for user recovery, creation, password setup, and metrics.
+
+### `AddAuthorizationForRegularUserAndExternalSystem`
+Adds authorization policies for regular users and external systems. Includes policies for user recovery, creation, password setup, and metrics.
+
+### `AddAuthorizationForKeycloakAndRegularUserSchemes`
+Adds authorization policies for Keycloak and regular users, including a policy for metrics. It does not include user management policies.
+
+### `AddAuthorizationForRegularUserKeycloakAndApiCertificate`
+Adds authorization policies for regular users, Keycloak users, and API certificates. It includes default policies for user recovery, user creation, password setup, and metrics.
+
+# Custom Authentication Controller
+
+You can implement authentication for a custom source (e.g., external system, different user table) by inheriting from `BaseAuthenticationController`.
+
+1.  **Create a Controller**: Create a new controller that inherits from `BaseAuthenticationController`.
+2.  **Implement Authenticator**: Implement `IEntityAuthenticator` (or `IUserAuthenticator`) to handle your specific login logic.
+3.  **Implement Token Refresher**: Implement `IEntityTokenRefresher` to handle token refreshing logic.
+4.  **Inject Services**: Inject your custom implementations into the controller's constructor.
+
+```csharp
+[Route("api/[Controller]")]
+[ApiController]
+public class MyCustomAuthController : BaseAuthenticationController
+{
+    public MyCustomAuthController(
+        IMyCustomAuthenticator authenticator, 
+        IMyCustomTokenRefresher tokenRefresher,
+        ILogger<AuthenticationController> logger)
+        : base(authenticator, tokenRefresher, logger)
+    {
+    }
+}
+```
 
