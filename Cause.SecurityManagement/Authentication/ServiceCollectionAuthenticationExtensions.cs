@@ -5,14 +5,17 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Cause.SecurityManagement.Authentication;
 
+/// <summary>
+/// Extension methods for IServiceCollection to add authentication schemes. 
+/// </summary>
 internal static class ServiceCollectionAuthenticationExtensions
 {
-    internal static AuthenticationBuilder AddAuthenticationWithScheme(this IServiceCollection services)
+    internal static AuthenticationBuilder AddAuthenticationWithScheme(this IServiceCollection services, string schemeName)
     {
         return services.AddAuthentication(options =>
         {
-            options.DefaultScheme = CustomAuthSchemes.RegularUserOrKeycloakScheme;
-            options.DefaultChallengeScheme = CustomAuthSchemes.RegularUserOrKeycloakScheme;
+            options.DefaultScheme = schemeName;
+            options.DefaultChallengeScheme = schemeName;
         });
     }
 
