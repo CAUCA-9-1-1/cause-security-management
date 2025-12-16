@@ -16,4 +16,5 @@ public class KeycloakConfiguration
     public string ValidIssuer { get; set; }
     public string Audience => Resource;
     public bool ValidateSigningKey { get; set; } = true;
+    public bool ShowDebugInfo { get; set; } = false;
 }

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Net.Http.Headers;
 using System.Diagnostics.CodeAnalysis;
 using System.IdentityModel.Tokens.Jwt;
@@ -83,13 +84,29 @@ public static class TokenAuthenticationExtensions
             return CustomAuthSchemes.RegularUserAuthentication;
         var token = authorization.Substring("Bearer ".Length).Trim();
         var jwtHandler = new JwtSecurityTokenHandler();
+        
+        string selectedScheme;
         if (IsKeycloakToken(configuration, jwtHandler, token))
-            return CustomAuthSchemes.KeycloakAuthentication;
-        if (IsRegularUser(jwtHandler, token))
-            return CustomAuthSchemes.RegularUserAuthentication;
-        if (IsConsole(jwtHandler, token))
-            return CustomAuthSchemes.ConsoleCertificateAuthentication;
-        return CustomAuthSchemes.RegularUserAuthentication;
+            selectedScheme = CustomAuthSchemes.KeycloakAuthentication;
+        else if (IsRegularUser(jwtHandler, token))
+            selectedScheme = CustomAuthSchemes.RegularUserAuthentication;
+        else if (IsConsole(jwtHandler, token))
+            selectedScheme = CustomAuthSchemes.ConsoleCertificateAuthentication;
+        else
+            selectedScheme = CustomAuthSchemes.RegularUserAuthentication;
+
+        if (configuration?.ShowDebugInfo == true)
+        {
+            var logger = context.RequestServices.GetService<ILogger<object>>();
+            if (logger != null)
+            {
+                var jwtToken = jwtHandler.ReadJwtToken(token);
+                var claims = string.Join(", ", jwtToken.Claims.Select(c => $"{c.Type}={c.Value}"));
+                logger.LogInformation("Token authentication scheme selection - Scheme: {Scheme}, Claims: [{Claims}]", selectedScheme, claims);
+            }
+        }
+
+        return selectedScheme;
     }
 
     private static bool IsKeycloakToken(KeycloakConfiguration configuration, JwtSecurityTokenHandler jwtHandler, string token)

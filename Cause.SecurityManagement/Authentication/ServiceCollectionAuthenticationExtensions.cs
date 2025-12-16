@@ -14,6 +14,7 @@ internal static class ServiceCollectionAuthenticationExtensions
     {
         return services.AddAuthentication(options =>
         {
+            options.DefaultAuthenticateScheme = schemeName;
             options.DefaultScheme = schemeName;
             options.DefaultChallengeScheme = schemeName;
         });

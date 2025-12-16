@@ -15,10 +15,10 @@
     <Copyright>CAUCA 9-1-1 (c) 2025</Copyright>
     <PackageTags>Cause Security Management AspNetCore Api Client Cauca</PackageTags>
     <PackageReleaseNotes>Better, cleaner, faster, stronger. Add triple authentication support.</PackageReleaseNotes>
-    <Version>9.5.7</Version>
+    <Version>9.5.10</Version>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <AssemblyVersion>9.5.7</AssemblyVersion>
-    <FileVersion>9.5.7</FileVersion>
+    <AssemblyVersion>9.5.10</AssemblyVersion>
+    <FileVersion>9.5.10</FileVersion>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
 
