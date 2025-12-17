@@ -2,14 +2,14 @@
 
   <PropertyGroup>
 	  <IsPackable>true</IsPackable>
-	  <TargetFramework>net9.0</TargetFramework>
+	  <TargetFramework>net10.0</TargetFramework>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <Version>9.3.1</Version>
+    <Version>10.0.0</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 	  <RepositoryUrl>https://github.com/CAUCA-9-1-1/cause-security-management</RepositoryUrl>
 	  <PackageProjectUrl>https://github.com/CAUCA-9-1-1/cause-security-management</PackageProjectUrl>
-    <AssemblyVersion>9.3.1</AssemblyVersion>
-    <FileVersion>9.3.1</FileVersion>
+    <AssemblyVersion>10.0.0</AssemblyVersion>
+    <FileVersion>10.0.0</FileVersion>
     <Authors>Fred Catellier</Authors>
     <Description>Base models for the Causee.SecurityManagement's library.</Description>
     <Copyright>CAUCA 9-1-1 2025</Copyright>
