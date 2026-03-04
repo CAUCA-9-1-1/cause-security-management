@@ -168,7 +168,7 @@ public abstract class BaseAuthenticator<TEntity, TEntityToken>(
         var entity = repository.GetEntityByUsername(usernameOrEmail.Trim());
         if (entity == null)
             return;
-        await MultiFactorHandler.SendNewValidationCodeAsync(entity);
+        await MultiFactorHandler.SendAccountRecoveryCodeAsync(entity);
     }
 
     public async Task<LoginResult> ValidateAccountRecoveryAsync(string usernameOrEmail, string validationCode)
