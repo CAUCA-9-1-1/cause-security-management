@@ -81,6 +81,15 @@ namespace Cause.SecurityManagement.Authentication.MultiFactor
             }
         }
 
+        public async Task SendAccountRecoveryCodeAsync(TUser user, ValidationCodeCommunicationType communicationType = ValidationCodeCommunicationType.Email)
+        {
+            if (!await SendWithExternalSenderWhenExternalValidatorIsActive(user))
+            {
+                repository.DeleteExistingValidationCode(user.Id);
+                await SendValidationCodeAsync(user, ValidationCodeType.AccountRecovery, communicationType);
+            }
+        }
+
         private async Task<bool> SendWithExternalSenderWhenExternalValidatorIsActive(TUser user)
         {
             if (sender != null && validator != null)
