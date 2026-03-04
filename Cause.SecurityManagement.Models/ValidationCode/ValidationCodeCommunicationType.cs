@@ -4,4 +4,5 @@ public enum ValidationCodeCommunicationType
 {
     Sms,
     Voice,
+    Email
 }
