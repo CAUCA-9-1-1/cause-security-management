@@ -25,9 +25,10 @@ public class CertificateAuthenticationHandler(
             certificateValidator.ValidateCertificate(Request.Headers);
             return Task.FromResult(AuthenticateResult.Success(GenerateTicket()));
         }
-        catch (Exception)
+        catch (Exception exception)
         {
-            return Task.FromResult(AuthenticateResult.NoResult());
+            Logger.LogInformation(exception, "Certificate authentication failed.");
+            return Task.FromResult(AuthenticateResult.Fail("Certificate authentication failed."));
         }
     }
 

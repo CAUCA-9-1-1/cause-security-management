@@ -9,6 +9,26 @@ namespace Cause.SecurityManagement.Authentication;
 public static class ServiceCollectionAuthorizationExtensions
 {
     /// <summary>
+    /// Add authorization policies for external systems. 
+    /// Will require authenticated users to have the 'ExternalSystem' role by default unless a different policy is specified on the endpoint.
+    /// </summary>
+    /// <param name="services"></param>
+    /// <returns></returns>
+    public static IServiceCollection AddAuthorizationForExternalSystem(this IServiceCollection services)
+    {        
+        return services.AddAuthorizationCore(options =>
+        {
+            options
+                .AddExternalSystemPolicy()
+                .FallbackPolicy = new AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser()
+                .RequireRole(SecurityRoles.ExternalSystem)
+                .Build();
+        });
+    }
+
+
+    /// <summary>
     /// Add authorization policies for regular users with policies for user recovery, user creation, user password setup, and metrics.
     /// Also includes policies for console certificates.
     /// Will require user to have either the 'RegularUser', 'Console', or 'Administrator' role by default unless a different policy is specified on the endpoint.

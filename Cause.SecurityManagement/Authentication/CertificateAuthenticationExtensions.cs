@@ -7,13 +7,18 @@ namespace Cause.SecurityManagement.Authentication;
 
 public static class CertificateAuthenticationExtensions
 {
-    /// <summary>
-    /// Add certificate authentication for external systems.
-    /// </summary>
-    public static IServiceCollection AddExternalCertificateAuthentication(this IServiceCollection services)
+    public static IServiceCollection AddExternalCertificateAuthentication(
+        this IServiceCollection services,
+        string scheme = CustomAuthSchemes.CertificateAuthentication)
     {
-        services.AddAuthentication()
-            .AddScheme<CertificateAuthenticationOptions, CertificateAuthenticationHandler>(CustomAuthSchemes.CertificateAuthentication, _ => { });
+        services
+            .AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = scheme;
+                options.DefaultChallengeScheme = scheme;
+                options.DefaultScheme = scheme;
+            })
+            .AddScheme<CertificateAuthenticationOptions, CertificateAuthenticationHandler>(scheme, _ => { });
 
         return services;
     }

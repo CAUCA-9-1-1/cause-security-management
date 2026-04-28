@@ -30,6 +30,8 @@ internal sealed class MultiJwtClaimsTransformer(IOptions<SecurityConfiguration> 
         else if (issuer == keycloakConfiguration?.Value?.ValidIssuer)
         {
             claimsIdentity.AddClaim(new Claim(AuthenticationSource, CustomAuthSchemes.KeycloakAuthentication));
+            // Je garde en commentaire, je me questionne sur pourquoi j'avais mis ça plutôt qu'administrator.
+            //claimsIdentity.AddClaim(new Claim(ClaimTypes.Role, SecurityRoles.ApiCertificate));
             claimsIdentity.AddClaim(new Claim(ClaimTypes.Role, "Administrator"));
         }
         principal.AddIdentity(claimsIdentity);
