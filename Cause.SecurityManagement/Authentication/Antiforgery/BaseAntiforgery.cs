@@ -8,8 +8,13 @@ namespace Cause.SecurityManagement.Authentication.Antiforgery
         protected static bool RequestIsFromMobile(HttpRequest request)
         {
             string userAgent = request.Headers.UserAgent.ToString() ?? "";
+            string platform = request.Headers["Sec-CH-UA-Platform"].ToString().Trim('"');
 
-            return userAgent.Contains("iPhone") || userAgent.Contains("iPad") || userAgent.Contains("Android");
+            return userAgent.Contains("iPhone")
+                || userAgent.Contains("iPad")
+                || userAgent.Contains("Android")
+                || platform == "iOS"
+                || platform == "Android";
         }
     }
 }

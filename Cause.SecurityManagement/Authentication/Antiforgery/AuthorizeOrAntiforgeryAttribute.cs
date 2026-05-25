@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using System;
 using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.Authentication;
+using System.Security.Claims;
 
 namespace Cause.SecurityManagement.Authentication.Antiforgery
 {
@@ -16,7 +18,7 @@ namespace Cause.SecurityManagement.Authentication.Antiforgery
         {
             Console.WriteLine("Validation authorization");
 
-            var authorize = IsAuthorize(filterContext);
+            var authorize = await IsAuthorize(filterContext);
             var antiforgery = await HasAntiforgery(filterContext);
             var dev = IsDev(filterContext);
 
@@ -52,14 +54,15 @@ namespace Cause.SecurityManagement.Authentication.Antiforgery
             }
         }
 
-        private static bool IsAuthorize(ActionExecutingContext filterContext)
+        private static async Task<bool> IsAuthorize(ActionExecutingContext filterContext)
         {
-            if (filterContext.Controller is ControllerBase controller)
-            {
-                return controller.User.HasClaim(claim => claim.Type == JwtRegisteredClaimNames.Sid);
-            }
+            var authResult = await filterContext.HttpContext.AuthenticateAsync();
+            if (!authResult.Succeeded)
+                return false;
 
-            return false;
+            var user = authResult.Principal;
+            return user.HasClaim(c => c.Type == JwtRegisteredClaimNames.Sid)
+                || user.HasClaim(c => c.Type == ClaimTypes.Sid);
         }
 
         private static bool IsDev(ActionExecutingContext filterContext)
