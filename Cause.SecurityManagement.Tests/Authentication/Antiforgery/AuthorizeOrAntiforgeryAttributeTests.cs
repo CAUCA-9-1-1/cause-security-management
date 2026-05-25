@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Cause.SecurityManagement.Authentication.Antiforgery;
 using AwesomeAssertions;
 using Microsoft.AspNetCore.Antiforgery;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -57,6 +58,46 @@ namespace Cause.SecurityManagement.Tests.Authentication.Antiforgery
         }
 
         [Test]
+        public void AsAuthorizeUserOnIpadWithDesktopUA_WhenAccessController_ShouldAccessController()
+        {
+            var context = GenerateBasicContext(
+                headerAuthorization: "Bearer WithToken",
+                userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/604.1");
+            var controller = new AuthorizeOrAntiforgeryAttribute();
+
+            controller.OnActionExecuting(context);
+
+            context.Result.Should().Be(null);
+        }
+
+        [Test]
+        public void AsAnonymousUserWithValidAntiforgeryOnIpadWithDesktopUA_WhenAccessController_ShouldAccessController()
+        {
+            var context = GenerateBasicContext(
+                validAntiforgery: true,
+                userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/604.1");
+            var controller = new AuthorizeOrAntiforgeryAttribute();
+
+            controller.OnActionExecuting(context);
+
+            context.Result.Should().Be(null);
+        }
+
+        [Test]
+        public void AsAnonymousUserWithMobileTokensOnIpadWithClientHint_WhenAccessController_ShouldAccessController()
+        {
+            var context = GenerateBasicContext(
+                validMobileAndToken: true,
+                userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/604.1",
+                clientHintPlatform: "\"iOS\"");
+            var controller = new AuthorizeOrAntiforgeryAttribute();
+
+            controller.OnActionExecuting(context);
+
+            context.Result.Should().Be(null);
+        }
+
+        [Test]
         public void AsEnvironmentIsDev_WhenAccessController_ShouldAccessController()
         {
             var context = GenerateBasicContext("Development");
@@ -72,25 +113,15 @@ namespace Cause.SecurityManagement.Tests.Authentication.Antiforgery
         {
             var context = GenerateBasicContext();
             var controller = new AuthorizeOrAntiforgeryAttribute();
-            
+
             controller.OnActionExecuting(context);
 
             context.Result.Should().NotBeNull().And.BeOfType<UnauthorizedResult>();
         }
 
-        private ActionExecutingContext GenerateBasicContext(string environmentName = "", string headerAuthorization = "", bool validAntiforgery = false, bool validMobileAndToken = false)
+        private ActionExecutingContext GenerateBasicContext(string environmentName = "", string headerAuthorization = "", bool validAntiforgery = false, bool validMobileAndToken = false, string userAgent = "", string clientHintPlatform = "")
         {
-            Controller controller = null;
-            var httpContext = GenerateBasicHttpContext(environmentName, validAntiforgery, validMobileAndToken);
-
-            if (!string.IsNullOrEmpty(headerAuthorization))
-            {
-                controller = new TestController();
-                controller.ControllerContext = new ControllerContext
-                {
-                    HttpContext = new DefaultHttpContext { User = GetUser(headerAuthorization) }
-                };
-            }
+            var httpContext = GenerateBasicHttpContext(environmentName, validAntiforgery, validMobileAndToken, headerAuthorization, userAgent, clientHintPlatform);
 
             return new ActionExecutingContext(
                 new ActionContext(
@@ -101,7 +132,7 @@ namespace Cause.SecurityManagement.Tests.Authentication.Antiforgery
                 ),
                 new List<IFilterMetadata>(),
                 new Dictionary<string, object>(),
-                controller!
+                new TestController()
             );
         }
 
@@ -115,7 +146,7 @@ namespace Cause.SecurityManagement.Tests.Authentication.Antiforgery
             return claimsPrincipal;
         }
 
-        private static HttpContext GenerateBasicHttpContext(string environmentName = "", bool validAntiforgery = false, bool validMobileAndToken = false)
+        private static HttpContext GenerateBasicHttpContext(string environmentName = "", bool validAntiforgery = false, bool validMobileAndToken = false, string headerAuthorization = "", string userAgent = "", string clientHintPlatform = "")
         {
             var antiforgery = Substitute.For<IAntiforgery>();
 
@@ -127,12 +158,21 @@ namespace Cause.SecurityManagement.Tests.Authentication.Antiforgery
             {
                 antiforgery.ValidateRequestAsync(Arg.Any<HttpContext>()).Returns(Task.FromException(new AntiforgeryValidationException("")));
             }
-            
+
+            var authService = Substitute.For<IAuthenticationService>();
+            if (!string.IsNullOrEmpty(headerAuthorization))
+                authService.AuthenticateAsync(Arg.Any<HttpContext>(), Arg.Any<string>())
+                    .Returns(AuthenticateResult.Success(new AuthenticationTicket(GetUser(headerAuthorization), "test")));
+            else
+                authService.AuthenticateAsync(Arg.Any<HttpContext>(), Arg.Any<string>())
+                    .Returns(AuthenticateResult.NoResult());
+
             var webHostEnvironment = Substitute.For<IWebHostEnvironment>();
             webHostEnvironment.EnvironmentName = environmentName;
 
             var httpContext = Substitute.For<HttpContext>();
             httpContext.RequestServices.GetService<IAntiforgery>().Returns(antiforgery);
+            httpContext.RequestServices.GetService<IAuthenticationService>().Returns(authService);
             httpContext.RequestServices.GetService<IWebHostEnvironment>().Returns(webHostEnvironment);
 
             if (validMobileAndToken)
@@ -141,6 +181,12 @@ namespace Cause.SecurityManagement.Tests.Authentication.Antiforgery
                 httpContext.Request.Headers["X-CSRF-Cookie"] = "csrf cookie for test";
                 httpContext.Request.Headers["X-CSRF-Token"] = "crsf cookie for test";
             }
+
+            if (!string.IsNullOrEmpty(userAgent))
+                httpContext.Request.Headers.UserAgent = userAgent;
+
+            if (!string.IsNullOrEmpty(clientHintPlatform))
+                httpContext.Request.Headers["Sec-CH-UA-Platform"] = clientHintPlatform;
 
             return httpContext;
         }
