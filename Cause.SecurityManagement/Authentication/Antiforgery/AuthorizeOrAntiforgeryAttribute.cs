@@ -20,15 +20,16 @@ namespace Cause.SecurityManagement.Authentication.Antiforgery
 
             var authorize = await IsAuthorize(filterContext);
             var antiforgery = await HasAntiforgery(filterContext);
+            var isFromMobile = RequestIsFromMobile(filterContext.HttpContext.Request);
             var dev = IsDev(filterContext);
 
-            if (authorize || antiforgery || dev)
+            if (authorize || antiforgery || isFromMobile || dev)
             {
                 base.OnActionExecuting(filterContext);
             }
             else
             {
-                Console.WriteLine($"Is authorize : {authorize}, Has Antiforgery : {antiforgery}, Is DEV : {dev}");
+                Console.WriteLine($"Is authorize : {authorize}, Has Antiforgery : {antiforgery}, Is From Mobile : {isFromMobile}, Is DEV : {dev}");
                 filterContext.Result = new UnauthorizedResult();
             }
         }
@@ -39,11 +40,6 @@ namespace Cause.SecurityManagement.Authentication.Antiforgery
 
             try
             {
-                if (RequestIsFromMobile(filterContext.HttpContext.Request) && !string.IsNullOrEmpty(filterContext.HttpContext.Request.Headers["X-CSRF-Cookie"]))
-                {
-                    return !string.IsNullOrEmpty(filterContext.HttpContext.Request.Headers["X-CSRF-Token"]);
-                }
-
                 await antiforgery.ValidateRequestAsync(filterContext.HttpContext);
                 return true;
             }
