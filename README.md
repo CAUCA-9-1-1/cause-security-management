@@ -194,3 +194,193 @@ public class MyCustomAuthController : BaseAuthenticationController
 }
 ```
 
+---
+
+# Cause.SecurityManagement.Wolverine
+
+A separate NuGet package (`Cause.SecurityManagement.Wolverine`) that provides Wolverine HTTP endpoints and sagas as an alternative to the MVC-based `Cause.SecurityManagement.Http` package. Use this when your API is built on [Wolverine](https://wolverine.netlify.app/) instead of (or alongside) traditional ASP.NET Core controllers.
+
+## Installation
+
+```
+dotnet add package Cause.SecurityManagement.Wolverine
+```
+
+This package depends on `Cause.SecurityManagement` (core) and `WolverineFx.Http`. You do **not** need `Cause.SecurityManagement.Http`.
+
+## Setup
+
+### 1. Register core security services
+
+Same as the Http package — call `InjectSecurityServices` before Wolverine:
+
+```csharp
+builder.Services.Configure<SecurityConfiguration>(builder.Configuration.GetSection("APIConfig"));
+builder.Services.InjectSecurityServices<UserAuthenticator<User>, User>(options =>
+{
+    options.UseMultiFactorAuthentication();
+    options.SetValidationCodeSender<MySmsSender>();
+});
+```
+
+### 2. Add Wolverine with security handlers
+
+Call `AddSecurityManagementHandlers()` inside your `UseWolverine` configuration. This registers all endpoint classes and sagas from the package via Wolverine's assembly scanning:
+
+```csharp
+builder.Host.UseWolverine(opts =>
+{
+    opts.AddSecurityManagementHandlers();
+});
+```
+
+### 3. Map Wolverine HTTP endpoints
+
+In your `WebApplication` pipeline, map the Wolverine HTTP endpoints as you would normally:
+
+```csharp
+var app = builder.Build();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapWolverineEndpoints();
+
+app.Run();
+```
+
+### Minimal example `Program.cs`
+
+```csharp
+using Cause.SecurityManagement;
+using Cause.SecurityManagement.Wolverine;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.Configure<SecurityConfiguration>(builder.Configuration.GetSection("APIConfig"));
+builder.Services.InjectSecurityServices<UserAuthenticator<User>, User>();
+
+// Add JWT authentication
+var secConfig = builder.Configuration.GetSection("APIConfig").Get<SecurityConfiguration>();
+builder.Services.AddTokenAuthentication(secConfig);
+builder.Services.AddAuthorizationForRegularUser();
+
+builder.Host.UseWolverine(opts =>
+{
+    opts.AddSecurityManagementHandlers();
+    // your other Wolverine configuration …
+});
+
+var app = builder.Build();
+
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapWolverineEndpoints();
+app.Run();
+```
+
+## Provided HTTP endpoints
+
+All routes mirror the ones provided by `Cause.SecurityManagement.Http` so existing clients are fully compatible.
+
+| Method | Route | Auth | Description |
+|--------|-------|------|-------------|
+| `POST` | `/api/Authentication/Logon` | Anonymous | Login with body or base64 `auth` header |
+| `POST` | `/api/Authentication/Refresh` | Anonymous | Refresh user access token |
+| `GET`  | `/api/Authentication/validationCode` | `UserLoginWithMultiFactor` | Send new MFA code |
+| `POST` | `/api/Authentication/ValidationCode` | `UserLoginWithMultiFactor` | Verify MFA code |
+| `POST` | `/api/Authentication/State` | — | Check if refresh token is still valid |
+| `POST` | `/api/Authentication/RecoverAccount` | Anonymous | Initiate account recovery |
+| `POST` | `/api/Authentication/RecoverAccountValidation` | Anonymous | Validate recovery code |
+| `POST` | `/api/Authentication/PasswordSetup` | `RegularUser / UserPasswordSetup / UserRecovery` | Set password |
+| `GET`  | `/api/Authentication/Permissions` | `RegularUser / Administrator` | Get current user permissions |
+| `GET`  | `/api/Authentication/VersionValidator/{v}/Latest` | Anonymous | Check if version is latest |
+| `GET`  | `/api/Authentication/VersionValidator/{v}` | Anonymous | Check if version is valid |
+| `POST` | `/api/ExternalSystemAuthentication/Logon` | Anonymous | External system login |
+| `POST` | `/api/Authentication/LogonForExternalSystem` | Anonymous | Legacy alias |
+| `POST` | `/api/ExternalSystemAuthentication/Refresh` | Anonymous | External system token refresh |
+| `POST` | `/api/Authentication/RefreshForExternalSystem` | Anonymous | Legacy alias |
+| `GET`  | `/api/KeycloakConfiguration` | Anonymous | Returns Keycloak config for web clients |
+| `GET`  | `/api/Me` | `RegularUser / Administrator / Console` | Returns current user claims |
+
+## Sagas
+
+The package includes two Wolverine sagas for multi-step authentication flows. These are useful when you want to drive the login or recovery flow via the message bus rather than directly from HTTP endpoints (e.g. for background processing, retries, or custom orchestration).
+
+### `UserLoginSaga`
+
+Manages the multi-factor authentication login flow. Correlates on the authenticated user's `Guid` ID.
+
+```
+StartUserLogin(UserId)
+    → saga created, MFA code already sent by LoginAsync
+ResendLoginCode(UserId, CommunicationType)
+    → new code sent
+VerifyLoginCode(UserId, Code)
+    → returns LoginResult, saga completed
+```
+
+**Usage** — publish from your own code after a login that returns `MustVerifyCode = true`:
+
+```csharp
+// After calling LoginAsync and seeing MustVerifyCode is true:
+await bus.PublishAsync(new StartUserLogin(loginResult.IdUser));
+
+// When user submits the code:
+var fullResult = await bus.InvokeAsync<LoginResult>(new VerifyLoginCode(userId, submittedCode));
+```
+
+### `AccountRecoverySaga`
+
+Manages the account recovery flow. Correlates on the trimmed username / email string.
+
+```
+StartAccountRecovery(UsernameOrEmail)
+    → saga created, recovery code sent via email
+ValidateAccountRecovery(UsernameOrEmail, ValidationCode)
+    → returns LoginResult (MustChangePassword = true), saga completed
+```
+
+**Usage**:
+
+```csharp
+await bus.PublishAsync(new StartAccountRecovery(email));
+
+// When user submits the recovery code:
+var recoveryToken = await bus.InvokeAsync<LoginResult>(new ValidateAccountRecovery(email, code));
+// recoveryToken.MustChangePassword == true — direct user to password setup
+```
+
+## Architecture
+
+The Wolverine package uses a **vertical slices** layout. Each feature is fully self-contained in a single file under `Features/`:
+
+```
+Features/
+  Authentication/
+    Logon.cs
+    Refresh.cs
+    SendValidationCode.cs
+    VerifyValidationCode.cs
+    GetAuthenticationState.cs
+    RecoverAccount.cs
+    ValidateRecoverAccount.cs
+    SetPassword.cs
+    GetPermissions.cs
+    MobileVersionEndpoints.cs
+  ExternalSystem/
+    Logon.cs
+    Refresh.cs
+  Keycloak/
+    GetConfiguration.cs
+  Me/
+    GetCurrentUser.cs
+  Sagas/
+    Login/
+      LoginMessages.cs       ← StartUserLogin, ResendLoginCode, VerifyLoginCode
+      UserLoginSaga.cs
+    Recovery/
+      RecoveryMessages.cs    ← StartAccountRecovery, ValidateAccountRecovery
+      AccountRecoverySaga.cs
+```
+
