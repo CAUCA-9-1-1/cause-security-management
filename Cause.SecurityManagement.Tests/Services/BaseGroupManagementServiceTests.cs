@@ -1,12 +1,12 @@
 namespace Cause.SecurityManagement.Tests.Services
 {
-    using Cause.SecurityManagement.Services;
+    using Cause.SecurityManagement.Core.Services;
     using NUnit.Framework;
     using AwesomeAssertions;
     using NSubstitute;
     using System.Collections.Generic;
     using Cause.SecurityManagement.Models;
-    using Cause.SecurityManagement.Repositories;
+    using Cause.SecurityManagement.Core.Repositories;
 
     [TestFixture]
     public class BaseGroupManagementServiceTests

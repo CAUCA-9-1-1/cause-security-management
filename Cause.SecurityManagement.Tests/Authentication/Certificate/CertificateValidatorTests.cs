@@ -1,6 +1,6 @@
 using AwesomeAssertions;
-using Cause.SecurityManagement.Authentication.Certificate;
-using Cause.SecurityManagement.Authentication.Exceptions;
+using Cause.SecurityManagement.Core.Authentication.Certificate;
+using Cause.SecurityManagement.Core.Authentication.Exceptions;
 using Cause.SecurityManagement.Models.Configuration;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;

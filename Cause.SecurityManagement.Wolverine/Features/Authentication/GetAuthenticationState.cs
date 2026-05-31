@@ -1,5 +1,5 @@
 using Cause.SecurityManagement.Models.DataTransferObjects;
-using Cause.SecurityManagement.Services;
+using Cause.SecurityManagement.Core.Services;
 using Microsoft.AspNetCore.Http;
 using Wolverine.Http;
 

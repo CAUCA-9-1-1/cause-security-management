@@ -1,8 +1,8 @@
 using System;
-using Cause.SecurityManagement.Authentication.MultiFactor;
+using Cause.SecurityManagement.Core.Authentication.MultiFactor;
 using Cause.SecurityManagement.Models.DataTransferObjects;
 using Cause.SecurityManagement.Models.ValidationCode;
-using Cause.SecurityManagement.Services;
+using Cause.SecurityManagement.Core.Services;
 using Wolverine;
 
 namespace Cause.SecurityManagement.Wolverine.Features.Sagas.Recovery;

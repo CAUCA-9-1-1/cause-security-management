@@ -1,14 +1,26 @@
-using System.Collections.ObjectModel;
-using Cause.SecurityManagement.Services;
+﻿using System.Collections.ObjectModel;
+using Cause.SecurityManagement.Core;
+
+using Cause.SecurityManagement.Core.Services;
+
 using TUser = Cause.SecurityManagement.Models.User;
+
 using System;
+
 using NUnit.Framework;
+
 using NSubstitute;
+
 using Cause.SecurityManagement.Models;
+
 using System.Collections.Generic;
+
 using Microsoft.Extensions.Options;
+
 using Cause.SecurityManagement.Models.Configuration;
-using Cause.SecurityManagement.Repositories;
+
+using Cause.SecurityManagement.Core.Repositories;
+
 using AwesomeAssertions;
 
 namespace Cause.SecurityManagement.Tests.Services

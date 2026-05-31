@@ -1,4 +1,4 @@
-﻿using Cause.SecurityManagement.VersionManagement;
+using Cause.SecurityManagement.Core.VersionManagement;
 using AwesomeAssertions;
 using NUnit.Framework;
 using Semver;

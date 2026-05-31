@@ -1,8 +1,14 @@
 ﻿using Cause.SecurityManagement.Models;
-using Cause.SecurityManagement.Repositories;
-using Cause.SecurityManagement.Services;
+using Cause.SecurityManagement.Core;
+
+using Cause.SecurityManagement.Core.Repositories;
+
+using Cause.SecurityManagement.Core.Services;
+
 using AwesomeAssertions;
+
 using NSubstitute;
+
 using NUnit.Framework;
 
 namespace Cause.SecurityManagement.Tests.Services

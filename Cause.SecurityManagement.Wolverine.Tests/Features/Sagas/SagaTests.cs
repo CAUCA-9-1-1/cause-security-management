@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using AwesomeAssertions;
 using Cause.SecurityManagement.Models.DataTransferObjects;
 using Cause.SecurityManagement.Models.ValidationCode;
-using Cause.SecurityManagement.Services;
+using Cause.SecurityManagement.Core.Services;
 using Cause.SecurityManagement.Wolverine.Features.Sagas.Login;
 using Cause.SecurityManagement.Wolverine.Features.Sagas.Recovery;
 using NSubstitute;

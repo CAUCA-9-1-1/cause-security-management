@@ -1,6 +1,6 @@
 using Cause.SecurityManagement.Integration.Tests.Infrastructure;
 using Cause.SecurityManagement.Models;
-using Cause.SecurityManagement.Services;
+using Cause.SecurityManagement.Core.Services;
 
 namespace Cause.SecurityManagement.Integration.Tests.TestData;
 

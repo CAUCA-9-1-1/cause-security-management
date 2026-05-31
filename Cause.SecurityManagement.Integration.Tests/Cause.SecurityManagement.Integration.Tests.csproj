@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Cause.SecurityManagement\Cause.SecurityManagement.csproj" />
+    <ProjectReference Include="..\Cause.SecurityManagement.Core\Cause.SecurityManagement.Core.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,7 +1,7 @@
 ﻿using Cause.SecurityManagement.Controllers;
 using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Models.DataTransferObjects;
-using Cause.SecurityManagement.Services;
+using Cause.SecurityManagement.Core.Services;
 using AwesomeAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

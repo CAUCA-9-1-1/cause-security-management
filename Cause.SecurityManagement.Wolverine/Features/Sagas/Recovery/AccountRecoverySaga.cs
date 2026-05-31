@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 using Cause.SecurityManagement.Models.DataTransferObjects;
-using Cause.SecurityManagement.Services;
+using Cause.SecurityManagement.Core.Services;
 using Wolverine;
 
 namespace Cause.SecurityManagement.Wolverine.Features.Sagas.Recovery;

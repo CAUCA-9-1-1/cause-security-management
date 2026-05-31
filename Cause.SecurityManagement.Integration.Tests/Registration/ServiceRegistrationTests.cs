@@ -1,7 +1,7 @@
 using AwesomeAssertions;
 using Cause.SecurityManagement.Integration.Tests.Infrastructure;
-using Cause.SecurityManagement.Repositories;
-using Cause.SecurityManagement.Services;
+using Cause.SecurityManagement.Core.Repositories;
+using Cause.SecurityManagement.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 

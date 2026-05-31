@@ -1,4 +1,6 @@
-using Cause.SecurityManagement.Mapping;
+﻿using Cause.SecurityManagement.Core.Mapping;
+using Cause.SecurityManagement.Core;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace Cause.SecurityManagement.Integration.Tests.Infrastructure;
