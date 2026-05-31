@@ -1,12 +1,13 @@
-﻿using Cause.SecurityManagement.Authentication.MultiFactor;
+﻿using Cause.SecurityManagement.Core.Authentication.MultiFactor;
 using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Models.ValidationCode;
-using Cause.SecurityManagement.Repositories;
+using Cause.SecurityManagement.Core.Repositories;
 using AwesomeAssertions;
 using NSubstitute;
 using NUnit.Framework;
 using System;
 using System.Threading.Tasks;
+using Cause.SecurityManagement.Core;
 
 namespace Cause.SecurityManagement.Tests.Services
 {

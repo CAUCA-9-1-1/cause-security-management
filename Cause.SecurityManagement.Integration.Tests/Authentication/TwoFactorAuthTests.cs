@@ -1,12 +1,22 @@
-using AwesomeAssertions;
-using Cause.SecurityManagement.Authentication.MultiFactor;
+﻿using AwesomeAssertions;
+using Cause.SecurityManagement.Core;
+
+using Cause.SecurityManagement.Core.Authentication.MultiFactor;
+
 using Cause.SecurityManagement.Integration.Tests.Infrastructure;
+
 using Cause.SecurityManagement.Integration.Tests.TestData;
+
 using Cause.SecurityManagement.Models;
+
 using Cause.SecurityManagement.Models.DataTransferObjects;
+
 using Cause.SecurityManagement.Models.ValidationCode;
-using Cause.SecurityManagement.Repositories;
-using Cause.SecurityManagement.Services;
+
+using Cause.SecurityManagement.Core.Repositories;
+
+using Cause.SecurityManagement.Core.Services;
+
 using NUnit.Framework;
 
 namespace Cause.SecurityManagement.Integration.Tests.Authentication;

@@ -1,14 +1,26 @@
 ﻿using System;
+using Cause.SecurityManagement.Core;
+
 using System.Collections.Generic;
+
 using System.IdentityModel.Tokens.Jwt;
+
 using System.Security.Claims;
+
 using System.Threading.Tasks;
+
 using AwesomeAssertions;
+
 using Cause.SecurityManagement.Models.DataTransferObjects;
-using Cause.SecurityManagement.Repositories;
-using Cause.SecurityManagement.Services;
+
+using Cause.SecurityManagement.Core.Repositories;
+
+using Cause.SecurityManagement.Core.Services;
+
 using Microsoft.AspNetCore.Http;
+
 using NSubstitute;
+
 using NUnit.Framework;
 
 namespace Cause.SecurityManagement.Tests.Services;

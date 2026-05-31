@@ -1,12 +1,12 @@
 namespace Cause.SecurityManagement.Tests.Services
 {
-    using Cause.SecurityManagement.Services;
+    using Cause.SecurityManagement.Core.Services;
     using System;
     using NUnit.Framework;
     using AwesomeAssertions;
     using NSubstitute;
     using Cause.SecurityManagement.Models;
-    using Cause.SecurityManagement.Repositories;
+    using Cause.SecurityManagement.Core.Repositories;
     using Microsoft.Extensions.Options;
     using Cause.SecurityManagement.Models.Configuration;
 

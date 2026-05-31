@@ -1,12 +1,22 @@
 ﻿using System;
+using Cause.SecurityManagement.Core;
+
 using System.Threading.Tasks;
+
 using Cause.SecurityManagement.Models;
+
 using Cause.SecurityManagement.Models.Configuration;
-using Cause.SecurityManagement.Repositories;
-using Cause.SecurityManagement.Services;
+
+using Cause.SecurityManagement.Core.Repositories;
+
+using Cause.SecurityManagement.Core.Services;
+
 using AwesomeAssertions;
+
 using Microsoft.Extensions.Options;
+
 using NSubstitute;
+
 using NUnit.Framework;
 
 namespace Cause.SecurityManagement.Tests.Services;

@@ -1,6 +1,10 @@
-using Cause.SecurityManagement.Models.DataTransferObjects;
-using Cause.SecurityManagement.Services;
+﻿using Cause.SecurityManagement.Models.DataTransferObjects;
+using Cause.SecurityManagement.Core;
+
+using Cause.SecurityManagement.Core.Services;
+
 using Microsoft.AspNetCore.Http;
+
 using Wolverine.Http;
 
 namespace Cause.SecurityManagement.Wolverine.Features.Authentication;

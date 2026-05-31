@@ -5,8 +5,8 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using NUnit.Framework;
 using System;
-using Cause.SecurityManagement.Services;
-using TokenReader = Cause.SecurityManagement.Services.TokenReader;
+using Cause.SecurityManagement.Core.Services;
+using TokenReader = Cause.SecurityManagement.Core.Services.TokenReader;
 
 namespace Cause.SecurityManagement.Tests.Services
 {

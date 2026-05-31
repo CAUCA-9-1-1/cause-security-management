@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using AwesomeAssertions;
 using Cause.SecurityManagement.Models.DataTransferObjects;
-using Cause.SecurityManagement.Services;
+using Cause.SecurityManagement.Core.Services;
 using Cause.SecurityManagement.Wolverine.Features.Authentication;
 using NSubstitute;
 using NUnit.Framework;

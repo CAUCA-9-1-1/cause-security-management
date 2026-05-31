@@ -2,7 +2,7 @@ using System;
 using System.Text;
 using System.Text.Json;
 using Cause.SecurityManagement.Models.DataTransferObjects;
-using Cause.SecurityManagement.Services;
+using Cause.SecurityManagement.Core.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

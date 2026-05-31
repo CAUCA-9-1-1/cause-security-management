@@ -1,0 +1,15 @@
+using Cause.SecurityManagement.Models;
+using Cause.SecurityManagement.Models.ValidationCode;
+using System.Threading.Tasks;
+
+namespace Cause.SecurityManagement.Core.Authentication.MultiFactor
+{
+    public interface IAuthenticationMultiFactorHandler<in T>
+        where T : IAuthenticableEntity
+    {
+        Task SendValidationCodeWhenNeededAsync(T entity);
+        Task<bool> CodeIsValidAsync(T entity, string validationCode, ValidationCodeType type);
+        Task SendNewValidationCodeAsync(T entity, ValidationCodeCommunicationType communicationType = ValidationCodeCommunicationType.Sms);
+        Task SendAccountRecoveryCodeAsync(T entity, ValidationCodeCommunicationType communicationType = ValidationCodeCommunicationType.Email);
+    }
+}

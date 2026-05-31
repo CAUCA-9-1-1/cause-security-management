@@ -1,5 +1,5 @@
-﻿using System;
-using Cause.SecurityManagement.Services;
+using System;
+using Cause.SecurityManagement.Core.Services;
 using AwesomeAssertions;
 using NUnit.Framework;
 

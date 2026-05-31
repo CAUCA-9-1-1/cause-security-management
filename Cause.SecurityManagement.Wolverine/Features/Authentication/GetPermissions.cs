@@ -1,5 +1,8 @@
-using Cause.SecurityManagement.Services;
+﻿using Cause.SecurityManagement.Core.Services;
+using Cause.SecurityManagement.Core;
+
 using Microsoft.AspNetCore.Http;
+
 using Wolverine.Http;
 
 namespace Cause.SecurityManagement.Wolverine.Features.Authentication;

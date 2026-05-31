@@ -1,9 +1,9 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.3.11312.210
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cause.SecurityManagement", "Cause.SecurityManagement\Cause.SecurityManagement.csproj", "{61B910FF-38E3-4A56-937E-76ADD3D5ABF4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cause.SecurityManagement.Core", "Cause.SecurityManagement.Core\Cause.SecurityManagement.Core.csproj", "{61B910FF-38E3-4A56-937E-76ADD3D5ABF4}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cause.SecurityManagement.Models", "Cause.SecurityManagement.Models\Cause.SecurityManagement.Models.csproj", "{73A465C1-FEF8-4317-975C-91168D04CEC1}"
 EndProject
@@ -16,7 +16,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cause.SecurityManagement.Integration.Tests", "Cause.SecurityManagement.Integration.Tests\Cause.SecurityManagement.Integration.Tests.csproj", "{6C9357BB-C488-496F-A549-2A5C344D9832}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cause.SecurityManagement.Http", "Cause.SecurityManagement.Http\Cause.SecurityManagement.Http.csproj", "{D41B0EFC-58C8-4B02-A615-16AAF97825FB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cause.SecurityManagement", "Cause.SecurityManagement\Cause.SecurityManagement.csproj", "{D41B0EFC-58C8-4B02-A615-16AAF97825FB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cause.SecurityManagement.Wolverine", "Cause.SecurityManagement.Wolverine\Cause.SecurityManagement.Wolverine.csproj", "{5D3621E6-C958-4FA4-B88C-96BB52712AB6}"
 EndProject

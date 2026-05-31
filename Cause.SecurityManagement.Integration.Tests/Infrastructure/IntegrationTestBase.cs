@@ -1,11 +1,20 @@
-using Cause.SecurityManagement.Authentication.MultiFactor;
+﻿using Cause.SecurityManagement.Core.Authentication.MultiFactor;
+using Cause.SecurityManagement.Core;
+
 using Cause.SecurityManagement.Models.Configuration;
-using Cause.SecurityManagement.Services;
+
+using Cause.SecurityManagement.Core.Services;
+
 using Microsoft.AspNetCore.Http;
+
 using Microsoft.EntityFrameworkCore;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Microsoft.Extensions.DependencyInjection.Extensions;
+
 using NUnit.Framework;
+
 using System;
 
 namespace Cause.SecurityManagement.Integration.Tests.Infrastructure;

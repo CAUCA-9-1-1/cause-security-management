@@ -1,14 +1,26 @@
-﻿using Cause.SecurityManagement.Authentication.MultiFactor;
+﻿using Cause.SecurityManagement.Core.Authentication.MultiFactor;
+using Cause.SecurityManagement.Core;
+
 using Cause.SecurityManagement.Models;
+
 using Cause.SecurityManagement.Models.Configuration;
-using Cause.SecurityManagement.Repositories;
-using Cause.SecurityManagement.Services;
+
+using Cause.SecurityManagement.Core.Repositories;
+
+using Cause.SecurityManagement.Core.Services;
+
 using AwesomeAssertions;
+
 using Microsoft.Extensions.Options;
+
 using NSubstitute;
+
 using NUnit.Framework;
+
 using System;
+
 using System.Threading.Tasks;
+
 using Cause.SecurityManagement.Models.ValidationCode;
 
 namespace Cause.SecurityManagement.Tests.Services;

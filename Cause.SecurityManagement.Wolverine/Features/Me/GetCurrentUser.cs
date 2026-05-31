@@ -1,4 +1,6 @@
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
+using Cause.SecurityManagement.Core;
+
 using Wolverine.Http;
 
 namespace Cause.SecurityManagement.Wolverine.Features.Me;
