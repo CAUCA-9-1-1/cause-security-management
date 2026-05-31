@@ -1,7 +1,6 @@
-﻿namespace Cause.SecurityManagement.Models.DataTransferObjects
+﻿namespace Cause.SecurityManagement.Models.DataTransferObjects;
+
+public record ValidationInformation
 {
-    public class ValidationInformation
-    {
-		public string ValidationCode { get; set; }
-    }
+    public string ValidationCode { get; init; }
 }

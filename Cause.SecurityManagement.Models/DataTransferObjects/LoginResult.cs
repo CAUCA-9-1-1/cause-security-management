@@ -1,17 +1,16 @@
 ﻿using System;
 
-namespace Cause.SecurityManagement.Models.DataTransferObjects
+namespace Cause.SecurityManagement.Models.DataTransferObjects;
+
+public record LoginResult
 {
-	public class LoginResult
-	{
-		public string AuthorizationType { get; set; }
-		public DateTime ExpiredOn { get; set; }
-		public string AccessToken { get; set; }
-		public string RefreshToken { get; set; }
-		public bool MustVerifyCode { get; set; }
-		public bool MustChangePassword { get; set; }
-		public Guid IdUser { get; set; }
-		public string Name { get; set; }
-		public string Username { get; set; }
-	}
+    public string AuthorizationType { get; init; }
+    public DateTime ExpiredOn { get; init; }
+    public string AccessToken { get; init; }
+    public string RefreshToken { get; init; }
+    public bool MustVerifyCode { get; init; }
+    public bool MustChangePassword { get; init; }
+    public Guid IdUser { get; init; }
+    public string Name { get; init; }
+    public string Username { get; init; }
 }

@@ -1,7 +1,6 @@
-﻿namespace Cause.SecurityManagement.Models.DataTransferObjects
+﻿namespace Cause.SecurityManagement.Models.DataTransferObjects;
+
+public record ExternalSystemLoginInformations
 {
-    public class ExternalSystemLoginInformations
-    {
-        public string Apikey { get; set; }
-    }
+    public string Apikey { get; init; }
 }
