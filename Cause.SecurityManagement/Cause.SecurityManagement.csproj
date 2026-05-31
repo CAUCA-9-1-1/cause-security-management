@@ -26,8 +26,6 @@
     <PackageReference Include="Cause.Core.DataLayerExtensions" Version="10.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.*" />
     <PackageReference Include="Semver" Version="3.0.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.*" />
-    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="10.1.*" />
   </ItemGroup>
 
   <ItemGroup>

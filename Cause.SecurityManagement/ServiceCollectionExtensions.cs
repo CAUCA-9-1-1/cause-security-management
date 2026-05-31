@@ -1,4 +1,5 @@
-﻿using Cause.SecurityManagement.Authentication.MultiFactor;
+﻿using Cause.SecurityManagement.Authentication.Certificate;
+using Cause.SecurityManagement.Authentication.MultiFactor;
 using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Repositories;
 using Cause.SecurityManagement.Services;
@@ -51,6 +52,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IExternalSystemRepository, ExternalSystemRepository<TUser>>();
         services.AddScoped<IUserValidationCodeRepository, UserValidationCodeRepository<TUser>>();
         services.AddScoped<IScopedDbContextProvider<TUser>, ScopedDbContextProvider<TUser>>();
+        services.AddScoped<ICertificateValidator, CertificateValidator>();
         services.AddScoped<IUserTokenGenerator, UserTokenGenerator<TUser>>();
         return services;
     }
