@@ -1,6 +1,6 @@
 ﻿namespace Cause.SecurityManagement.Models.DataTransferObjects;
 
-public class AuthenticationStateRequest
+public record AuthenticationStateRequest
 {
-    public string RefreshToken { get; set; }
+    public string RefreshToken { get; init; }
 }

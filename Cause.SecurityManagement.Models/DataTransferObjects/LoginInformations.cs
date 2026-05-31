@@ -1,8 +1,7 @@
-﻿namespace Cause.SecurityManagement.Models.DataTransferObjects
+﻿namespace Cause.SecurityManagement.Models.DataTransferObjects;
+
+public record LoginInformations
 {
-	public class LoginInformations
-	{
-		public string UserName { get; set; }
-		public string Password { get; set; }
-	}
+    public string UserName { get; init; }
+    public string Password { get; init; }
 }

@@ -1,8 +1,7 @@
-﻿namespace Cause.SecurityManagement.Models.DataTransferObjects
+﻿namespace Cause.SecurityManagement.Models.DataTransferObjects;
+
+public record UserMergedPermission
 {
-	public class UserMergedPermission
-	{
-		public string FeatureName { get; set; }
-		public bool Access { get; set; }
-	}
+    public string FeatureName { get; init; }
+    public bool Access { get; init; }
 }

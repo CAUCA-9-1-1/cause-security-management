@@ -1,8 +1,7 @@
-﻿namespace Cause.SecurityManagement.Models.DataTransferObjects
+﻿namespace Cause.SecurityManagement.Models.DataTransferObjects;
+
+public record TokenRefreshResult
 {
-	public class TokenRefreshResult
-	{
-		public string AccessToken { get; set; }
-		public string RefreshToken { get; set; }
-	}
+    public string AccessToken { get; init; }
+    public string RefreshToken { get; init; }
 }

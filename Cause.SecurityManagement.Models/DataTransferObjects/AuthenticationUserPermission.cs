@@ -1,11 +1,10 @@
 ﻿using System;
 
-namespace Cause.SecurityManagement.Models.DataTransferObjects
+namespace Cause.SecurityManagement.Models.DataTransferObjects;
+
+public record AuthenticationUserPermission
 {
-    public class AuthenticationUserPermission
-    {
-        public Guid IdModulePermission { get; set; }
-        public string Tag { get; set; }
-		public bool IsAllowed { get; set; }
-    }
+    public Guid IdModulePermission { get; init; }
+    public string Tag { get; init; }
+    public bool IsAllowed { get; init; }
 }

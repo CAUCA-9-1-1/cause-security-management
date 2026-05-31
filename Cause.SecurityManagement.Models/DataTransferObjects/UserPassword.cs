@@ -1,28 +1,27 @@
 ﻿using System;
 
-namespace Cause.SecurityManagement.Models.DataTransferObjects
+namespace Cause.SecurityManagement.Models.DataTransferObjects;
+
+public record UserPassword
 {
-    public class UserPassword
-	{
-		public Guid Id { get; set; }
-        public string CurrentPassword { get; set; }
-		public string Password { get; set; }
-		public string PasswordConfirmation { get; set; }
-	}
+    public Guid Id { get; init; }
+    public string CurrentPassword { get; init; }
+    public string Password { get; init; }
+    public string PasswordConfirmation { get; init; }
+}
 
-    public class PasswordChangeRequest
-    {
-        public string NewPassword { get; set; }
-    }
+public record PasswordChangeRequest
+{
+    public string NewPassword { get; init; }
+}
 
-    public class AccountRecoveryRequest
-    {
-        public string Email { get; set; }
-    }
+public record AccountRecoveryRequest
+{
+    public string Email { get; init; }
+}
 
-    public class AccountRecoveryValidationRequest
-    {
-        public string Email { get; set; }
-        public string ValidationCode { get; set; }
-    }
+public record AccountRecoveryValidationRequest
+{
+    public string Email { get; init; }
+    public string ValidationCode { get; init; }
 }
