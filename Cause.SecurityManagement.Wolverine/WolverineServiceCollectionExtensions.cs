@@ -1,5 +1,3 @@
-using Cause.SecurityManagement.Models;
-using Microsoft.Extensions.DependencyInjection;
 using Wolverine;
 
 namespace Cause.SecurityManagement.Wolverine;
