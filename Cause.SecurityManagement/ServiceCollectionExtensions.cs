@@ -1,5 +1,4 @@
-﻿using Cause.SecurityManagement.Authentication.Certificate;
-using Cause.SecurityManagement.Authentication.MultiFactor;
+﻿using Cause.SecurityManagement.Authentication.MultiFactor;
 using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Repositories;
 using Cause.SecurityManagement.Services;
@@ -52,32 +51,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IExternalSystemRepository, ExternalSystemRepository<TUser>>();
         services.AddScoped<IUserValidationCodeRepository, UserValidationCodeRepository<TUser>>();
         services.AddScoped<IScopedDbContextProvider<TUser>, ScopedDbContextProvider<TUser>>();
-        services.AddScoped<ICertificateValidator, CertificateValidator>();
         services.AddScoped<IUserTokenGenerator, UserTokenGenerator<TUser>>();
-        return services;
-    }
-
-    public static IServiceCollection AddBasicPoliciesForCertificateLogon(this IServiceCollection services)
-    {
-        services.AddAuthorization(options =>
-        {
-            options.AddPolicy("defaultpolicy", policy =>
-            {
-                policy.RequireAuthenticatedUser();
-                policy.RequireRole(SecurityRoles.User);
-            });
-            options.AddPolicy("apipolicy", policy =>
-            {
-                policy.RequireAuthenticatedUser();
-                policy.RequireRole(SecurityRoles.ExternalSystem);
-            });
-            options.AddPolicy("apicertificatepolicy", policy =>
-            {
-                policy.RequireAuthenticatedUser();
-                policy.RequireRole(SecurityRoles.ExternalSystem);
-                policy.AddAuthenticationSchemes(CertificateAuthenticationOptions.Name, SecurityManagementOptions.AuthenticationScheme);
-            });
-        });
         return services;
     }
 

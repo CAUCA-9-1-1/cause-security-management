@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Cause.SecurityManagement\Cause.SecurityManagement.csproj" />
+    <ProjectReference Include="..\Cause.SecurityManagement.Http\Cause.SecurityManagement.Http.csproj" />
   </ItemGroup>
 
 </Project>

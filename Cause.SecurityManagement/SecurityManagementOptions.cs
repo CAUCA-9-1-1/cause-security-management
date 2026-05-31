@@ -17,7 +17,7 @@ public class SecurityManagementOptions
     internal Type DeviceManager { get; set; }
     internal static bool MultiFactorAuthenticationIsActivated { get; set; }
     public static bool ValidateCurrentPasswordOnPasswordChange { get; set; }
-    internal static string AuthenticationScheme { get; private set; } = JwtBearerDefaults.AuthenticationScheme;
+    public static string AuthenticationScheme { get; private set; } = JwtBearerDefaults.AuthenticationScheme;
 
     public SecurityManagementOptions()
     {
