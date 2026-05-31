@@ -21,7 +21,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="WolverineFx" Version="6.2.2" />
+    <PackageReference Include="WolverineFx.Http" Version="6.2.2" />
   </ItemGroup>
 
   <ItemGroup>
