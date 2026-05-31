@@ -1,7 +1,12 @@
 # Cause.SecurityManagement
-[![NuGet version](https://badge.fury.io/nu/Cause.SecurityManagement.svg)](https://badge.fury.io/nu/Cause.SecurityManagement)
 
 Add basic JWT authentication to an Asp.Net core project.
+
+| Package | NuGet |
+|---------|-------|
+| `Cause.SecurityManagement.Core` | [![NuGet version](https://badge.fury.io/nu/Cause.SecurityManagement.Core.svg)](https://badge.fury.io/nu/Cause.SecurityManagement.Core) |
+| `Cause.SecurityManagement` | [![NuGet version](https://badge.fury.io/nu/Cause.SecurityManagement.svg)](https://badge.fury.io/nu/Cause.SecurityManagement) |
+| `Cause.SecurityManagement.Wolverine` | [![NuGet version](https://badge.fury.io/nu/Cause.SecurityManagement.Wolverine.svg)](https://badge.fury.io/nu/Cause.SecurityManagement.Wolverine) |
 
 # Usage
 ### appsettings.json
@@ -198,7 +203,7 @@ public class MyCustomAuthController : BaseAuthenticationController
 
 # Cause.SecurityManagement.Wolverine
 
-A separate NuGet package (`Cause.SecurityManagement.Wolverine`) that provides Wolverine HTTP endpoints and sagas as an alternative to the MVC-based `Cause.SecurityManagement.Http` package. Use this when your API is built on [Wolverine](https://wolverine.netlify.app/) instead of (or alongside) traditional ASP.NET Core controllers.
+A separate NuGet package (`Cause.SecurityManagement.Wolverine`) that provides Wolverine HTTP endpoints and sagas as an alternative to the MVC-based `Cause.SecurityManagement` package. Use this when your API is built on [Wolverine](https://wolverine.netlify.app/) instead of (or alongside) traditional ASP.NET Core controllers.
 
 ## Installation
 
@@ -206,7 +211,7 @@ A separate NuGet package (`Cause.SecurityManagement.Wolverine`) that provides Wo
 dotnet add package Cause.SecurityManagement.Wolverine
 ```
 
-This package depends on `Cause.SecurityManagement` (core) and `WolverineFx.Http`. You do **not** need `Cause.SecurityManagement.Http`.
+This package depends on `Cause.SecurityManagement.Core` and `WolverineFx.Http`. You do **not** need `Cause.SecurityManagement` (the HTTP/MVC package).
 
 ## Setup
 
@@ -252,7 +257,7 @@ app.Run();
 ### Minimal example `Program.cs`
 
 ```csharp
-using Cause.SecurityManagement;
+using Cause.SecurityManagement.Core;
 using Cause.SecurityManagement.Wolverine;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -281,7 +286,7 @@ app.Run();
 
 ## Provided HTTP endpoints
 
-All routes mirror the ones provided by `Cause.SecurityManagement.Http` so existing clients are fully compatible.
+All routes mirror the ones provided by `Cause.SecurityManagement` so existing clients are fully compatible.
 
 | Method | Route | Auth | Description |
 |--------|-------|------|-------------|
