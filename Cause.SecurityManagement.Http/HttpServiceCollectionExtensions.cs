@@ -5,17 +5,17 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Cause.SecurityManagement;
 
 /// <summary>
-/// Extension methods for registering Cause.SecurityManagement HTTP services (controllers, certificate validation, policies).
+/// Extension methods for registering Cause.SecurityManagement HTTP services (controllers, authorization policies).
 /// </summary>
 public static class HttpServiceCollectionExtensions
 {
     /// <summary>
-    /// Registers ICertificateValidator and the three default authorization policies
-    /// (defaultpolicy, apipolicy, apicertificatepolicy) used by AddAuthorizeFiltersControllerConvention.
+    /// Registers the three default authorization policies (defaultpolicy, apipolicy, apicertificatepolicy)
+    /// used by AddAuthorizeFiltersControllerConvention.
+    /// ICertificateValidator is already registered by InjectSecurityServices() in the core package.
     /// </summary>
     public static IServiceCollection AddBasicPoliciesForCertificateLogon(this IServiceCollection services)
     {
-        services.AddScoped<ICertificateValidator, CertificateValidator>();
         services.AddAuthorization(options =>
         {
             options.AddPolicy("defaultpolicy", policy =>
