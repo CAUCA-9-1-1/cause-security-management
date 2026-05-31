@@ -20,6 +20,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cause.SecurityManagement.Ht
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cause.SecurityManagement.Wolverine", "Cause.SecurityManagement.Wolverine\Cause.SecurityManagement.Wolverine.csproj", "{5D3621E6-C958-4FA4-B88C-96BB52712AB6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cause.SecurityManagement.Wolverine.Tests", "Cause.SecurityManagement.Wolverine.Tests\Cause.SecurityManagement.Wolverine.Tests.csproj", "{11DB84AD-FD22-4ED8-A3F4-5F7F6D6AF33B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -141,6 +143,24 @@ Global
 		{5D3621E6-C958-4FA4-B88C-96BB52712AB6}.Release|x64.Build.0 = Release|Any CPU
 		{5D3621E6-C958-4FA4-B88C-96BB52712AB6}.Release|x86.ActiveCfg = Release|Any CPU
 		{5D3621E6-C958-4FA4-B88C-96BB52712AB6}.Release|x86.Build.0 = Release|Any CPU
+		{11DB84AD-FD22-4ED8-A3F4-5F7F6D6AF33B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{11DB84AD-FD22-4ED8-A3F4-5F7F6D6AF33B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{11DB84AD-FD22-4ED8-A3F4-5F7F6D6AF33B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{11DB84AD-FD22-4ED8-A3F4-5F7F6D6AF33B}.Debug|x64.Build.0 = Debug|Any CPU
+		{11DB84AD-FD22-4ED8-A3F4-5F7F6D6AF33B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{11DB84AD-FD22-4ED8-A3F4-5F7F6D6AF33B}.Debug|x86.Build.0 = Debug|Any CPU
+		{11DB84AD-FD22-4ED8-A3F4-5F7F6D6AF33B}.NuGet|Any CPU.ActiveCfg = Debug|Any CPU
+		{11DB84AD-FD22-4ED8-A3F4-5F7F6D6AF33B}.NuGet|Any CPU.Build.0 = Debug|Any CPU
+		{11DB84AD-FD22-4ED8-A3F4-5F7F6D6AF33B}.NuGet|x64.ActiveCfg = Debug|Any CPU
+		{11DB84AD-FD22-4ED8-A3F4-5F7F6D6AF33B}.NuGet|x64.Build.0 = Debug|Any CPU
+		{11DB84AD-FD22-4ED8-A3F4-5F7F6D6AF33B}.NuGet|x86.ActiveCfg = Debug|Any CPU
+		{11DB84AD-FD22-4ED8-A3F4-5F7F6D6AF33B}.NuGet|x86.Build.0 = Debug|Any CPU
+		{11DB84AD-FD22-4ED8-A3F4-5F7F6D6AF33B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{11DB84AD-FD22-4ED8-A3F4-5F7F6D6AF33B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{11DB84AD-FD22-4ED8-A3F4-5F7F6D6AF33B}.Release|x64.ActiveCfg = Release|Any CPU
+		{11DB84AD-FD22-4ED8-A3F4-5F7F6D6AF33B}.Release|x64.Build.0 = Release|Any CPU
+		{11DB84AD-FD22-4ED8-A3F4-5F7F6D6AF33B}.Release|x86.ActiveCfg = Release|Any CPU
+		{11DB84AD-FD22-4ED8-A3F4-5F7F6D6AF33B}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
