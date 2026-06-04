@@ -1,18 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <IsPackable>true</IsPackable>
+    <IsPackable>false</IsPackable>
     <TargetFramework>net10.0</TargetFramework>
     <OutputType>Library</OutputType>
     <Authors>Fred Catellier-Poulin, Michael Jolin, Claudine Gagnon</Authors>
     <Company>CAUCA 9-1-1</Company>
     <RepositoryUrl>https://github.com/CAUCA-9-1-1/cause-security-management</RepositoryUrl>
     <PackageProjectUrl>https://github.com/CAUCA-9-1-1/cause-security-management</PackageProjectUrl>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Description>Wolverine integration (message handlers and sagas) for Cause.SecurityManagement.</Description>
     <Copyright>CAUCA 9-1-1 (c) 2025</Copyright>
     <PackageTags>Cause Security Management Wolverine Saga Cauca</PackageTags>
-    <Version>10.2.0-experimental4</Version>
+    <PackageReleaseNotes>Add new groups management abstract controller and deprecated old ones.</PackageReleaseNotes>
+    <Version>10.2.0-experimental5</Version>
     <AssemblyVersion>10.2.0</AssemblyVersion>
     <FileVersion>10.2.0</FileVersion>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>

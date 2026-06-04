@@ -20,6 +20,7 @@ This index tracks Architecture Decision Records (ADRs) stored in this folder.
 | Security Testing Strategy Across Unit And Integration Layers | accepted | [2026-06-04-security-testing-strategy.md](2026-06-04-security-testing-strategy.md) |
 | Mobile Version Compatibility Policy Using Semantic Version Gates | accepted | [2026-06-04-mobile-version-compatibility-policy.md](2026-06-04-mobile-version-compatibility-policy.md) |
 | Multi-Package Release Governance For SecurityManagement Libraries | accepted | [2026-06-04-multi-package-release-governance.md](2026-06-04-multi-package-release-governance.md) |
+| Exclude Cause.SecurityManagement.Wolverine From The Published Release Set | accepted | [2026-06-04-exclude-wolverine-from-published-release-set.md](2026-06-04-exclude-wolverine-from-published-release-set.md) |
 
 ## Review Protocol
 

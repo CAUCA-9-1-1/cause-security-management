@@ -3,8 +3,12 @@
     Release gate for Cause.SecurityManagement NuGet packages.
 
 .DESCRIPTION
-    Enforces coordinated versioning across all four packable projects, then
+    Enforces coordinated versioning across all packable projects, then
     builds, tests, packs, and pushes them to the internal CaucaNuget feed.
+
+    Note: Cause.SecurityManagement.Wolverine is intentionally excluded from the
+    published set (incomplete/unfinished). It is still built and tested as part
+    of the solution but is not packed or pushed.
 
     Steps performed in order:
       1. VERSION GATE  — reads <Version> from each packable .csproj; aborts if
@@ -55,8 +59,7 @@ $RepoRoot = $PSScriptRoot
 $PackableProjects = @(
     'Cause.SecurityManagement.Models\Cause.SecurityManagement.Models.csproj',
     'Cause.SecurityManagement.Core\Cause.SecurityManagement.Core.csproj',
-    'Cause.SecurityManagement\Cause.SecurityManagement.csproj',
-    'Cause.SecurityManagement.Wolverine\Cause.SecurityManagement.Wolverine.csproj'
+    'Cause.SecurityManagement\Cause.SecurityManagement.csproj'
 )
 
 $SolutionFile = Join-Path $RepoRoot 'Cause.SecurityManagement.sln'
@@ -148,10 +151,12 @@ else {
 Write-Host "`n=== Step 4: Pack ===" -ForegroundColor Cyan
 
 # Clean output directory before each run for idempotency.
+# -Force keeps -WhatIf runs working: under -WhatIf the Remove-Item above is
+# skipped (it honours ShouldProcess), so the directory may still exist here.
 if (Test-Path $ArtifactsDir) {
     Remove-Item $ArtifactsDir -Recurse -Force
 }
-New-Item -ItemType Directory -Path $ArtifactsDir | Out-Null
+New-Item -ItemType Directory -Force -Path $ArtifactsDir | Out-Null
 
 foreach ($relPath in $PackableProjects) {
     $fullPath = Join-Path $RepoRoot $relPath

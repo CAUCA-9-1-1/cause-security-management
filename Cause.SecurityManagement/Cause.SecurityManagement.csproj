@@ -12,13 +12,19 @@
     <Description>ASP.NET Core HTTP integration (controllers, authentication, authorization) for Cause.SecurityManagement.Core.</Description>
     <Copyright>CAUCA 9-1-1 (c) 2025</Copyright>
     <PackageTags>Cause Security Management AspNetCore Http Controllers Cauca</PackageTags>
-    <Version>10.2.0-experimental4</Version>
+    <PackageReleaseNotes>Add new groups management abstract controller and deprecated old ones.</PackageReleaseNotes>
+    <Version>10.2.0-experimental5</Version>
     <AssemblyVersion>10.2.0</AssemblyVersion>
     <FileVersion>10.2.0</FileVersion>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.*" />

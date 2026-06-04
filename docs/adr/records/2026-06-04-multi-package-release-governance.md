@@ -5,6 +5,12 @@
 * Deciders: Cause.SecurityManagement maintainers
 * Technical Story: Package release consistency
 
+> **Scope update:** As of [Exclude Cause.SecurityManagement.Wolverine From The
+> Published Release Set](2026-06-04-exclude-wolverine-from-published-release-set.md),
+> `Cause.SecurityManagement.Wolverine` is excluded from the published set. The
+> coordinated-versioning and compatibility rules below now apply to the three
+> published packages (`Models`, `Core`, `Cause.SecurityManagement`).
+
 ## Context and Problem Statement
 
 The repository ships multiple NuGet packages (`Cause.SecurityManagement.Models`, `Cause.SecurityManagement.Core`, `Cause.SecurityManagement`, and `Cause.SecurityManagement.Wolverine`) with explicit architectural boundaries. Consumers often depend on more than one package, so releases require coordinated versioning and compatibility governance.
