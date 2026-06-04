@@ -27,108 +27,108 @@ public class ManagementEndpointsTests
     }
 
     [Test]
-    public void WhenGroupExists_DeleteGroup_ShouldReturnNoContent()
+    public async Task WhenGroupExists_DeleteGroup_ShouldReturnNoContent()
     {
         var groupId = Guid.NewGuid();
-        groupService.DeleteGroup(groupId).Returns(true);
+        groupService.DeleteGroupAsync(groupId, Arg.Any<CancellationToken>()).Returns(true);
 
-        var result = DeleteGroupEndpoint.Handle(groupId, groupService);
+        var result = await DeleteGroupEndpoint.Handle(groupId, groupService, CancellationToken.None);
 
         StatusCodeOf(result).Should().Be(StatusCodes.Status204NoContent);
     }
 
     [Test]
-    public void WhenGroupDoesNotExist_DeleteGroup_ShouldReturnNotFound()
+    public async Task WhenGroupDoesNotExist_DeleteGroup_ShouldReturnNotFound()
     {
-        groupService.DeleteGroup(Arg.Any<Guid>()).Returns(false);
+        groupService.DeleteGroupAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(false);
 
-        var result = DeleteGroupEndpoint.Handle(Guid.NewGuid(), groupService);
+        var result = await DeleteGroupEndpoint.Handle(Guid.NewGuid(), groupService, CancellationToken.None);
 
         StatusCodeOf(result).Should().Be(StatusCodes.Status404NotFound);
     }
 
     [Test]
-    public void WhenGroupIsValid_SaveGroup_ShouldReturnOkWithSavedGroup()
+    public async Task WhenGroupIsValid_SaveGroup_ShouldReturnOkWithSavedGroup()
     {
         var group = new GroupDto { Id = Guid.NewGuid(), Name = "Dispatchers" };
         var saved = new GroupDto { Id = group.Id, Name = "Dispatchers" };
-        validator.Validate(Arg.Any<GroupDto>()).Returns(new ValidationResult());
-        groupService.SaveGroup(group).Returns(saved);
+        validator.ValidateAsync(Arg.Any<GroupDto>(), Arg.Any<CancellationToken>()).Returns(new ValidationResult());
+        groupService.SaveGroupAsync(group, Arg.Any<CancellationToken>()).Returns(saved);
 
-        var result = SaveGroupEndpoint.Handle(group, groupService, validator);
+        var result = await SaveGroupEndpoint.Handle(group, groupService, validator, CancellationToken.None);
 
         result.Should().BeOfType<Ok<GroupDto>>().Which.Value.Should().Be(saved);
     }
 
     [Test]
-    public void WhenGroupIsInvalid_SaveGroup_ShouldReturnBadRequest()
+    public async Task WhenGroupIsInvalid_SaveGroup_ShouldReturnBadRequest()
     {
         var group = new GroupDto { Id = Guid.NewGuid() };
-        validator.Validate(Arg.Any<GroupDto>())
+        validator.ValidateAsync(Arg.Any<GroupDto>(), Arg.Any<CancellationToken>())
             .Returns(new ValidationResult(new[] { new ValidationFailure("Name", "Name is required") }));
 
-        var result = SaveGroupEndpoint.Handle(group, groupService, validator);
+        var result = await SaveGroupEndpoint.Handle(group, groupService, validator, CancellationToken.None);
 
         StatusCodeOf(result).Should().Be(StatusCodes.Status400BadRequest);
-        groupService.DidNotReceive().SaveGroup(Arg.Any<GroupDto>());
+        await groupService.DidNotReceive().SaveGroupAsync(Arg.Any<GroupDto>(), Arg.Any<CancellationToken>());
     }
 
     [Test]
-    public void WhenGroupExists_GetGroup_ShouldReturnOkWithGroup()
+    public async Task WhenGroupExists_GetGroup_ShouldReturnOkWithGroup()
     {
         var groupId = Guid.NewGuid();
         var group = new GroupDto { Id = groupId, Name = "Dispatchers" };
-        groupService.GetGroup(groupId).Returns(group);
+        groupService.GetGroupAsync(groupId, Arg.Any<CancellationToken>()).Returns(group);
 
-        var result = GetGroupEndpoint.Handle(groupId, groupService);
+        var result = await GetGroupEndpoint.Handle(groupId, groupService, CancellationToken.None);
 
         result.Should().BeOfType<Ok<GroupDto>>().Which.Value.Should().Be(group);
     }
 
     [Test]
-    public void WhenGroupDoesNotExist_GetGroup_ShouldReturnNotFound()
+    public async Task WhenGroupDoesNotExist_GetGroup_ShouldReturnNotFound()
     {
-        groupService.GetGroup(Arg.Any<Guid>()).Returns((GroupDto?)null);
+        groupService.GetGroupAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns((GroupDto?)null);
 
-        var result = GetGroupEndpoint.Handle(Guid.NewGuid(), groupService);
+        var result = await GetGroupEndpoint.Handle(Guid.NewGuid(), groupService, CancellationToken.None);
 
         StatusCodeOf(result).Should().Be(StatusCodes.Status404NotFound);
     }
 
     [Test]
-    public void WhenGroupHasMembers_GetUserList_ShouldReturnOkWithMembers()
+    public async Task WhenGroupHasMembers_GetUserList_ShouldReturnOkWithMembers()
     {
         var groupId = Guid.NewGuid();
         var members = new List<UserForGroupDto> { new() { Id = Guid.NewGuid(), FirstName = "Ada", LastName = "Lovelace" } };
-        groupService.GetGroupUsers(groupId).Returns(members);
+        groupService.GetGroupUsersAsync(groupId, Arg.Any<CancellationToken>()).Returns(members);
 
-        var result = GetGroupUserListEndpoint.Handle(groupId, groupService);
+        var result = await GetGroupUserListEndpoint.Handle(groupId, groupService, CancellationToken.None);
 
         result.Should().BeOfType<Ok<List<UserForGroupDto>>>().Which.Value.Should().BeEquivalentTo(members);
     }
 
     [Test]
-    public void WhenSearching_SearchUsers_ShouldReturnOkWithResult()
+    public async Task WhenSearching_SearchUsers_ShouldReturnOkWithResult()
     {
         var request = new UserSearchRequestDto { Query = "ada", Skip = 0, Top = 10 };
         var searchResult = new UserSearchResultDto { Items = new List<UserForGroupDto>(), TotalCount = 0 };
-        groupService.SearchUsers(request).Returns(searchResult);
+        groupService.SearchUsersAsync(request, Arg.Any<CancellationToken>()).Returns(searchResult);
 
-        var result = SearchUsersEndpoint.Handle(request, groupService);
+        var result = await SearchUsersEndpoint.Handle(request, groupService, CancellationToken.None);
 
         result.Should().BeOfType<Ok<UserSearchResultDto>>().Which.Value.Should().Be(searchResult);
     }
 
     [Test]
-    public void WhenCatalogRequested_GetPermissionCatalog_ShouldReturnOkWithCatalog()
+    public async Task WhenCatalogRequested_GetPermissionCatalog_ShouldReturnOkWithCatalog()
     {
         var catalog = new List<PermissionDto>
         {
             new() { Id = Guid.NewGuid(), IdModulePermission = Guid.NewGuid(), Tag = "module.access", Name = "Access the module" }
         };
-        permissionService.GetPermissions().Returns(catalog);
+        permissionService.GetPermissionsAsync(Arg.Any<CancellationToken>()).Returns(catalog);
 
-        var result = GetPermissionCatalogEndpoint.Handle(permissionService);
+        var result = await GetPermissionCatalogEndpoint.Handle(permissionService, CancellationToken.None);
 
         result.Should().BeOfType<Ok<List<PermissionDto>>>().Which.Value.Should().BeEquivalentTo(catalog);
     }
