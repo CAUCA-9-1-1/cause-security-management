@@ -28,7 +28,7 @@ public abstract class BaseAuthenticationController(
     public async Task<ActionResult<LoginResult>> Logon([FromHeader(Name = "auth")] string? authorizationHeader, [FromBody] LoginInformations? loginInformations = null)
     {
         var login = GetLoginFromHeader(authorizationHeader) ?? loginInformations;
-        if (login == null)
+        if (login is null)
             return Unauthorized();
         return await Logon(login);
     }
@@ -43,8 +43,8 @@ public abstract class BaseAuthenticationController(
 
     private async Task<ActionResult<LoginResult>> Logon(LoginInformations login)
     {
-        var result = await authenticator.LoginAsync(login?.UserName, login?.Password);
-        return result == null ? Unauthorized() : result;
+        var result = await authenticator.LoginAsync(login.UserName, login.Password);
+        return result is null ? Unauthorized() : result;
     }
 
     [Route("validationCode"), HttpGet, Authorize(Roles = SecurityRoles.UserLoginWithMultiFactor)]
@@ -149,7 +149,7 @@ public abstract class BaseAuthenticationController(
     public async Task<ActionResult> ValidateRecoverAccount([FromBody] AccountRecoveryValidationRequest request)
     {
         var result = await authenticator.ValidateAccountRecoveryAsync(request.Email, request.ValidationCode);
-        return result == null ? BadRequest() : Ok(result);
+        return result is null ? BadRequest() : Ok(result);
     }
 
     [HttpPost, Route("PasswordSetup"), AuthorizeByRoles(SecurityRoles.User, SecurityRoles.UserPasswordSetup, SecurityRoles.UserRecovery)]
