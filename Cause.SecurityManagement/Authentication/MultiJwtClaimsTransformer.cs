@@ -1,12 +1,9 @@
 using Cause.SecurityManagement.Core.Authentication;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
-using System.Threading.Tasks;
 using Cause.SecurityManagement.Models.Configuration;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Options;
-using Cause.SecurityManagement.Core;
 
 namespace Cause.SecurityManagement.Authentication;
 

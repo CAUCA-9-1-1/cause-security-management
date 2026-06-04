@@ -1,8 +1,6 @@
 ﻿using AwesomeAssertions;
 using Cause.SecurityManagement.Core;
 
-using Cause.SecurityManagement.Core.Authentication.MultiFactor;
-
 using Cause.SecurityManagement.Integration.Tests.Infrastructure;
 
 using Cause.SecurityManagement.Integration.Tests.TestData;

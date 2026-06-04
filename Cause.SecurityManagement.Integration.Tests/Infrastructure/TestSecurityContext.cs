@@ -1,5 +1,4 @@
-﻿using Cause.SecurityManagement.Core.Mapping;
-using Cause.SecurityManagement.Core;
+﻿using Cause.SecurityManagement.Core;
 
 using Microsoft.EntityFrameworkCore;
 

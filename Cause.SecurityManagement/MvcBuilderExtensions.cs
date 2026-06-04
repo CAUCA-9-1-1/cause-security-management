@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-
-namespace Cause.SecurityManagement
+﻿namespace Cause.SecurityManagement
 {
 	public static class MvcBuilderExtensions
 	{

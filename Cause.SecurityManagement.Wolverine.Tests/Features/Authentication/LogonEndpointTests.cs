@@ -1,12 +1,9 @@
-using System;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 using AwesomeAssertions;
 using Cause.SecurityManagement.Models.DataTransferObjects;
 using Cause.SecurityManagement.Core.Services;
 using Cause.SecurityManagement.Wolverine.Features.Authentication;
-using Microsoft.AspNetCore.Http;
 using NSubstitute;
 using NUnit.Framework;
 

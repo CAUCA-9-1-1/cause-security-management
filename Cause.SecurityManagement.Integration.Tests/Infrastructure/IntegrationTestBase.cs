@@ -15,8 +15,6 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 
 using NUnit.Framework;
 
-using System;
-
 namespace Cause.SecurityManagement.Integration.Tests.Infrastructure;
 
 /// <summary>

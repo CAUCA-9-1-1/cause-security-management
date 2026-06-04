@@ -1,4 +1,3 @@
-using System;
 using Cause.SecurityManagement.Models.ValidationCode;
 
 namespace Cause.SecurityManagement.Wolverine.Features.Sagas.Login;

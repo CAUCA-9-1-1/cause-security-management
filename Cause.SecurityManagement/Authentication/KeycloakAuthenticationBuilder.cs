@@ -1,13 +1,9 @@
 ﻿using Cause.SecurityManagement.Core.Authentication;
-using System;
-using System.Linq;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 using Cause.SecurityManagement.Models.Configuration;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Cause.SecurityManagement.Authentication;

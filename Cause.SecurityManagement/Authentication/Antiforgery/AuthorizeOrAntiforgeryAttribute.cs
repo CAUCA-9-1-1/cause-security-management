@@ -1,12 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.DependencyInjection;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Antiforgery;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
-using System;
-using Microsoft.Extensions.Hosting;
 
 namespace Cause.SecurityManagement.Authentication.Antiforgery
 {

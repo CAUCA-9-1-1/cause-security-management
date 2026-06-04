@@ -1,8 +1,6 @@
 using Cause.SecurityManagement.Models;
 using Microsoft.AspNetCore.DataProtection.Repositories;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.Xml.Linq;
 using Cause.SecurityManagement.Core;
 

@@ -1,6 +1,4 @@
 using Cause.SecurityManagement.Core.Authentication.Certificate;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.DependencyInjection;
 using Cause.SecurityManagement.Core;
 
 namespace Cause.SecurityManagement;

@@ -1,5 +1,4 @@
 using Cause.SecurityManagement.Authentication;
-using Cause.SecurityManagement.Core.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.AspNetCore.Mvc.Authorization;

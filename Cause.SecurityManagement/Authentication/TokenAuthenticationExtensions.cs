@@ -1,13 +1,9 @@
 using Cause.SecurityManagement.Core.Authentication;
 using Cause.SecurityManagement.Models.Configuration;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Net.Http.Headers;
 using System.Diagnostics.CodeAnalysis;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
 using Cause.SecurityManagement.Core.Authentication.Certificate;
 using Cause.SecurityManagement.Core;

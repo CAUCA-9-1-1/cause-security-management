@@ -1,10 +1,7 @@
 using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Core.Services;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
-using System;
-using System.Collections.Generic;
 
 namespace Cause.SecurityManagement.Controllers
 {
