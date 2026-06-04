@@ -15,7 +15,7 @@
     <Copyright>CAUCA 9-1-1 (c) 2025</Copyright>
     <PackageTags>Cause Security Management Core AspNetCore Cauca</PackageTags>
     <PackageReleaseNotes>Add new groups management abstract controller and deprecated old ones.</PackageReleaseNotes>
-    <Version>10.2.0-experimental5</Version>
+    <Version>10.2.0-experimental6</Version>
     <Configurations>Debug;Release;NuGet</Configurations>
     <AssemblyVersion>10.2.0</AssemblyVersion>
     <FileVersion>10.2.0</FileVersion>
