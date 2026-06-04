@@ -248,10 +248,20 @@ up the project's default authorization (an authenticated user is required — no
 ## Groups OData feed (owned by the consumer)
 
 The groups data grid is powered by an OData v4 feed at `GET odata/GroupList`. To keep the library
-database-agnostic, **the consuming application owns this feed entirely** — its OData controller,
-`[EnableQuery]`, EDM registration and routing. The library only provides the contract shape
+database-agnostic and free of any OData dependency, it provides only the contract shape
 `Cause.SecurityManagement.Models.GroupListItem` (`Id`, `Name`, `AssignableByAllUsers`,
-`SearchableGroup`, `SearchableUsers`).
+`SearchableGroup`, `SearchableUsers`) and the **abstract** `BaseGroupListController`:
+
+```csharp
+public abstract class BaseGroupListController : ControllerBase
+{
+    public abstract IQueryable<GroupListItem> Get();
+}
+```
+
+The **consuming application owns every OData concern** — `[EnableQuery]`, the EDM model and the
+`AddOData` routing. Subclass `BaseGroupListController`, name the subclass `GroupListController` so it
+matches the `GroupList` entity set, and implement `Get()`.
 
 The Angular grid filters with
 `contains(searchableGroup, '<term>') or contains(searchableUsers, '<term>')`, and the client
@@ -278,11 +288,11 @@ services.AddControllers()
         .AddRouteComponents("odata", GetEdmModel())
         .Filter().OrderBy().Count().SetMaxTop(null));
 
-// Controller (your normalized view/projection backs the queryable)
-public class GroupListController(MyDbContext context) : ODataController
+// Controller — subclass BaseGroupListController; your normalized view/projection backs the queryable
+public class GroupListController(MyDbContext context) : BaseGroupListController
 {
-    [EnableQuery(PageSize = 100)]
-    public IQueryable<GroupListItem> Get() => context.GroupListView.AsNoTracking();
+    [EnableQuery]
+    public override IQueryable<GroupListItem> Get() => context.GroupListView.AsNoTracking();
 }
 ```
 
