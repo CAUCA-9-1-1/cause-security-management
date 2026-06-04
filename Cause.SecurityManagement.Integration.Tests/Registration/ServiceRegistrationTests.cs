@@ -49,6 +49,10 @@ public class ServiceRegistrationTests : IntegrationTestBase
         => Resolve<IGroupManagementApiService>().Should().NotBeNull();
 
     [Test]
+    public void InjectSecurityServices_ResolvesUserSearchService()
+        => Resolve<IUserSearchService>().Should().NotBeNull();
+
+    [Test]
     public void InjectSecurityServices_ResolvesPermissionCatalogService()
         => Resolve<IPermissionCatalogService>().Should().NotBeNull();
 

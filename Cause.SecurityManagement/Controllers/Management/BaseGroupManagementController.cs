@@ -76,30 +76,4 @@ public abstract class BaseGroupManagementController(
         var group = await GroupService.GetGroupAsync(groupId, cancellationToken);
         return group == null ? NotFound() : Ok(group);
     }
-
-    [HttpGet("{groupId:guid}/UserList")]
-    [ProducesResponseType<List<UserForGroupDto>>(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [SwaggerResponse(StatusCodes.Status200OK, "The users that are members of the group", typeof(List<UserForGroupDto>))]
-    [SwaggerResponse(StatusCodes.Status401Unauthorized, "The caller is not authenticated")]
-    [SwaggerOperation(
-        Summary = "Lists the members of a group",
-        Description = "Returns the users that currently belong to the group. Requires an authenticated user.")]
-    public virtual async Task<ActionResult<List<UserForGroupDto>>> GetUserListAsync(Guid groupId, CancellationToken cancellationToken)
-    {
-        return Ok(await GroupService.GetGroupUsersAsync(groupId, cancellationToken));
-    }
-
-    [HttpPost("users/search")]
-    [ProducesResponseType<UserSearchResultDto>(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [SwaggerResponse(StatusCodes.Status200OK, "A page of matching active users with the total match count", typeof(UserSearchResultDto))]
-    [SwaggerResponse(StatusCodes.Status401Unauthorized, "The caller is not authenticated")]
-    [SwaggerOperation(
-        Summary = "Searches active users for group membership",
-        Description = "Performs a server-side paged search over all active users, matching the query against first or last name and excluding already-selected users. Requires an authenticated user.")]
-    public virtual async Task<ActionResult<UserSearchResultDto>> SearchUsersAsync([FromBody] UserSearchRequestDto request, CancellationToken cancellationToken)
-    {
-        return Ok(await GroupService.SearchUsersAsync(request, cancellationToken));
-    }
 }

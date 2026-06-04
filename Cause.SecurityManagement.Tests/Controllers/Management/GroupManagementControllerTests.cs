@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using AwesomeAssertions;
@@ -103,30 +102,6 @@ namespace Cause.SecurityManagement.Tests.Controllers.Management
             var result = await controller.GetGroupAsync(Guid.NewGuid(), CancellationToken.None);
 
             result.Result.Should().BeOfType<NotFoundResult>();
-        }
-
-        [Test]
-        public async Task WhenGroupHasMembers_GetUserList_ShouldReturnOkWithMembers()
-        {
-            var groupId = Guid.NewGuid();
-            var members = new List<UserForGroupDto> { new() { Id = Guid.NewGuid(), FirstName = "Ada", LastName = "Lovelace" } };
-            groupService.GetGroupUsersAsync(groupId, Arg.Any<CancellationToken>()).Returns(members);
-
-            var result = await controller.GetUserListAsync(groupId, CancellationToken.None);
-
-            (result.Result as OkObjectResult)?.Value.Should().BeEquivalentTo(members);
-        }
-
-        [Test]
-        public async Task WhenSearching_SearchUsers_ShouldReturnOkWithResult()
-        {
-            var request = new UserSearchRequestDto { Query = "ada", Skip = 0, Top = 10 };
-            var searchResult = new UserSearchResultDto { Items = new List<UserForGroupDto>(), TotalCount = 0 };
-            groupService.SearchUsersAsync(request, Arg.Any<CancellationToken>()).Returns(searchResult);
-
-            var result = await controller.SearchUsersAsync(request, CancellationToken.None);
-
-            (result.Result as OkObjectResult)?.Value.Should().Be(searchResult);
         }
 
         private sealed class TestableGroupManagementController(

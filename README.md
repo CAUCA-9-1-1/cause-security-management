@@ -210,12 +210,14 @@ Every action takes the request's `CancellationToken` and threads it all the way 
 queries, so a cancelled HTTP request never runs (or keeps running) its database work.
 
 The services are registered automatically by `InjectSecurityServices<TUser>()`:
-`IGroupManagementApiService`, `IPermissionCatalogService` and the `IValidator<GroupDto>`.
+`IGroupManagementApiService`, `IUserSearchService`, `IPermissionCatalogService` and the
+`IValidator<GroupDto>`.
 
 ## REST controllers
 
-Subclass the abstract base controllers — the routes are inherited from the base, so an empty
-subclass is enough to expose them at the routes the Angular library expects:
+Each controller has a single responsibility, so there is one abstract base per concern. Subclass
+them — the routes are inherited from the base, so an empty subclass is enough to expose them at the
+routes the Angular library expects:
 
 ```csharp
 using Cause.SecurityManagement.Controllers.Management;
@@ -224,6 +226,9 @@ public class GroupManagementController(
     IGroupManagementApiService service,
     IValidator<GroupDto> validator)
     : BaseGroupManagementController(service, validator);
+
+public class UserSearchController(IUserSearchService service)
+    : BaseUserSearchController(service);
 
 public class PermissionManagementController(IPermissionCatalogService service)
     : BasePermissionManagementController(service);
@@ -237,8 +242,7 @@ up the project's default authorization (an authenticated user is required — no
 | `DELETE` | `GroupManagement/{groupId}` | Delete a group and its dependents (`204` / `404`) |
 | `POST`   | `GroupManagement` | **Upsert** a group (client generates the ids), its permission overrides and its membership (`200` / `400`) |
 | `GET`    | `GroupManagement/{groupId}` | Full group payload (`200` / `404`) |
-| `GET`    | `GroupManagement/{groupId}/UserList` | Members of the group |
-| `POST`   | `GroupManagement/users/search` | Server-side paged search over active users |
+| `POST`   | `UserSearch` | Server-side paged search over active users (group member selection) |
 | `GET`    | `PermissionManagement` | The assignable module-permission catalog |
 
 > `POST GroupManagement` is an upsert: the client generates the `Guid` for new groups and new
@@ -410,8 +414,7 @@ All routes mirror the ones provided by `Cause.SecurityManagement` so existing cl
 | `DELETE` | `/GroupManagement/{groupId}` | Authenticated | Delete a group and its dependents |
 | `POST` | `/GroupManagement` | Authenticated | Upsert a group, its permissions and membership |
 | `GET`  | `/GroupManagement/{groupId}` | Authenticated | Full group payload |
-| `GET`  | `/GroupManagement/{groupId}/UserList` | Authenticated | Members of the group |
-| `POST` | `/GroupManagement/users/search` | Authenticated | Paged active-user search |
+| `POST` | `/UserSearch` | Authenticated | Paged active-user search (group member selection) |
 | `GET`  | `/PermissionManagement` | Authenticated | Assignable module-permission catalog |
 
 The group & permission management endpoints mirror the routes of the MVC package (see

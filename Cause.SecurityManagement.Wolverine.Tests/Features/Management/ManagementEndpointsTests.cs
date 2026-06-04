@@ -15,6 +15,7 @@ namespace Cause.SecurityManagement.Wolverine.Tests.Features.Management;
 public class ManagementEndpointsTests
 {
     private IGroupManagementApiService groupService = null!;
+    private IUserSearchService userSearchService = null!;
     private IPermissionCatalogService permissionService = null!;
     private IValidator<GroupDto> validator = null!;
 
@@ -22,6 +23,7 @@ public class ManagementEndpointsTests
     public void SetUp()
     {
         groupService = Substitute.For<IGroupManagementApiService>();
+        userSearchService = Substitute.For<IUserSearchService>();
         permissionService = Substitute.For<IPermissionCatalogService>();
         validator = Substitute.For<IValidator<GroupDto>>();
     }
@@ -96,25 +98,13 @@ public class ManagementEndpointsTests
     }
 
     [Test]
-    public async Task WhenGroupHasMembers_GetUserList_ShouldReturnOkWithMembers()
-    {
-        var groupId = Guid.NewGuid();
-        var members = new List<UserForGroupDto> { new() { Id = Guid.NewGuid(), FirstName = "Ada", LastName = "Lovelace" } };
-        groupService.GetGroupUsersAsync(groupId, Arg.Any<CancellationToken>()).Returns(members);
-
-        var result = await GetGroupUserListEndpoint.Handle(groupId, groupService, CancellationToken.None);
-
-        result.Should().BeOfType<Ok<List<UserForGroupDto>>>().Which.Value.Should().BeEquivalentTo(members);
-    }
-
-    [Test]
     public async Task WhenSearching_SearchUsers_ShouldReturnOkWithResult()
     {
         var request = new UserSearchRequestDto { Query = "ada", Skip = 0, Top = 10 };
         var searchResult = new UserSearchResultDto { Items = new List<UserForGroupDto>(), TotalCount = 0 };
-        groupService.SearchUsersAsync(request, Arg.Any<CancellationToken>()).Returns(searchResult);
+        userSearchService.SearchUsersAsync(request, Arg.Any<CancellationToken>()).Returns(searchResult);
 
-        var result = await SearchUsersEndpoint.Handle(request, groupService, CancellationToken.None);
+        var result = await SearchUsersEndpoint.Handle(request, userSearchService, CancellationToken.None);
 
         result.Should().BeOfType<Ok<UserSearchResultDto>>().Which.Value.Should().Be(searchResult);
     }

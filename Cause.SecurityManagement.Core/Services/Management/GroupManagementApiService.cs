@@ -59,56 +59,6 @@ namespace Cause.SecurityManagement.Core.Services.Management
             return true;
         }
 
-        public Task<List<UserForGroupDto>> GetGroupUsersAsync(Guid groupId, CancellationToken cancellationToken = default)
-        {
-            return (
-                from membership in context.UserGroups.AsNoTracking()
-                where membership.IdGroup == groupId
-                join user in context.Users.AsNoTracking() on membership.IdUser equals user.Id
-                orderby user.LastName, user.FirstName
-                select new UserForGroupDto
-                {
-                    Id = user.Id,
-                    FirstName = user.FirstName,
-                    LastName = user.LastName,
-                }).ToListAsync(cancellationToken);
-        }
-
-        public async Task<UserSearchResultDto> SearchUsersAsync(UserSearchRequestDto request, CancellationToken cancellationToken = default)
-        {
-            var query = context.Users.AsNoTracking().Where(user => user.IsActive);
-
-            var excludedUserIds = request.ExcludedUserIds ?? new List<Guid>();
-            if (excludedUserIds.Count > 0)
-                query = query.Where(user => !excludedUserIds.Contains(user.Id));
-
-            var term = (request.Query ?? string.Empty).Trim().ToLower();
-            if (term.Length > 0)
-                query = query.Where(user =>
-                    (user.FirstName != null && user.FirstName.ToLower().Contains(term))
-                    || (user.LastName != null && user.LastName.ToLower().Contains(term)));
-
-            var totalCount = await query.CountAsync(cancellationToken);
-
-            var pagedQuery = query
-                .OrderBy(user => user.LastName)
-                .ThenBy(user => user.FirstName)
-                .Skip(request.Skip);
-            if (request.Top > 0)
-                pagedQuery = pagedQuery.Take(request.Top);
-
-            var items = await pagedQuery
-                .Select(user => new UserForGroupDto
-                {
-                    Id = user.Id,
-                    FirstName = user.FirstName,
-                    LastName = user.LastName,
-                })
-                .ToListAsync(cancellationToken);
-
-            return new UserSearchResultDto { Items = items, TotalCount = totalCount };
-        }
-
         private Task<List<GroupPermissionDto>> GetPermissionsAsync(Guid groupId, CancellationToken cancellationToken)
         {
             return context.GroupPermissions.AsNoTracking()
