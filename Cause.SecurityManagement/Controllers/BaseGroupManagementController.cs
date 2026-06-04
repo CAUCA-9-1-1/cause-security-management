@@ -6,6 +6,9 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace Cause.SecurityManagement.Controllers
 {
 	[Route("api/groups")]
+	[Obsolete("Replaced by the modernized group management API consumed by the cauca-management library: " +
+		"subclass Cause.SecurityManagement.Controllers.Management.BaseGroupManagementController (route 'GroupManagement') for " +
+		"group edition, membership and user search, and expose your own OData feed of GroupListItem for the groups grid.")]
 	public abstract class BaseGroupManagementController(IGroupManagementService groupService) : Controller
     {
 		protected IGroupManagementService GroupService = groupService;
