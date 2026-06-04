@@ -29,7 +29,7 @@ public abstract class BaseAuthenticationController(
     [SwaggerResponse(StatusCodes.Status200OK, "The login result with tokens", typeof(LoginResult))]
     [SwaggerResponse(StatusCodes.Status401Unauthorized, "Unauthorized")]
     [SwaggerOperation(Summary = "Authenticates a user and returns a login result with tokens")]
-    public async Task<ActionResult<LoginResult>> Logon([FromHeader(Name = "auth")] string authorizationHeader, [FromBody] LoginInformations loginInformations = null)
+    public async Task<ActionResult<LoginResult>> Logon([FromHeader(Name = "auth")] string? authorizationHeader, [FromBody] LoginInformations? loginInformations = null)
     {
         var login = GetLoginFromHeader(authorizationHeader) ?? loginInformations;
         if (login == null)
@@ -37,13 +37,12 @@ public abstract class BaseAuthenticationController(
         return await Logon(login);
     }
 
-    private static LoginInformations GetLoginFromHeader(string authorizationHeader)
+    private static LoginInformations? GetLoginFromHeader(string? authorizationHeader)
     {
         if (string.IsNullOrWhiteSpace(authorizationHeader))
             return null;
         var decodedHeader = Uri.UnescapeDataString(Encoding.Default.GetString(Convert.FromBase64String(authorizationHeader)));
-        var login = JsonSerializer.Deserialize<LoginInformations>(decodedHeader, SerializationOptions);
-        return login;
+        return JsonSerializer.Deserialize<LoginInformations>(decodedHeader, SerializationOptions);
     }
 
     private async Task<ActionResult<LoginResult>> Logon(LoginInformations login)

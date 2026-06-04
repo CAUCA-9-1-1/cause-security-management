@@ -33,7 +33,7 @@ namespace Cause.SecurityManagement.Authentication.Antiforgery
 
         private static async Task<bool> HasAntiforgery(ActionExecutingContext filterContext)
         {
-            var antiforgery = filterContext.HttpContext.RequestServices.GetService<IAntiforgery>();
+            var antiforgery = filterContext.HttpContext.RequestServices.GetRequiredService<IAntiforgery>();
 
             try
             {
@@ -64,7 +64,7 @@ namespace Cause.SecurityManagement.Authentication.Antiforgery
 
         private static bool IsDev(ActionExecutingContext filterContext)
         {
-            var env = filterContext.HttpContext.RequestServices.GetService<IWebHostEnvironment>();
+            var env = filterContext.HttpContext.RequestServices.GetRequiredService<IWebHostEnvironment>();
             return env.IsDevelopment();
         }
     }

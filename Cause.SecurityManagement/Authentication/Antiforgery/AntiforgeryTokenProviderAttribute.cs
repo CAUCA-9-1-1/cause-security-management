@@ -9,12 +9,15 @@ namespace Cause.SecurityManagement.Authentication.Antiforgery
     {
         public override void OnActionExecuting(ActionExecutingContext context)
         {
-            var antiforgery = context.HttpContext.RequestServices.GetService<IAntiforgery>();
+            var antiforgery = context.HttpContext.RequestServices.GetRequiredService<IAntiforgery>();
             var tokens = antiforgery.GetAndStoreTokens(context.HttpContext);
 
-            context.HttpContext.Response.Headers.Append("X-CSRF-Token", tokens.RequestToken);
+            if (!string.IsNullOrEmpty(tokens.RequestToken))
+            {
+                context.HttpContext.Response.Headers.Append("X-CSRF-Token", tokens.RequestToken);
+            }
 
-            if (RequestIsFromMobile(context.HttpContext.Request))
+            if (RequestIsFromMobile(context.HttpContext.Request) && !string.IsNullOrEmpty(tokens.CookieToken))
             {
                 context.HttpContext.Response.Headers.Append("X-CSRF-Cookie", tokens.CookieToken);
             }

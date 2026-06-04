@@ -15,7 +15,7 @@ namespace Cause.SecurityManagement.Wolverine.Tests.Features.Authentication;
 [TestFixture]
 public class LogonEndpointTests
 {
-    private IEntityAuthenticator authenticator;
+    private IEntityAuthenticator authenticator = null!;
 
     private readonly LoginInformations loginInfo = new() { UserName = "user", Password = "pass" };
 

@@ -9,7 +9,7 @@ namespace Cause.SecurityManagement.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class KeycloakConfigurationController(IOptions<KeycloakConfiguration> options = null) : ControllerBase
+public class KeycloakConfigurationController(IOptions<KeycloakConfiguration>? options = null) : ControllerBase
 {
     [HttpGet, AllowAnonymous]
     [ProducesResponseType(typeof(KeycloakConfigurationForWeb), StatusCodes.Status200OK)]
