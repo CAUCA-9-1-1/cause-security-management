@@ -14,7 +14,7 @@ namespace Cause.SecurityManagement.Wolverine.Tests.Features.Sagas;
 [TestFixture]
 public class UserLoginSagaTests
 {
-    private IEntityAuthenticator authenticator;
+    private IEntityAuthenticator authenticator = null!;
 
     [SetUp]
     public void SetUp() => authenticator = Substitute.For<IEntityAuthenticator>();
@@ -58,7 +58,7 @@ public class UserLoginSagaTests
 [TestFixture]
 public class AccountRecoverySagaTests
 {
-    private IEntityAuthenticator authenticator;
+    private IEntityAuthenticator authenticator = null!;
 
     [SetUp]
     public void SetUp() => authenticator = Substitute.For<IEntityAuthenticator>();

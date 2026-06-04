@@ -24,7 +24,7 @@ public static class TokenAuthenticationExtensions
     /// This method configures JWT bearer authentication for regular users, console certificates, and Keycloak using the provided security configuration and optional Keycloak configuration.
     /// It also allows specifying a custom authentication handler for certificate authentication.
     /// </summary>
-    public static IServiceCollection AddTokenAuthenticationWithCertificates<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler>(this IServiceCollection services, SecurityConfiguration configuration, KeycloakConfiguration keycloakConfiguration = null)
+    public static IServiceCollection AddTokenAuthenticationWithCertificates<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] THandler>(this IServiceCollection services, SecurityConfiguration configuration, KeycloakConfiguration? keycloakConfiguration = null)
         where THandler : AuthenticationHandler<CertificateAuthenticationOptions>
     {
         JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
@@ -42,7 +42,7 @@ public static class TokenAuthenticationExtensions
     /// Add dual token authentication (keycloak and internal user) to the service collection.
     /// This method configures JWT bearer authentication for both regular users and Keycloak using the provided security configuration and optional Keycloak configuration.
     /// </summary>
-    public static IServiceCollection AddTokenAuthentication(this IServiceCollection services, SecurityConfiguration configuration, KeycloakConfiguration keycloakConfiguration = null)
+    public static IServiceCollection AddTokenAuthentication(this IServiceCollection services, SecurityConfiguration configuration, KeycloakConfiguration? keycloakConfiguration = null)
     {
         JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
@@ -71,7 +71,7 @@ public static class TokenAuthenticationExtensions
     /// <summary>
     /// This method add a way to select the right authentication scheme based on the incoming request/token.
     /// </summary>
-    internal static AuthenticationBuilder AddCustomPolicyScheme(this AuthenticationBuilder builder, KeycloakConfiguration configuration, string multiSchemeName)
+    internal static AuthenticationBuilder AddCustomPolicyScheme(this AuthenticationBuilder builder, KeycloakConfiguration? configuration, string multiSchemeName)
     {
         return builder.AddPolicyScheme(multiSchemeName, multiSchemeName, options =>
         {
@@ -79,9 +79,9 @@ public static class TokenAuthenticationExtensions
         });
     }
 
-    private static string GetSchemeToUse(KeycloakConfiguration configuration, HttpContext context)
+    private static string GetSchemeToUse(KeycloakConfiguration? configuration, HttpContext context)
     {
-        string authorization = context.Request.Headers[HeaderNames.Authorization];
+        string? authorization = context.Request.Headers[HeaderNames.Authorization].FirstOrDefault();
         if (string.IsNullOrEmpty(authorization) || !authorization.StartsWith("Bearer "))
             return CustomAuthSchemes.RegularUserAuthentication;
         var token = authorization.Substring("Bearer ".Length).Trim();
@@ -111,7 +111,7 @@ public static class TokenAuthenticationExtensions
         return selectedScheme;
     }
 
-    private static bool IsKeycloakToken(KeycloakConfiguration configuration, JwtSecurityTokenHandler jwtHandler, string token)
+    private static bool IsKeycloakToken(KeycloakConfiguration? configuration, JwtSecurityTokenHandler jwtHandler, string token)
         => configuration != null && jwtHandler.ReadJwtToken(token).Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Iss)?.Value == configuration.ValidIssuer;
 
     private static bool IsRegularUser(JwtSecurityTokenHandler jwtHandler, string token)

@@ -11,7 +11,7 @@ namespace Cause.SecurityManagement.Wolverine.Tests.Features.Authentication;
 [TestFixture]
 public class GetAuthenticationStateEndpointTests
 {
-    private IEntityAuthenticator authenticator;
+    private IEntityAuthenticator authenticator = null!;
 
     [SetUp]
     public void SetUp() => authenticator = Substitute.For<IEntityAuthenticator>();
@@ -42,7 +42,7 @@ public class GetAuthenticationStateEndpointTests
 [TestFixture]
 public class RecoverAccountEndpointTests
 {
-    private IEntityAuthenticator authenticator;
+    private IEntityAuthenticator authenticator = null!;
 
     [SetUp]
     public void SetUp() => authenticator = Substitute.For<IEntityAuthenticator>();
@@ -60,7 +60,7 @@ public class RecoverAccountEndpointTests
 [TestFixture]
 public class ValidateRecoverAccountEndpointTests
 {
-    private IEntityAuthenticator authenticator;
+    private IEntityAuthenticator authenticator = null!;
 
     [SetUp]
     public void SetUp() => authenticator = Substitute.For<IEntityAuthenticator>();
@@ -93,7 +93,7 @@ public class ValidateRecoverAccountEndpointTests
 [TestFixture]
 public class SetPasswordEndpointTests
 {
-    private IEntityAuthenticator authenticator;
+    private IEntityAuthenticator authenticator = null!;
 
     [SetUp]
     public void SetUp() => authenticator = Substitute.For<IEntityAuthenticator>();

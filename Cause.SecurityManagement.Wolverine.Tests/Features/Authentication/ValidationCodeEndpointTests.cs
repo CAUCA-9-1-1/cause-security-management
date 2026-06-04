@@ -14,7 +14,7 @@ namespace Cause.SecurityManagement.Wolverine.Tests.Features.Authentication;
 [TestFixture]
 public class SendValidationCodeEndpointTests
 {
-    private IEntityAuthenticator authenticator;
+    private IEntityAuthenticator authenticator = null!;
 
     [SetUp]
     public void SetUp() => authenticator = Substitute.For<IEntityAuthenticator>();
@@ -43,7 +43,7 @@ public class SendValidationCodeEndpointTests
 [TestFixture]
 public class VerifyValidationCodeEndpointTests
 {
-    private IEntityAuthenticator authenticator;
+    private IEntityAuthenticator authenticator = null!;
 
     [SetUp]
     public void SetUp() => authenticator = Substitute.For<IEntityAuthenticator>();

@@ -18,7 +18,7 @@ namespace Cause.SecurityManagement.Wolverine.Tests.Features.ExternalSystem;
 [TestFixture]
 public class ExternalSystemLogonEndpointTests
 {
-    private IExternalSystemAuthenticationService svc;
+    private IExternalSystemAuthenticationService svc = null!;
 
     [SetUp]
     public void SetUp() => svc = Substitute.For<IExternalSystemAuthenticationService>();
@@ -50,9 +50,9 @@ public class ExternalSystemLogonEndpointTests
 [TestFixture]
 public class ExternalSystemRefreshEndpointTests
 {
-    private IExternalSystemAuthenticationService svc;
-    private ILogger<ExternalSystemRefreshEndpoint> logger;
-    private DefaultHttpContext httpContext;
+    private IExternalSystemAuthenticationService svc = null!;
+    private ILogger<ExternalSystemRefreshEndpoint> logger = null!;
+    private DefaultHttpContext httpContext = null!;
 
     private readonly TokenRefreshResult tokens = new() { AccessToken = "at", RefreshToken = "rt" };
 

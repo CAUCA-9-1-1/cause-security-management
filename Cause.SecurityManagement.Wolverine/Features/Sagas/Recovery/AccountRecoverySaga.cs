@@ -20,7 +20,7 @@ namespace Cause.SecurityManagement.Wolverine.Features.Sagas.Recovery;
 public class AccountRecoverySaga : Saga
 {
     /// <summary>Saga correlation key — the trimmed username or email used to initiate recovery.</summary>
-    public string Id { get; set; }
+    public string Id { get; set; } = string.Empty;
 
     // -------------------------------------------------------------------------
     // Start — sends the recovery code

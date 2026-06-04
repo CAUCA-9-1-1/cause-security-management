@@ -14,7 +14,7 @@ namespace Cause.SecurityManagement.Authentication;
 
 internal static class KeycloakAuthenticationBuilder
 {
-    internal static AuthenticationBuilder AddKeycloakAuthenticationBuilderWhenNeeded(this AuthenticationBuilder builder, KeycloakConfiguration configuration)
+    internal static AuthenticationBuilder AddKeycloakAuthenticationBuilderWhenNeeded(this AuthenticationBuilder builder, KeycloakConfiguration? configuration)
     {
         return configuration != null ? builder.AddKeycloakJwtBearer(configuration) : builder;
     }

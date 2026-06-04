@@ -12,9 +12,9 @@
     <Description>ASP.NET Core HTTP integration (controllers, authentication, authorization) for Cause.SecurityManagement.Core.</Description>
     <Copyright>CAUCA 9-1-1 (c) 2025</Copyright>
     <PackageTags>Cause Security Management AspNetCore Http Controllers Cauca</PackageTags>
-    <Version>10.1.2</Version>
-    <AssemblyVersion>10.1.2</AssemblyVersion>
-    <FileVersion>10.1.2</FileVersion>
+    <Version>10.2.0-experimental1</Version>
+    <AssemblyVersion>10.2.0</AssemblyVersion>
+    <FileVersion>10.2.0</FileVersion>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>

@@ -10,7 +10,7 @@ using Cause.SecurityManagement.Core;
 
 namespace Cause.SecurityManagement.Authentication;
 
-internal sealed class MultiJwtClaimsTransformer(IOptions<SecurityConfiguration> configuration, IOptions<KeycloakConfiguration> keycloakConfiguration = null) : IClaimsTransformation
+internal sealed class MultiJwtClaimsTransformer(IOptions<SecurityConfiguration> configuration, IOptions<KeycloakConfiguration>? keycloakConfiguration = null) : IClaimsTransformation
 {
     public const string AuthenticationSource = "auth_source";
 

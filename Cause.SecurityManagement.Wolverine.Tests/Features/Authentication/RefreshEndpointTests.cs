@@ -16,9 +16,9 @@ namespace Cause.SecurityManagement.Wolverine.Tests.Features.Authentication;
 [TestFixture]
 public class RefreshEndpointTests
 {
-    private IEntityTokenRefresher tokenRefresher;
-    private ILogger<RefreshEndpoint> logger;
-    private DefaultHttpContext httpContext;
+    private IEntityTokenRefresher tokenRefresher = null!;
+    private ILogger<RefreshEndpoint> logger = null!;
+    private DefaultHttpContext httpContext = null!;
 
     private readonly TokenRefreshResult tokens = new() { AccessToken = "old", RefreshToken = "refresh" };
 
