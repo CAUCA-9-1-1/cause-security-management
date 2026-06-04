@@ -1,12 +1,8 @@
 using Cause.SecurityManagement.Models.DataTransferObjects;
 using Cause.SecurityManagement.Core.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Swashbuckle.AspNetCore.Annotations;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Cause.SecurityManagement.Core;
 
 namespace Cause.SecurityManagement.Controllers;

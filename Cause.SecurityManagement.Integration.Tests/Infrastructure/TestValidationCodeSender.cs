@@ -1,8 +1,5 @@
 using Cause.SecurityManagement.Core.Authentication.MultiFactor;
-using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Models.ValidationCode;
-using System;
-using System.Threading.Tasks;
 
 namespace Cause.SecurityManagement.Integration.Tests.Infrastructure;
 

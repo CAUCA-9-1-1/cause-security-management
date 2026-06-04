@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using AwesomeAssertions;
 using Cause.SecurityManagement.Core.Authentication.MultiFactor;
 using Cause.SecurityManagement.Models.DataTransferObjects;

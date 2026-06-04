@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Antiforgery;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Cause.SecurityManagement.Authentication.Antiforgery
 {

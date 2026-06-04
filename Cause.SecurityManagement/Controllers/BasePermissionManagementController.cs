@@ -1,8 +1,5 @@
-using System;
-using System.Collections.Generic;
 using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Core.Services;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 

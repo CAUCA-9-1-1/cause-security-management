@@ -2,7 +2,6 @@ using AwesomeAssertions;
 using Cause.SecurityManagement.Integration.Tests.Infrastructure;
 using Cause.SecurityManagement.Core.Repositories;
 using Cause.SecurityManagement.Core.Services;
-using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 
 namespace Cause.SecurityManagement.Integration.Tests.Registration;

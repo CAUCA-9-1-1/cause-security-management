@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using Cause.SecurityManagement.Models.DataTransferObjects;
 using Cause.SecurityManagement.Core.Services;
 using Wolverine;

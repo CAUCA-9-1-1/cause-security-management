@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-
-namespace Cause.SecurityManagement.Authentication;
+﻿namespace Cause.SecurityManagement.Authentication;
 
 public static class HeadersExtensions
 {
