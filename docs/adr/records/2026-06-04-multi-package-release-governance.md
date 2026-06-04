@@ -1,13 +1,13 @@
 # Multi-Package Release Governance For SecurityManagement Libraries
 
-* Status: proposed
+* Status: accepted
 * Date: 2026-06-04
 * Deciders: Cause.SecurityManagement maintainers
 * Technical Story: Package release consistency
 
 ## Context and Problem Statement
 
-The repository ships multiple NuGet packages (`Cause.SecurityManagement.Core`, `Cause.SecurityManagement`, and `Cause.SecurityManagement.Wolverine`) with explicit architectural boundaries. Consumers often depend on more than one package, so releases require coordinated versioning and compatibility governance.
+The repository ships multiple NuGet packages (`Cause.SecurityManagement.Models`, `Cause.SecurityManagement.Core`, `Cause.SecurityManagement`, and `Cause.SecurityManagement.Wolverine`) with explicit architectural boundaries. Consumers often depend on more than one package, so releases require coordinated versioning and compatibility governance.
 
 ## Decision Drivers
 
@@ -32,8 +32,8 @@ Chosen option: **Option A**, because these packages represent one security platf
 * Bad: Release orchestration overhead increases for small changes.
 * Bad: Packaging automation must enforce compatibility checks to avoid manual errors.
 
-## Implementation Plan
-<!-- Crucial section so Claude Code knows how to execute it -->
-- [ ] Task 1: Define and document semver bump rules for each package based on API and behavior changes.
-- [ ] Task 2: Add release verification that builds/tests all package projects before publishing.
-- [ ] Task 3: Include release notes indicating cross-package compatibility expectations for each published version set.
+## Maintenance Invariants
+<!-- Behaviors to preserve; this decision is implemented -->
+- Keep semver bump rules per package documented and current in `docs/RELEASING.md`.
+- Keep `release.ps1` as the release gate: it verifies version coordination, then builds and tests all packable projects before any package is pushed.
+- Maintain release notes that describe cross-package compatibility expectations for each published version set.
