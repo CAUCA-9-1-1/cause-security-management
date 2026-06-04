@@ -2,65 +2,64 @@
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Antiforgery;
+using Microsoft.AspNetCore.Authentication;
+using System.Security.Claims;
 
-namespace Cause.SecurityManagement.Authentication.Antiforgery
+namespace Cause.SecurityManagement.Authentication.Antiforgery;
+
+[AttributeUsage(AttributeTargets.Method|AttributeTargets.Class)]
+public class AuthorizeOrAntiforgeryAttribute : BaseAntiforgery
 {
-    public class AuthorizeOrAntiforgeryAttribute : BaseAntiforgery
+    public override async void OnActionExecuting(ActionExecutingContext context)
     {
-        public override async void OnActionExecuting(ActionExecutingContext filterContext)
+        Console.WriteLine("Validation authorization");
+
+        var authorize = await IsAuthorize(context);
+        var antiforgery = await HasAntiforgery(context);
+        var isFromMobile = RequestIsFromMobile(context.HttpContext.Request);
+        var dev = IsDev(context);
+
+        if (authorize || antiforgery || isFromMobile || dev)
         {
-            Console.WriteLine("Validation authorization");
-
-            var authorize = IsAuthorize(filterContext);
-            var antiforgery = await HasAntiforgery(filterContext);
-            var dev = IsDev(filterContext);
-
-            if (authorize || antiforgery || dev)
-            {
-                base.OnActionExecuting(filterContext);
-            }
-            else
-            {
-                Console.WriteLine($"Is authorize : {authorize}, Has Antiforgery : {antiforgery}, Is DEV : {dev}");
-                filterContext.Result = new UnauthorizedResult();
-            }
+            base.OnActionExecuting(context);
         }
-
-        private static async Task<bool> HasAntiforgery(ActionExecutingContext filterContext)
+        else
         {
-            var antiforgery = filterContext.HttpContext.RequestServices.GetRequiredService<IAntiforgery>();
-
-            try
-            {
-                if (RequestIsFromMobile(filterContext.HttpContext.Request) && !string.IsNullOrEmpty(filterContext.HttpContext.Request.Headers["X-CSRF-Cookie"]))
-                {
-                    return !string.IsNullOrEmpty(filterContext.HttpContext.Request.Headers["X-CSRF-Token"]);
-                }
-
-                await antiforgery.ValidateRequestAsync(filterContext.HttpContext);
-                return true;
-            }
-            catch (AntiforgeryValidationException e)
-            {
-                Console.WriteLine($"Antiforgery is invalid : {e.Message}");
-                return false;
-            }
+            Console.WriteLine($"Is authorize : {authorize}, Has Antiforgery : {antiforgery}, Is From Mobile : {isFromMobile}, Is DEV : {dev}");
+            context.Result = new UnauthorizedResult();
         }
+    }
 
-        private static bool IsAuthorize(ActionExecutingContext filterContext)
+    private static async Task<bool> HasAntiforgery(ActionExecutingContext filterContext)
+    {
+        var antiforgery = filterContext.HttpContext.RequestServices.GetService<IAntiforgery>();
+
+        try
         {
-            if (filterContext.Controller is ControllerBase controller)
-            {
-                return controller.User.HasClaim(claim => claim.Type == JwtRegisteredClaimNames.Sid);
-            }
-
+            await antiforgery!.ValidateRequestAsync(filterContext.HttpContext);
+            return true;
+        }
+        catch (AntiforgeryValidationException e)
+        {
+            Console.WriteLine($"Antiforgery is invalid : {e.Message}");
             return false;
         }
+    }
 
-        private static bool IsDev(ActionExecutingContext filterContext)
-        {
-            var env = filterContext.HttpContext.RequestServices.GetRequiredService<IWebHostEnvironment>();
-            return env.IsDevelopment();
-        }
+    private static async Task<bool> IsAuthorize(ActionExecutingContext filterContext)
+    {
+        var authResult = await filterContext.HttpContext.AuthenticateAsync();
+        if (!authResult.Succeeded)
+            return false;
+
+        var user = authResult.Principal;
+        return user.HasClaim(c => c.Type == JwtRegisteredClaimNames.Sid)
+               || user.HasClaim(c => c.Type == ClaimTypes.Sid);
+    }
+
+    private static bool IsDev(ActionExecutingContext filterContext)
+    {
+        var env = filterContext.HttpContext.RequestServices.GetService<IWebHostEnvironment>();
+        return env!.IsDevelopment();
     }
 }
