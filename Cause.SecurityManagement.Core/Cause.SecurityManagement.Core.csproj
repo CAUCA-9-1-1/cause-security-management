@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <PackageReference Include="Cause.Core.DataLayerExtensions" Version="10.0.0" />
+    <PackageReference Include="FluentValidation" Version="11.*" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.*" />
     <PackageReference Include="Semver" Version="3.0.0" />
   </ItemGroup>

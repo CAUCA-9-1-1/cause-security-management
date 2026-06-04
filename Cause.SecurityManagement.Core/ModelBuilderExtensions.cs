@@ -12,7 +12,7 @@ public static class ModelBuilderExtensions
         new ModuleMapping().Map(modelBuilder);
         new ModulePermissionMapping().Map(modelBuilder);
         new GroupMapping().Map(modelBuilder);
-        new UserGroupMapping().Map(modelBuilder);            
+        new UserGroupMapping().Map(modelBuilder);
         new UserPermissionMapping().Map(modelBuilder);
         new UserTokenMapping().Map(modelBuilder);
         new UserValidationCodeMapping().Map(modelBuilder);
