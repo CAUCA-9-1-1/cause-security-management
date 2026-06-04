@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Models.DataTransferObjects.Management;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +12,7 @@ namespace Cause.SecurityManagement.Core.Services.Management
         : IPermissionCatalogService
         where TUser : User, new()
     {
-        public List<PermissionDto> GetPermissions()
+        public Task<List<PermissionDto>> GetPermissionsAsync(CancellationToken cancellationToken = default)
         {
             return context.ModulePermissions.AsNoTracking()
                 .OrderBy(permission => permission.Sequence)
@@ -21,7 +23,7 @@ namespace Cause.SecurityManagement.Core.Services.Management
                     Tag = permission.Tag,
                     Name = permission.Name,
                 })
-                .ToList();
+                .ToListAsync(cancellationToken);
         }
     }
 }

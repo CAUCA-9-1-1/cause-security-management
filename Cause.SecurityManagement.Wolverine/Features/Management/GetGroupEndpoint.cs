@@ -7,9 +7,12 @@ namespace Cause.SecurityManagement.Wolverine.Features.Management;
 public class GetGroupEndpoint
 {
     [WolverineGet("/GroupManagement/{groupId}")]
-    public static IResult Handle(Guid groupId, IGroupManagementApiService groupService)
+    public static async Task<IResult> Handle(
+        Guid groupId,
+        IGroupManagementApiService groupService,
+        CancellationToken cancellationToken)
     {
-        var group = groupService.GetGroup(groupId);
+        var group = await groupService.GetGroupAsync(groupId, cancellationToken);
         return group is null ? Results.NotFound() : Results.Ok(group);
     }
 }

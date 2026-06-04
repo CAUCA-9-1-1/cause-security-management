@@ -7,8 +7,11 @@ namespace Cause.SecurityManagement.Wolverine.Features.Management;
 public class GetGroupUserListEndpoint
 {
     [WolverineGet("/GroupManagement/{groupId}/UserList")]
-    public static IResult Handle(Guid groupId, IGroupManagementApiService groupService)
+    public static async Task<IResult> Handle(
+        Guid groupId,
+        IGroupManagementApiService groupService,
+        CancellationToken cancellationToken)
     {
-        return Results.Ok(groupService.GetGroupUsers(groupId));
+        return Results.Ok(await groupService.GetGroupUsersAsync(groupId, cancellationToken));
     }
 }

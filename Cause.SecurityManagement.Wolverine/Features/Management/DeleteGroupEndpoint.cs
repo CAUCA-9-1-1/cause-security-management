@@ -7,8 +7,13 @@ namespace Cause.SecurityManagement.Wolverine.Features.Management;
 public class DeleteGroupEndpoint
 {
     [WolverineDelete("/GroupManagement/{groupId}")]
-    public static IResult Handle(Guid groupId, IGroupManagementApiService groupService)
+    public static async Task<IResult> Handle(
+        Guid groupId,
+        IGroupManagementApiService groupService,
+        CancellationToken cancellationToken)
     {
-        return groupService.DeleteGroup(groupId) ? Results.NoContent() : Results.NotFound();
+        return await groupService.DeleteGroupAsync(groupId, cancellationToken)
+            ? Results.NoContent()
+            : Results.NotFound();
     }
 }

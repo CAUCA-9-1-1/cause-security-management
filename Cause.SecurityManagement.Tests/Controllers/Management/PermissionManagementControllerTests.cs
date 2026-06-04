@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using AwesomeAssertions;
 using Cause.SecurityManagement.Controllers.Management;
 using Cause.SecurityManagement.Core.Services.Management;
@@ -24,15 +26,15 @@ namespace Cause.SecurityManagement.Tests.Controllers.Management
         }
 
         [Test]
-        public void WhenCatalogRequested_GetPermissions_ShouldReturnOkWithCatalog()
+        public async Task WhenCatalogRequested_GetPermissions_ShouldReturnOkWithCatalog()
         {
             var catalog = new List<PermissionDto>
             {
                 new() { Id = Guid.NewGuid(), IdModulePermission = Guid.NewGuid(), Tag = "module.access", Name = "Access the module" }
             };
-            permissionService.GetPermissions().Returns(catalog);
+            permissionService.GetPermissionsAsync(Arg.Any<CancellationToken>()).Returns(catalog);
 
-            var result = controller.GetPermissions();
+            var result = await controller.GetPermissionsAsync(CancellationToken.None);
 
             (result.Result as OkObjectResult)?.Value.Should().BeEquivalentTo(catalog);
         }

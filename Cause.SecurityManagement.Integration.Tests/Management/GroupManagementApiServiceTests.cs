@@ -13,7 +13,7 @@ public class GroupManagementApiServiceTests : IntegrationTestBase
     private IGroupManagementApiService Service => Resolve<IGroupManagementApiService>();
 
     [Test]
-    public void WhenGroupIsNew_SaveGroup_ShouldInsertGroupWithPermissionsAndMembers()
+    public async Task WhenGroupIsNew_SaveGroup_ShouldInsertGroupWithPermissionsAndMembers()
     {
         var user = SeedUser("Ada", "Lovelace");
         var permission = SeedModulePermission();
@@ -26,17 +26,17 @@ public class GroupManagementApiServiceTests : IntegrationTestBase
             Users = [new GroupUserDto { Id = user.Id }],
         };
 
-        var saved = Service.SaveGroup(group);
+        var saved = await Service.SaveGroupAsync(group);
 
         saved.Name.Should().Be(group.Name);
         saved.AssignableByAllUsers.Should().BeTrue();
         saved.Permissions.Should().ContainSingle().Which.IdModulePermission.Should().Be(permission.Id);
         saved.Users.Should().ContainSingle().Which.FullName.Should().Be("Ada Lovelace");
-        Context.Groups.Find(group.Id).Should().NotBeNull();
+        (await Context.Groups.FindAsync(group.Id)).Should().NotBeNull();
     }
 
     [Test]
-    public void WhenGroupExists_SaveGroup_ShouldUpdateNameAndReconcileChildren()
+    public async Task WhenGroupExists_SaveGroup_ShouldUpdateNameAndReconcileChildren()
     {
         var keptUser = SeedUser("Grace", "Hopper");
         var droppedUser = SeedUser("Alan", "Turing");
@@ -47,7 +47,7 @@ public class GroupManagementApiServiceTests : IntegrationTestBase
 
         var groupId = Guid.NewGuid();
         var keptPermissionId = Guid.NewGuid();
-        Service.SaveGroup(new GroupDto
+        await Service.SaveGroupAsync(new GroupDto
         {
             Id = groupId,
             Name = "Original",
@@ -59,7 +59,7 @@ public class GroupManagementApiServiceTests : IntegrationTestBase
             Users = [new GroupUserDto { Id = keptUser.Id }, new GroupUserDto { Id = droppedUser.Id }],
         });
 
-        var updated = Service.SaveGroup(new GroupDto
+        var updated = await Service.SaveGroupAsync(new GroupDto
         {
             Id = groupId,
             Name = "Renamed",
@@ -80,12 +80,12 @@ public class GroupManagementApiServiceTests : IntegrationTestBase
     }
 
     [Test]
-    public void WhenGroupExists_DeleteGroup_ShouldRemoveGroupAndDependents()
+    public async Task WhenGroupExists_DeleteGroup_ShouldRemoveGroupAndDependents()
     {
         var user = SeedUser("Linus", "Torvalds");
         var permission = SeedModulePermission();
         var groupId = Guid.NewGuid();
-        Service.SaveGroup(new GroupDto
+        await Service.SaveGroupAsync(new GroupDto
         {
             Id = groupId,
             Name = $"Group_{Guid.NewGuid():N}",
@@ -93,39 +93,39 @@ public class GroupManagementApiServiceTests : IntegrationTestBase
             Users = [new GroupUserDto { Id = user.Id }],
         });
 
-        var deleted = Service.DeleteGroup(groupId);
+        var deleted = await Service.DeleteGroupAsync(groupId);
 
         deleted.Should().BeTrue();
-        Context.Groups.Find(groupId).Should().BeNull();
+        (await Context.Groups.FindAsync(groupId)).Should().BeNull();
         Context.GroupPermissions.Any(p => p.IdGroup == groupId).Should().BeFalse();
         Context.UserGroups.Any(u => u.IdGroup == groupId).Should().BeFalse();
     }
 
     [Test]
-    public void WhenGroupDoesNotExist_DeleteGroup_ShouldReturnFalse()
+    public async Task WhenGroupDoesNotExist_DeleteGroup_ShouldReturnFalse()
     {
-        Service.DeleteGroup(Guid.NewGuid()).Should().BeFalse();
+        (await Service.DeleteGroupAsync(Guid.NewGuid())).Should().BeFalse();
     }
 
     [Test]
-    public void WhenGroupDoesNotExist_GetGroup_ShouldReturnNull()
+    public async Task WhenGroupDoesNotExist_GetGroup_ShouldReturnNull()
     {
-        Service.GetGroup(Guid.NewGuid()).Should().BeNull();
+        (await Service.GetGroupAsync(Guid.NewGuid())).Should().BeNull();
     }
 
     [Test]
-    public void WhenGroupHasMembers_GetGroupUsers_ShouldReturnThem()
+    public async Task WhenGroupHasMembers_GetGroupUsers_ShouldReturnThem()
     {
         var user = SeedUser("Margaret", "Hamilton");
         var groupId = Guid.NewGuid();
-        Service.SaveGroup(new GroupDto
+        await Service.SaveGroupAsync(new GroupDto
         {
             Id = groupId,
             Name = $"Group_{Guid.NewGuid():N}",
             Users = [new GroupUserDto { Id = user.Id }],
         });
 
-        var members = Service.GetGroupUsers(groupId);
+        var members = await Service.GetGroupUsersAsync(groupId);
 
         members.Should().ContainSingle();
         members[0].FirstName.Should().Be("Margaret");
@@ -133,14 +133,14 @@ public class GroupManagementApiServiceTests : IntegrationTestBase
     }
 
     [Test]
-    public void WhenSearching_SearchUsers_ShouldMatchFirstOrLastNameCaseInsensitiveAndExcludeIds()
+    public async Task WhenSearching_SearchUsers_ShouldMatchFirstOrLastNameCaseInsensitiveAndExcludeIds()
     {
         var token = $"Z{Guid.NewGuid():N}";
         var first = SeedUser($"{token}first", "Smith");
         var second = SeedUser("John", $"{token}last");
         SeedUser("Unrelated", "Person");
 
-        var result = Service.SearchUsers(new UserSearchRequestDto
+        var result = await Service.SearchUsersAsync(new UserSearchRequestDto
         {
             Query = token.ToUpper(),
             Skip = 0,
@@ -153,27 +153,27 @@ public class GroupManagementApiServiceTests : IntegrationTestBase
     }
 
     [Test]
-    public void WhenSearching_SearchUsers_ShouldPageAndReportTotalBeforePaging()
+    public async Task WhenSearching_SearchUsers_ShouldPageAndReportTotalBeforePaging()
     {
         var token = $"Z{Guid.NewGuid():N}";
         SeedUser($"{token}a", "User");
         SeedUser($"{token}b", "User");
         SeedUser($"{token}c", "User");
 
-        var result = Service.SearchUsers(new UserSearchRequestDto { Query = token, Skip = 1, Top = 1 });
+        var result = await Service.SearchUsersAsync(new UserSearchRequestDto { Query = token, Skip = 1, Top = 1 });
 
         result.TotalCount.Should().Be(3);
         result.Items.Should().ContainSingle();
     }
 
     [Test]
-    public void WhenSearching_SearchUsers_ShouldOnlyReturnActiveUsers()
+    public async Task WhenSearching_SearchUsers_ShouldOnlyReturnActiveUsers()
     {
         var token = $"Z{Guid.NewGuid():N}";
         var active = SeedUser($"{token}active", "User");
         SeedUser($"{token}inactive", "User", isActive: false);
 
-        var result = Service.SearchUsers(new UserSearchRequestDto { Query = token, Skip = 0, Top = 50 });
+        var result = await Service.SearchUsersAsync(new UserSearchRequestDto { Query = token, Skip = 0, Top = 50 });
 
         result.TotalCount.Should().Be(1);
         result.Items.Should().ContainSingle().Which.Id.Should().Be(active.Id);

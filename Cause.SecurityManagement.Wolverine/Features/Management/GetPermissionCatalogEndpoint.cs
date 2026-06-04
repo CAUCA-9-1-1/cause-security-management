@@ -7,8 +7,10 @@ namespace Cause.SecurityManagement.Wolverine.Features.Management;
 public class GetPermissionCatalogEndpoint
 {
     [WolverineGet("/PermissionManagement")]
-    public static IResult Handle(IPermissionCatalogService permissionService)
+    public static async Task<IResult> Handle(
+        IPermissionCatalogService permissionService,
+        CancellationToken cancellationToken)
     {
-        return Results.Ok(permissionService.GetPermissions());
+        return Results.Ok(await permissionService.GetPermissionsAsync(cancellationToken));
     }
 }

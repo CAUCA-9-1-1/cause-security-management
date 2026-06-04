@@ -9,15 +9,16 @@ namespace Cause.SecurityManagement.Wolverine.Features.Management;
 public class SaveGroupEndpoint
 {
     [WolverinePost("/GroupManagement")]
-    public static IResult Handle(
+    public static async Task<IResult> Handle(
         GroupDto group,
         IGroupManagementApiService groupService,
-        IValidator<GroupDto> validator)
+        IValidator<GroupDto> validator,
+        CancellationToken cancellationToken)
     {
-        var validation = validator.Validate(group);
+        var validation = await validator.ValidateAsync(group, cancellationToken);
         if (!validation.IsValid)
             return Results.ValidationProblem(validation.ToDictionary());
 
-        return Results.Ok(groupService.SaveGroup(group));
+        return Results.Ok(await groupService.SaveGroupAsync(group, cancellationToken));
     }
 }

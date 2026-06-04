@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using AwesomeAssertions;
 using Cause.SecurityManagement.Controllers.Management;
 using Cause.SecurityManagement.Core.Services.Management;
@@ -35,94 +37,94 @@ namespace Cause.SecurityManagement.Tests.Controllers.Management
         }
 
         [Test]
-        public void WhenGroupExists_DeleteGroup_ShouldReturnNoContent()
+        public async Task WhenGroupExists_DeleteGroup_ShouldReturnNoContent()
         {
             var groupId = Guid.NewGuid();
-            groupService.DeleteGroup(groupId).Returns(true);
+            groupService.DeleteGroupAsync(groupId, Arg.Any<CancellationToken>()).Returns(true);
 
-            var result = controller.DeleteGroup(groupId);
+            var result = await controller.DeleteGroupAsync(groupId, CancellationToken.None);
 
             result.Should().BeOfType<NoContentResult>();
         }
 
         [Test]
-        public void WhenGroupDoesNotExist_DeleteGroup_ShouldReturnNotFound()
+        public async Task WhenGroupDoesNotExist_DeleteGroup_ShouldReturnNotFound()
         {
-            groupService.DeleteGroup(Arg.Any<Guid>()).Returns(false);
+            groupService.DeleteGroupAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(false);
 
-            var result = controller.DeleteGroup(Guid.NewGuid());
+            var result = await controller.DeleteGroupAsync(Guid.NewGuid(), CancellationToken.None);
 
             result.Should().BeOfType<NotFoundResult>();
         }
 
         [Test]
-        public void WhenGroupIsValid_SaveGroup_ShouldReturnOkWithSavedGroup()
+        public async Task WhenGroupIsValid_SaveGroup_ShouldReturnOkWithSavedGroup()
         {
             var group = new GroupDto { Id = Guid.NewGuid(), Name = "Dispatchers" };
             var saved = new GroupDto { Id = group.Id, Name = "Dispatchers" };
-            validator.Validate(Arg.Any<GroupDto>()).Returns(new ValidationResult());
-            groupService.SaveGroup(group).Returns(saved);
+            validator.ValidateAsync(Arg.Any<GroupDto>(), Arg.Any<CancellationToken>()).Returns(new ValidationResult());
+            groupService.SaveGroupAsync(group, Arg.Any<CancellationToken>()).Returns(saved);
 
-            var result = controller.SaveGroup(group);
+            var result = await controller.SaveGroupAsync(group, CancellationToken.None);
 
             (result.Result as OkObjectResult)?.Value.Should().Be(saved);
         }
 
         [Test]
-        public void WhenGroupIsInvalid_SaveGroup_ShouldReturnBadRequest()
+        public async Task WhenGroupIsInvalid_SaveGroup_ShouldReturnBadRequest()
         {
             var group = new GroupDto { Id = Guid.NewGuid() };
-            validator.Validate(Arg.Any<GroupDto>())
+            validator.ValidateAsync(Arg.Any<GroupDto>(), Arg.Any<CancellationToken>())
                 .Returns(new ValidationResult(new[] { new ValidationFailure("Name", "Name is required") }));
 
-            var result = controller.SaveGroup(group);
+            var result = await controller.SaveGroupAsync(group, CancellationToken.None);
 
             (result.Result as ObjectResult)?.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
-            groupService.DidNotReceive().SaveGroup(Arg.Any<GroupDto>());
+            await groupService.DidNotReceive().SaveGroupAsync(Arg.Any<GroupDto>(), Arg.Any<CancellationToken>());
         }
 
         [Test]
-        public void WhenGroupExists_GetGroup_ShouldReturnOkWithGroup()
+        public async Task WhenGroupExists_GetGroup_ShouldReturnOkWithGroup()
         {
             var groupId = Guid.NewGuid();
             var group = new GroupDto { Id = groupId, Name = "Dispatchers" };
-            groupService.GetGroup(groupId).Returns(group);
+            groupService.GetGroupAsync(groupId, Arg.Any<CancellationToken>()).Returns(group);
 
-            var result = controller.GetGroup(groupId);
+            var result = await controller.GetGroupAsync(groupId, CancellationToken.None);
 
             (result.Result as OkObjectResult)?.Value.Should().Be(group);
         }
 
         [Test]
-        public void WhenGroupDoesNotExist_GetGroup_ShouldReturnNotFound()
+        public async Task WhenGroupDoesNotExist_GetGroup_ShouldReturnNotFound()
         {
-            groupService.GetGroup(Arg.Any<Guid>()).Returns((GroupDto)null);
+            groupService.GetGroupAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns((GroupDto)null);
 
-            var result = controller.GetGroup(Guid.NewGuid());
+            var result = await controller.GetGroupAsync(Guid.NewGuid(), CancellationToken.None);
 
             result.Result.Should().BeOfType<NotFoundResult>();
         }
 
         [Test]
-        public void WhenGroupHasMembers_GetUserList_ShouldReturnOkWithMembers()
+        public async Task WhenGroupHasMembers_GetUserList_ShouldReturnOkWithMembers()
         {
             var groupId = Guid.NewGuid();
             var members = new List<UserForGroupDto> { new() { Id = Guid.NewGuid(), FirstName = "Ada", LastName = "Lovelace" } };
-            groupService.GetGroupUsers(groupId).Returns(members);
+            groupService.GetGroupUsersAsync(groupId, Arg.Any<CancellationToken>()).Returns(members);
 
-            var result = controller.GetUserList(groupId);
+            var result = await controller.GetUserListAsync(groupId, CancellationToken.None);
 
             (result.Result as OkObjectResult)?.Value.Should().BeEquivalentTo(members);
         }
 
         [Test]
-        public void WhenSearching_SearchUsers_ShouldReturnOkWithResult()
+        public async Task WhenSearching_SearchUsers_ShouldReturnOkWithResult()
         {
             var request = new UserSearchRequestDto { Query = "ada", Skip = 0, Top = 10 };
             var searchResult = new UserSearchResultDto { Items = new List<UserForGroupDto>(), TotalCount = 0 };
-            groupService.SearchUsers(request).Returns(searchResult);
+            groupService.SearchUsersAsync(request, Arg.Any<CancellationToken>()).Returns(searchResult);
 
-            var result = controller.SearchUsers(request);
+            var result = await controller.SearchUsersAsync(request, CancellationToken.None);
 
             (result.Result as OkObjectResult)?.Value.Should().Be(searchResult);
         }

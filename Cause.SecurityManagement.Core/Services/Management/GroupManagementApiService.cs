@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Models.DataTransferObjects.Management;
 using Microsoft.EntityFrameworkCore;
@@ -11,9 +13,10 @@ namespace Cause.SecurityManagement.Core.Services.Management
         : IGroupManagementApiService
         where TUser : User, new()
     {
-        public GroupDto GetGroup(Guid groupId)
+        public async Task<GroupDto> GetGroupAsync(Guid groupId, CancellationToken cancellationToken = default)
         {
-            var group = context.Groups.AsNoTracking().FirstOrDefault(g => g.Id == groupId);
+            var group = await context.Groups.AsNoTracking()
+                .FirstOrDefaultAsync(candidate => candidate.Id == groupId, cancellationToken);
             if (group == null)
                 return null;
 
@@ -22,34 +25,41 @@ namespace Cause.SecurityManagement.Core.Services.Management
                 Id = group.Id,
                 Name = group.Name,
                 AssignableByAllUsers = group.AssignableByAllUsers,
-                Permissions = GetPermissions(groupId),
-                Users = GetMembers(groupId),
+                Permissions = await GetPermissionsAsync(groupId, cancellationToken),
+                Users = await GetMembersAsync(groupId, cancellationToken),
             };
         }
 
-        public GroupDto SaveGroup(GroupDto group)
+        public async Task<GroupDto> SaveGroupAsync(GroupDto group, CancellationToken cancellationToken = default)
         {
-            SaveGroupDetails(group);
-            ReconcilePermissions(group);
-            ReconcileMembership(group);
-            context.SaveChanges();
-            return GetGroup(group.Id);
+            await SaveGroupDetailsAsync(group, cancellationToken);
+            await ReconcilePermissionsAsync(group, cancellationToken);
+            await ReconcileMembershipAsync(group, cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
+            return await GetGroupAsync(group.Id, cancellationToken);
         }
 
-        public bool DeleteGroup(Guid groupId)
+        public async Task<bool> DeleteGroupAsync(Guid groupId, CancellationToken cancellationToken = default)
         {
-            var group = context.Groups.Find(groupId);
+            var group = await context.Groups.FindAsync([groupId], cancellationToken);
             if (group == null)
                 return false;
 
-            context.GroupPermissions.RemoveRange(context.GroupPermissions.Where(p => p.IdGroup == groupId));
-            context.UserGroups.RemoveRange(context.UserGroups.Where(u => u.IdGroup == groupId));
+            var permissions = await context.GroupPermissions
+                .Where(permission => permission.IdGroup == groupId)
+                .ToListAsync(cancellationToken);
+            var memberships = await context.UserGroups
+                .Where(membership => membership.IdGroup == groupId)
+                .ToListAsync(cancellationToken);
+
+            context.GroupPermissions.RemoveRange(permissions);
+            context.UserGroups.RemoveRange(memberships);
             context.Groups.Remove(group);
-            context.SaveChanges();
+            await context.SaveChangesAsync(cancellationToken);
             return true;
         }
 
-        public List<UserForGroupDto> GetGroupUsers(Guid groupId)
+        public Task<List<UserForGroupDto>> GetGroupUsersAsync(Guid groupId, CancellationToken cancellationToken = default)
         {
             return (
                 from membership in context.UserGroups.AsNoTracking()
@@ -61,10 +71,10 @@ namespace Cause.SecurityManagement.Core.Services.Management
                     Id = user.Id,
                     FirstName = user.FirstName,
                     LastName = user.LastName,
-                }).ToList();
+                }).ToListAsync(cancellationToken);
         }
 
-        public UserSearchResultDto SearchUsers(UserSearchRequestDto request)
+        public async Task<UserSearchResultDto> SearchUsersAsync(UserSearchRequestDto request, CancellationToken cancellationToken = default)
         {
             var query = context.Users.AsNoTracking().Where(user => user.IsActive);
 
@@ -78,7 +88,7 @@ namespace Cause.SecurityManagement.Core.Services.Management
                     (user.FirstName != null && user.FirstName.ToLower().Contains(term))
                     || (user.LastName != null && user.LastName.ToLower().Contains(term)));
 
-            var totalCount = query.Count();
+            var totalCount = await query.CountAsync(cancellationToken);
 
             var pagedQuery = query
                 .OrderBy(user => user.LastName)
@@ -87,19 +97,19 @@ namespace Cause.SecurityManagement.Core.Services.Management
             if (request.Top > 0)
                 pagedQuery = pagedQuery.Take(request.Top);
 
-            var items = pagedQuery
+            var items = await pagedQuery
                 .Select(user => new UserForGroupDto
                 {
                     Id = user.Id,
                     FirstName = user.FirstName,
                     LastName = user.LastName,
                 })
-                .ToList();
+                .ToListAsync(cancellationToken);
 
             return new UserSearchResultDto { Items = items, TotalCount = totalCount };
         }
 
-        private List<GroupPermissionDto> GetPermissions(Guid groupId)
+        private Task<List<GroupPermissionDto>> GetPermissionsAsync(Guid groupId, CancellationToken cancellationToken)
         {
             return context.GroupPermissions.AsNoTracking()
                 .Where(permission => permission.IdGroup == groupId)
@@ -110,10 +120,10 @@ namespace Cause.SecurityManagement.Core.Services.Management
                     IdModulePermission = permission.IdModulePermission,
                     IsAllowed = permission.IsAllowed,
                 })
-                .ToList();
+                .ToListAsync(cancellationToken);
         }
 
-        private List<GroupUserDto> GetMembers(Guid groupId)
+        private Task<List<GroupUserDto>> GetMembersAsync(Guid groupId, CancellationToken cancellationToken)
         {
             return (
                 from membership in context.UserGroups.AsNoTracking()
@@ -124,12 +134,12 @@ namespace Cause.SecurityManagement.Core.Services.Management
                 {
                     Id = user.Id,
                     FullName = user.FirstName + " " + user.LastName,
-                }).ToList();
+                }).ToListAsync(cancellationToken);
         }
 
-        private void SaveGroupDetails(GroupDto group)
+        private async Task SaveGroupDetailsAsync(GroupDto group, CancellationToken cancellationToken)
         {
-            var existingGroup = context.Groups.Find(group.Id);
+            var existingGroup = await context.Groups.FindAsync([group.Id], cancellationToken);
             if (existingGroup == null)
             {
                 context.Groups.Add(new Group
@@ -146,12 +156,12 @@ namespace Cause.SecurityManagement.Core.Services.Management
             }
         }
 
-        private void ReconcilePermissions(GroupDto group)
+        private async Task ReconcilePermissionsAsync(GroupDto group, CancellationToken cancellationToken)
         {
             var desiredPermissions = group.Permissions ?? new List<GroupPermissionDto>();
-            var existingPermissions = context.GroupPermissions
+            var existingPermissions = await context.GroupPermissions
                 .Where(permission => permission.IdGroup == group.Id)
-                .ToList();
+                .ToListAsync(cancellationToken);
 
             existingPermissions
                 .Where(existing => desiredPermissions.TrueForAll(desired => desired.Id != existing.Id))
@@ -179,15 +189,15 @@ namespace Cause.SecurityManagement.Core.Services.Management
             }
         }
 
-        private void ReconcileMembership(GroupDto group)
+        private async Task ReconcileMembershipAsync(GroupDto group, CancellationToken cancellationToken)
         {
             var desiredUserIds = (group.Users ?? new List<GroupUserDto>())
                 .Select(user => user.Id)
                 .Distinct()
                 .ToList();
-            var existingMemberships = context.UserGroups
+            var existingMemberships = await context.UserGroups
                 .Where(membership => membership.IdGroup == group.Id)
-                .ToList();
+                .ToListAsync(cancellationToken);
 
             existingMemberships
                 .Where(existing => !desiredUserIds.Contains(existing.IdUser))

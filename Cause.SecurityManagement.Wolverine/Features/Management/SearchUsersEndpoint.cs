@@ -8,8 +8,11 @@ namespace Cause.SecurityManagement.Wolverine.Features.Management;
 public class SearchUsersEndpoint
 {
     [WolverinePost("/GroupManagement/users/search")]
-    public static IResult Handle(UserSearchRequestDto request, IGroupManagementApiService groupService)
+    public static async Task<IResult> Handle(
+        UserSearchRequestDto request,
+        IGroupManagementApiService groupService,
+        CancellationToken cancellationToken)
     {
-        return Results.Ok(groupService.SearchUsers(request));
+        return Results.Ok(await groupService.SearchUsersAsync(request, cancellationToken));
     }
 }

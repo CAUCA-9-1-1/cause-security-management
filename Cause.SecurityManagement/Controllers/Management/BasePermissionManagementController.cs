@@ -6,8 +6,8 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace Cause.SecurityManagement.Controllers.Management;
 
 /// <summary>
-/// Abstract endpoint exposing the catalog of assignable module permissions for the group
-/// management UI. Subclass it in the host application to activate the endpoint, e.g.
+/// Abstract, fully asynchronous endpoint exposing the catalog of assignable module permissions for
+/// the group management UI. Subclass it in the host application to activate the endpoint, e.g.
 /// <c>public class PermissionManagementController(IPermissionCatalogService service)
 /// : BasePermissionManagementController(service);</c>.
 /// </summary>
@@ -25,8 +25,8 @@ public abstract class BasePermissionManagementController(IPermissionCatalogServi
     [SwaggerOperation(
         Summary = "Retrieves the permission catalog",
         Description = "Returns every assignable module permission with its localization tag and description. Requires an authenticated user.")]
-    public virtual ActionResult<List<PermissionDto>> GetPermissions()
+    public virtual async Task<ActionResult<List<PermissionDto>>> GetPermissionsAsync(CancellationToken cancellationToken)
     {
-        return Ok(PermissionService.GetPermissions());
+        return Ok(await PermissionService.GetPermissionsAsync(cancellationToken));
     }
 }
