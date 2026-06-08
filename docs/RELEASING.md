@@ -79,6 +79,18 @@ consumers that do not use the group management feature.
    .\release.ps1
    ```
 
+6. Tag the released commit and push the tag. Use the `v<MAJOR>.<MINOR>.<PATCH>`
+   convention (e.g. `v10.2.0`), matching the coordinated `<Version>`. Tag the
+   exact commit on the main branch that was published:
+
+   ```powershell
+   git tag -a v10.2.0 -m "Release 10.2.0 (final, non-experimental)"
+   git push origin v10.2.0
+   ```
+
+   Pre-release sets (`10.3.0-preview1`, `-experimental*`, etc.) are not tagged;
+   only finalized version sets get a `v*` tag.
+
 `release.ps1` is the enforcement mechanism. It will:
 - Abort immediately if any packable project version differs from the others.
 - Build the solution in Release configuration.
@@ -86,3 +98,6 @@ consumers that do not use the group management feature.
   were already run locally in this session).
 - Pack only the three published packable projects into `./artifacts/nupkg`.
 - Push each `.nupkg` to the `CaucaNuget` feed.
+
+It does **not** create the git tag — tagging is a manual step (6 above) so the
+tag is only applied once the push has actually succeeded.
