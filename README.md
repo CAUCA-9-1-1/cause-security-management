@@ -201,6 +201,110 @@ public class MyCustomAuthController : BaseAuthenticationController
 
 ---
 
+# Group & Permission Management API
+
+The library provides the backend consumed by the `@cauca-911/cauca-management` Angular library
+(the modernized group & permission management UI). It ships **abstract, fully asynchronous**
+controllers that the host application subclasses to activate, plus the data contract and services.
+Every action takes the request's `CancellationToken` and threads it all the way down to the EF Core
+queries, so a cancelled HTTP request never runs (or keeps running) its database work.
+
+The services are registered automatically by `InjectSecurityServices<TUser>()`:
+`IGroupManagementApiService`, `IUserSearchService`, `IPermissionCatalogService` and the
+`IValidator<GroupDto>`.
+
+## REST controllers
+
+Each controller has a single responsibility, so there is one abstract base per concern. Subclass
+them — the routes are inherited from the base, so an empty subclass is enough to expose them at the
+routes the Angular library expects:
+
+```csharp
+using Cause.SecurityManagement.Controllers.Management;
+
+public class GroupManagementController(
+    IGroupManagementApiService service,
+    IValidator<GroupDto> validator)
+    : BaseGroupManagementController(service, validator);
+
+public class UserSearchController(IUserSearchService service)
+    : BaseUserSearchController(service);
+
+public class PermissionManagementController(IPermissionCatalogService service)
+    : BasePermissionManagementController(service);
+```
+
+They are activated like the other library controllers, via `InjectSecurityControllers()`, and pick
+up the project's default authorization (an authenticated user is required — no `[AllowAnonymous]`).
+
+| Method | Route | Description |
+|--------|-------|-------------|
+| `DELETE` | `GroupManagement/{groupId}` | Delete a group and its dependents (`204` / `404`) |
+| `POST`   | `GroupManagement` | **Upsert** a group (client generates the ids), its permission overrides and its membership (`200` / `400`) |
+| `GET`    | `GroupManagement/{groupId}` | Full group payload (`200` / `404`) |
+| `POST`   | `UserSearch` | Server-side paged search over active users (group member selection) |
+| `GET`    | `PermissionManagement` | The assignable module-permission catalog |
+
+> `POST GroupManagement` is an upsert: the client generates the `Guid` for new groups and new
+> group-permissions, then posts the whole object. The group is inserted when its id is unknown and
+> updated otherwise; permission overrides and membership are reconciled against the payload.
+
+## Groups OData feed (owned by the consumer)
+
+The groups data grid is powered by an OData v4 feed at `GET odata/GroupList`. To keep the library
+database-agnostic and free of any OData dependency, it provides only the contract shape
+`Cause.SecurityManagement.Models.GroupListItem` (`Id`, `Name`, `AssignableByAllUsers`,
+`SearchableGroup`, `SearchableUsers`) and the **abstract** `BaseGroupListController`:
+
+```csharp
+public abstract class BaseGroupListController : ControllerBase
+{
+    public abstract IQueryable<GroupListItem> Get();
+}
+```
+
+The **consuming application owns every OData concern** — `[EnableQuery]`, the EDM model and the
+`AddOData` routing. Subclass `BaseGroupListController`, name the subclass `GroupListController` so it
+matches the `GroupList` entity set, and implement `Get()`.
+
+The Angular grid filters with
+`contains(searchableGroup, '<term>') or contains(searchableUsers, '<term>')`, and the client
+lower-cases **and** strips diacritics from the term before sending it. OData `contains` is an exact
+substring match, so your feed must expose `SearchableGroup` / `SearchableUsers` **already normalized**
+(lower-cased and diacritic-free). Because diacritic stripping is not portable across database engines,
+produce these columns in a database view (e.g. PostgreSQL `unaccent()`, MariaDB collation/`CONVERT`)
+and map `GroupListItem` to it with `ToView(...)`.
+
+```csharp
+// EDM
+private static IEdmModel GetEdmModel()
+{
+    var builder = new ODataConventionModelBuilder();
+    builder.EnableLowerCamelCase();
+    builder.EntitySet<GroupListItem>("GroupList");
+    // … your own entity sets …
+    return builder.GetEdmModel();
+}
+
+// Registration
+services.AddControllers()
+    .AddOData(options => options
+        .AddRouteComponents("odata", GetEdmModel())
+        .Filter().OrderBy().Count().SetMaxTop(null));
+
+// Controller — subclass BaseGroupListController; your normalized view/projection backs the queryable
+public class GroupListController(MyDbContext context) : BaseGroupListController
+{
+    [EnableQuery]
+    public override IQueryable<GroupListItem> Get() => context.GroupListView.AsNoTracking();
+}
+```
+
+> The legacy `BaseGroupManagementController` (`api/groups`) and `BasePermissionManagementController`
+> (`api/permissions`) are marked `[Obsolete]` and point at the replacements above.
+
+---
+
 # Cause.SecurityManagement.Wolverine
 
 A separate NuGet package (`Cause.SecurityManagement.Wolverine`) that provides Wolverine HTTP endpoints and sagas as an alternative to the MVC-based `Cause.SecurityManagement` package. Use this when your API is built on [Wolverine](https://wolverine.netlify.app/) instead of (or alongside) traditional ASP.NET Core controllers.
@@ -307,6 +411,16 @@ All routes mirror the ones provided by `Cause.SecurityManagement` so existing cl
 | `POST` | `/api/Authentication/RefreshForExternalSystem` | Anonymous | Legacy alias |
 | `GET`  | `/api/KeycloakConfiguration` | Anonymous | Returns Keycloak config for web clients |
 | `GET`  | `/api/Me` | `RegularUser / Administrator / Console` | Returns current user claims |
+| `DELETE` | `/GroupManagement/{groupId}` | Authenticated | Delete a group and its dependents |
+| `POST` | `/GroupManagement` | Authenticated | Upsert a group, its permissions and membership |
+| `GET`  | `/GroupManagement/{groupId}` | Authenticated | Full group payload |
+| `POST` | `/UserSearch` | Authenticated | Paged active-user search (group member selection) |
+| `GET`  | `/PermissionManagement` | Authenticated | Assignable module-permission catalog |
+
+The group & permission management endpoints mirror the routes of the MVC package (see
+[Group & Permission Management API](#group--permission-management-api)) and reuse the same
+asynchronous, cancellation-aware services. The groups OData feed remains the consumer's
+responsibility in both hosting models.
 
 ## Sagas
 

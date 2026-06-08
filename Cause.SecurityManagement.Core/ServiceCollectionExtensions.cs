@@ -1,9 +1,12 @@
 using Cause.SecurityManagement.Core.Authentication.Certificate;
 using Cause.SecurityManagement.Core.Authentication.MultiFactor;
 using Cause.SecurityManagement.Models;
+using Cause.SecurityManagement.Models.DataTransferObjects.Management;
 using Cause.SecurityManagement.Core.Repositories;
 using Cause.SecurityManagement.Core.Services;
+using Cause.SecurityManagement.Core.Services.Management;
 using Cause.SecurityManagement.Core.VersionManagement;
+using FluentValidation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -41,6 +44,10 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IExternalSystemAuthenticationService, ExternalSystemAuthenticationService>();
         services.AddScoped<IGroupManagementService, BaseGroupManagementService>();
         services.AddScoped<IPermissionManagementService, BasePermissionManagementService<TUser>>();
+        services.AddScoped<IGroupManagementApiService, GroupManagementApiService<TUser>>();
+        services.AddScoped<IUserSearchService, UserSearchService<TUser>>();
+        services.AddScoped<IPermissionCatalogService, PermissionCatalogService<TUser>>();
+        services.AddScoped<IValidator<GroupDto>, GroupDtoValidator>();
         services.AddScoped<IAdministratorUserGenerator, AdministratorUserGenerator<TUser>>();
         services.AddScoped<IUserPermissionRepository, UserPermissionRepository<TUser>>();
         services.AddScoped<IUserRepository<TUser>>(provider => new UserRepository<TUser>(provider.GetRequiredService<IScopedDbContextProvider<TUser>>()));

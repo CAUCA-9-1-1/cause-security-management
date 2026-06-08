@@ -14,16 +14,22 @@
     <Description>Core security services for ASP.NET Core: authentication, authorization, user management and repositories.</Description>
     <Copyright>CAUCA 9-1-1 (c) 2025</Copyright>
     <PackageTags>Cause Security Management Core AspNetCore Cauca</PackageTags>
-    <PackageReleaseNotes>Better, cleaner, faster, stronger. Add triple authentication support.</PackageReleaseNotes>
-    <Version>10.2.0-experimental3</Version>
+    <PackageReleaseNotes>Add new groups management abstract controller and deprecated old ones.</PackageReleaseNotes>
+    <Version>10.2.0-experimental8</Version>
     <Configurations>Debug;Release;NuGet</Configurations>
     <AssemblyVersion>10.2.0</AssemblyVersion>
     <FileVersion>10.2.0</FileVersion>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Cause.Core.DataLayerExtensions" Version="10.0.0" />
+    <PackageReference Include="FluentValidation" Version="11.*" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.*" />
     <PackageReference Include="Semver" Version="3.0.0" />
   </ItemGroup>

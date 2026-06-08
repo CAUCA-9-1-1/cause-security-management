@@ -6,6 +6,8 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace Cause.SecurityManagement.Controllers
 {
 	[Route("api/permissions")]
+	[Obsolete("Replaced by the modernized permission catalog consumed by the cauca-management library: " +
+		"subclass Cause.SecurityManagement.Controllers.Management.BasePermissionManagementController (route 'PermissionManagement').")]
 	public abstract class BasePermissionManagementController(IPermissionManagementService permissionService)
         : Controller
     {
