@@ -22,5 +22,13 @@ namespace Cause.SecurityManagement.Core.Services.Management
 
         /// <summary>Deletes a group and its dependents. Returns <c>false</c> when not found.</summary>
         Task<bool> DeleteGroupAsync(Guid groupId, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Returns <c>true</c> when no other group already owns <paramref name="name"/>.
+        /// Pass <paramref name="excludeGroupId"/> when editing an existing group so that group's
+        /// current name is not counted as a conflict. A null or whitespace name is never available.
+        /// The comparison is case-insensitive.
+        /// </summary>
+        Task<bool> IsGroupNameAvailableAsync(string name, Guid? excludeGroupId, CancellationToken cancellationToken = default);
     }
 }

@@ -23,6 +23,23 @@ public abstract class BaseGroupManagementController(
 {
     protected IGroupManagementApiService GroupService = groupService;
 
+    [HttpGet("name-availability")]
+    [ProducesResponseType<GroupNameAvailabilityDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [SwaggerResponse(StatusCodes.Status200OK, "Whether the group name is available", typeof(GroupNameAvailabilityDto))]
+    [SwaggerResponse(StatusCodes.Status401Unauthorized, "The caller is not authenticated")]
+    [SwaggerOperation(
+        Summary = "Checks whether a group name is available",
+        Description = "Returns isAvailable=false when another group already owns that name (case-insensitive). Pass excludeGroupId with the group's own identifier when editing an existing group so its current name does not count as a conflict. A null or whitespace name is never considered available. Requires an authenticated user.")]
+    public virtual async Task<ActionResult<GroupNameAvailabilityDto>> GetGroupNameAvailabilityAsync(
+        [FromQuery] string name,
+        [FromQuery] Guid? excludeGroupId,
+        CancellationToken cancellationToken)
+    {
+        var isAvailable = await GroupService.IsGroupNameAvailableAsync(name, excludeGroupId, cancellationToken);
+        return Ok(new GroupNameAvailabilityDto { IsAvailable = isAvailable });
+    }
+
     [HttpDelete("{groupId:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

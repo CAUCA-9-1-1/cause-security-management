@@ -104,6 +104,28 @@ namespace Cause.SecurityManagement.Tests.Controllers.Management
             result.Result.Should().BeOfType<NotFoundResult>();
         }
 
+        [Test]
+        public async Task WhenNameIsAvailable_GetGroupNameAvailability_ShouldReturnOkWithIsAvailableTrue()
+        {
+            groupService.IsGroupNameAvailableAsync("Dispatchers", null, Arg.Any<CancellationToken>()).Returns(true);
+
+            var result = await controller.GetGroupNameAvailabilityAsync("Dispatchers", null, CancellationToken.None);
+
+            var dto = (result.Result as OkObjectResult)?.Value as GroupNameAvailabilityDto;
+            dto?.IsAvailable.Should().BeTrue();
+        }
+
+        [Test]
+        public async Task WhenNameIsTaken_GetGroupNameAvailability_ShouldReturnOkWithIsAvailableFalse()
+        {
+            groupService.IsGroupNameAvailableAsync("Dispatchers", null, Arg.Any<CancellationToken>()).Returns(false);
+
+            var result = await controller.GetGroupNameAvailabilityAsync("Dispatchers", null, CancellationToken.None);
+
+            var dto = (result.Result as OkObjectResult)?.Value as GroupNameAvailabilityDto;
+            dto?.IsAvailable.Should().BeFalse();
+        }
+
         private sealed class TestableGroupManagementController(
             IGroupManagementApiService groupService,
             IValidator<GroupDto> groupValidator)

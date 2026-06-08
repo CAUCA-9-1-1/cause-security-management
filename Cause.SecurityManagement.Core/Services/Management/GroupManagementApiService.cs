@@ -39,6 +39,19 @@ namespace Cause.SecurityManagement.Core.Services.Management
             return await GetGroupAsync(group.Id, cancellationToken);
         }
 
+        public async Task<bool> IsGroupNameAvailableAsync(string name, Guid? excludeGroupId, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                return false;
+
+            var normalizedName = name.ToUpperInvariant();
+            return !await context.Groups
+                .AsNoTracking()
+                .Where(group => group.Name.ToUpper() == normalizedName
+                    && (excludeGroupId == null || group.Id != excludeGroupId.Value))
+                .AnyAsync(cancellationToken);
+        }
+
         public async Task<bool> DeleteGroupAsync(Guid groupId, CancellationToken cancellationToken = default)
         {
             var group = await context.Groups.FindAsync([groupId], cancellationToken);
@@ -79,6 +92,7 @@ namespace Cause.SecurityManagement.Core.Services.Management
                 from membership in context.UserGroups.AsNoTracking()
                 where membership.IdGroup == groupId
                 join user in context.Users.AsNoTracking() on membership.IdUser equals user.Id
+                where user.IsActive
                 orderby user.LastName, user.FirstName
                 select new GroupUserDto
                 {
