@@ -19,11 +19,12 @@ public class AdditionalInformation_DefaultProvider_Tests : IntegrationTestBase
     [Test]
     public async Task UserSearch_WithDefaultProvider_AdditionalInformationIsNull()
     {
-        var user = SeedUser("Alice", "Default");
+        var token = $"Z{Guid.NewGuid():N}";
+        SeedUser(token, "Default");
 
         var result = await UserSearch.SearchUsersAsync(new UserSearchRequestDto
         {
-            Query = "Default",
+            Query = token,
             Skip = 0,
             Top = 10,
         });
@@ -83,11 +84,12 @@ public class AdditionalInformation_CustomProvider_Tests : IntegrationTestBase
     public async Task UserSearch_WithCustomProvider_AdditionalInformationIsPopulatedFromQuery()
     {
         var email = $"{Guid.NewGuid():N}@test.com";
-        var user = SeedUser("Carol", "Custom", email);
+        var token = $"Z{Guid.NewGuid():N}";
+        SeedUser(token, "Custom", email);
 
         var result = await UserSearch.SearchUsersAsync(new UserSearchRequestDto
         {
-            Query = "Custom",
+            Query = token,
             Skip = 0,
             Top = 10,
         });
