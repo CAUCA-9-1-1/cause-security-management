@@ -1,4 +1,6 @@
 using Cause.SecurityManagement.Core.Services;
+using Cause.SecurityManagement.Core.Services.Management;
+using Cause.SecurityManagement.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System;
 using System.Diagnostics.CodeAnalysis;
@@ -11,6 +13,7 @@ public class SecurityManagementOptions
     internal (Type serviceType, Type implementationType)? CustomUserTokenRefresher { get; set; }
     internal (Type serviceType, Type implementationType)? CustomUserManagementService { get; set; }
     internal (Type serviceType, Type implementationType)? CustomCurrentUserService { get; set; }
+    internal (Type serviceType, Type implementationType)? CustomUserAdditionalInformationProvider { get; set; }
     internal Type ValidationCodeSender { get; set; }
     internal Type ValidationCodeValidator { get; set; }
     internal Type EmailForUserModificationSender { get; set; }
@@ -30,6 +33,13 @@ public class SecurityManagementOptions
         where TImplementation : class, TService
     {
         CustomUserManagementService = (typeof(TService), typeof(TImplementation));
+    }
+
+    public void SetUserAdditionalInformationProvider<TUser, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TImplementation>()
+        where TUser : User, new()
+        where TImplementation : class, IUserAdditionalInformationProvider<TUser>
+    {
+        CustomUserAdditionalInformationProvider = (typeof(IUserAdditionalInformationProvider<TUser>), typeof(TImplementation));
     }
 
     public void SetUserAuthenticationService<TService, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TImplementation>()

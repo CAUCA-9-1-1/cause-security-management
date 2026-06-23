@@ -28,6 +28,7 @@ public static class ServiceCollectionExtensions
             .AddScopedCustomServiceOrDefault<IUserAuthenticator>(managementOptions.CustomAuthenticationService, () => services.AddScoped<IUserAuthenticator, UserAuthenticator<TUser>>())
             .AddScopedCustomServiceOrDefault<IUserTokenRefresher>(managementOptions.CustomUserTokenRefresher, () => services.AddScoped<IUserTokenRefresher, UserTokenRefresher<TUser>>())
             .AddScopedCustomServiceOrDefault<ICurrentUserService>(managementOptions.CustomCurrentUserService, () => services.AddScoped<ICurrentUserService, CurrentUserService>())
+            .AddScopedCustomServiceOrDefault<IUserAdditionalInformationProvider<TUser>>(managementOptions.CustomUserAdditionalInformationProvider, () => services.AddScoped<IUserAdditionalInformationProvider<TUser>, DefaultUserAdditionalInformationProvider<TUser>>())
             .AddScopedWhenImplementationIsKnown<IAuthenticationValidationCodeSender<TUser>>(managementOptions.ValidationCodeSender)
             .AddScopedWhenImplementationIsKnown<IAuthenticationValidationCodeValidator<TUser>>(managementOptions.ValidationCodeValidator)
             .AddScopedWhenImplementationIsKnown<IEmailForUserModificationSender>(managementOptions.EmailForUserModificationSender)

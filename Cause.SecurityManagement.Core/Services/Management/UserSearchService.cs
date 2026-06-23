@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Cause.SecurityManagement.Models;
@@ -9,7 +10,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Cause.SecurityManagement.Core.Services.Management
 {
-    public class UserSearchService<TUser>(ISecurityContext<TUser> context)
+    public class UserSearchService<TUser>(
+        ISecurityContext<TUser> context,
+        IUserAdditionalInformationProvider<TUser> additionalInformationProvider)
         : IUserSearchService
         where TUser : User, new()
     {
@@ -36,13 +39,15 @@ namespace Cause.SecurityManagement.Core.Services.Management
             if (request.Top > 0)
                 pagedQuery = pagedQuery.Take(request.Top);
 
+            Expression<Func<TUser, UserForGroupDto>> baseProjection = user => new UserForGroupDto
+            {
+                Id = user.Id,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+            };
+
             var items = await pagedQuery
-                .Select(user => new UserForGroupDto
-                {
-                    Id = user.Id,
-                    FirstName = user.FirstName,
-                    LastName = user.LastName,
-                })
+                .Select(baseProjection.WithAdditionalInformation(additionalInformationProvider.GetAdditionalInformation()))
                 .ToListAsync(cancellationToken);
 
             return new UserSearchResultDto { Items = items, TotalCount = totalCount };

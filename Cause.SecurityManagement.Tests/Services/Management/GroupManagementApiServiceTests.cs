@@ -23,7 +23,7 @@ namespace Cause.SecurityManagement.Tests.Services.Management
                 .UseInMemoryDatabase(Guid.NewGuid().ToString())
                 .Options;
             context = new TestGroupContext(options);
-            service = new GroupManagementApiService<TestGroupUser>(context);
+            service = new GroupManagementApiService<TestGroupUser>(context, new DefaultUserAdditionalInformationProvider<TestGroupUser>());
         }
 
         [TearDown]

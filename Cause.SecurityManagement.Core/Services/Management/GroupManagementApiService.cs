@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Cause.SecurityManagement.Models;
@@ -9,7 +10,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Cause.SecurityManagement.Core.Services.Management
 {
-    public class GroupManagementApiService<TUser>(ISecurityContext<TUser> context)
+    public class GroupManagementApiService<TUser>(
+        ISecurityContext<TUser> context,
+        IUserAdditionalInformationProvider<TUser> additionalInformationProvider)
         : IGroupManagementApiService
         where TUser : User, new()
     {
@@ -88,17 +91,24 @@ namespace Cause.SecurityManagement.Core.Services.Management
 
         private Task<List<GroupUserDto>> GetMembersAsync(Guid groupId, CancellationToken cancellationToken)
         {
+            Expression<Func<TUser, GroupUserDto>> baseProjection = user => new GroupUserDto
+            {
+                Id = user.Id,
+                FullName = user.FirstName + " " + user.LastName,
+            };
+
+            var projection = baseProjection.WithAdditionalInformation(
+                additionalInformationProvider.GetAdditionalInformation());
+
             return (
                 from membership in context.UserGroups.AsNoTracking()
                 where membership.IdGroup == groupId
                 join user in context.Users.AsNoTracking() on membership.IdUser equals user.Id
                 where user.IsActive
                 orderby user.LastName, user.FirstName
-                select new GroupUserDto
-                {
-                    Id = user.Id,
-                    FullName = user.FirstName + " " + user.LastName,
-                }).ToListAsync(cancellationToken);
+                select user)
+                .Select(projection)
+                .ToListAsync(cancellationToken);
         }
 
         private async Task SaveGroupDetailsAsync(GroupDto group, CancellationToken cancellationToken)
