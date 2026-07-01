@@ -14,11 +14,11 @@
     <Description>Core security services for ASP.NET Core: authentication, authorization, user management and repositories.</Description>
     <Copyright>CAUCA 9-1-1 (c) 2025</Copyright>
     <PackageTags>Cause Security Management Core AspNetCore Cauca</PackageTags>
-    <PackageReleaseNotes>10.3.0 — Adds an overridable AdditionalInformation field on the user management DTOs (UserForGroupDto, GroupUserDto), populated server-side via IUserAdditionalInformationProvider&lt;TUser&gt;. All published packages must be upgraded together. Backwards compatible with 10.2.x consumers.</PackageReleaseNotes>
-    <Version>10.3.0</Version>
+    <PackageReleaseNotes>10.3.1 — Bump packages for vulnerability fixes.</PackageReleaseNotes>
+    <Version>10.3.1</Version>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <AssemblyVersion>10.3.0</AssemblyVersion>
-    <FileVersion>10.3.0</FileVersion>
+    <AssemblyVersion>10.3.1</AssemblyVersion>
+    <FileVersion>10.3.1</FileVersion>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
@@ -28,8 +28,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Cause.Core.DataLayerExtensions" Version="10.0.0" />
-    <PackageReference Include="FluentValidation" Version="11.*" />
+    <PackageReference Include="Cause.Core.DataLayerExtensions" Version="10.0.*" />
+    <PackageReference Include="FluentValidation" Version="12.1.*" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.*" />
     <PackageReference Include="Semver" Version="3.0.0" />
   </ItemGroup>

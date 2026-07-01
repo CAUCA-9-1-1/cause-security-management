@@ -1,10 +1,8 @@
-using DotNet.Testcontainers.Builders;
 using Microsoft.EntityFrameworkCore;
 using NUnit.Framework;
 using Testcontainers.PostgreSql;
-using Cause.SecurityManagement.Integration.Tests.Infrastructure;
 
-namespace Cause.SecurityManagement.Integration.Tests;
+namespace Cause.SecurityManagement.Integration.Tests.Infrastructure;
 
 [SetUpFixture]
 public class DatabaseFixture
@@ -20,9 +18,7 @@ public class DatabaseFixture
         // The library's models use unspecified DateTime; enable legacy behaviour for tests.
         AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
-        container = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(5432))
+        container = new PostgreSqlBuilder("postgres:16-alpine")
             .Build();
 
         await container.StartAsync();

@@ -12,10 +12,10 @@
     <Description>ASP.NET Core HTTP integration (controllers, authentication, authorization) for Cause.SecurityManagement.Core.</Description>
     <Copyright>CAUCA 9-1-1 (c) 2025</Copyright>
     <PackageTags>Cause Security Management AspNetCore Http Controllers Cauca</PackageTags>
-    <PackageReleaseNotes>10.3.0 — Adds an overridable AdditionalInformation field on the user management DTOs (UserForGroupDto, GroupUserDto), populated server-side via IUserAdditionalInformationProvider&lt;TUser&gt;. All published packages must be upgraded together. Backwards compatible with 10.2.x consumers.</PackageReleaseNotes>
-    <Version>10.3.0</Version>
-    <AssemblyVersion>10.3.0</AssemblyVersion>
-    <FileVersion>10.3.0</FileVersion>
+    <PackageReleaseNotes>10.3.1 — Bump packages for vulnerability fixes.</PackageReleaseNotes>
+    <Version>10.3.1</Version>
+    <AssemblyVersion>10.3.1</AssemblyVersion>
+    <FileVersion>10.3.1</FileVersion>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -28,8 +28,8 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.*" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.*" />
-    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="10.1.*" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.*" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="10.2.*" />
   </ItemGroup>
 
   <ItemGroup>
