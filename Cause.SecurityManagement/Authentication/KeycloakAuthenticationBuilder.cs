@@ -27,8 +27,11 @@ internal static class KeycloakAuthenticationBuilder
         options.Audience = configuration.Audience;
         options.MetadataAddress = configuration.MetadataAddress;
         options.SaveToken = true;
-        options.TokenValidationParameters = GetValidationParameters(configuration);
-        options.Events = new() { OnAuthenticationFailed = context => GetCustomOnAuthenticationFailedResult(context, configuration) };
+        ConfigureValidationParameters(options.TokenValidationParameters, configuration);
+        options.Events = new()
+        {
+            OnAuthenticationFailed = context => GetCustomOnAuthenticationFailedResult(context, configuration)
+        };
     }
 
     private static async Task GetCustomOnAuthenticationFailedResult(AuthenticationFailedContext context, KeycloakConfiguration configuration)
@@ -48,6 +51,7 @@ internal static class KeycloakAuthenticationBuilder
                     ?? Array.Empty<object>();
 
                 var signingKey = context.Options.TokenValidationParameters.IssuerSigningKey;
+                var discoveredConfiguration = await GetDiscoveredConfigurationForDiagnosticsAsync(context);
 
                 var errorResponse = new
                 {
@@ -72,6 +76,7 @@ internal static class KeycloakAuthenticationBuilder
                         SigningKeysCount = signingKeys.Length,
                         SigningKeys = signingKeys
                     },
+                    DiscoveredConfiguration = discoveredConfiguration,
                     Token = token,
                     User = new
                     {
@@ -88,18 +93,36 @@ internal static class KeycloakAuthenticationBuilder
         }
     }
 
-    private static TokenValidationParameters GetValidationParameters(KeycloakConfiguration configuration)
+    private static async Task<object?> GetDiscoveredConfigurationForDiagnosticsAsync(AuthenticationFailedContext context)
     {
-        return new()
+        if (context.Options.ConfigurationManager == null)
+            return null;
+
+        try
         {
-            ValidIssuer = configuration.ValidIssuer,
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateIssuerSigningKey = configuration.ValidateSigningKey,
-            NameClaimType = "preferred_username",
-            RoleClaimType = "role",
-            ValidateLifetime = true,
-            ClockSkew = TimeSpan.Zero
-        };
+            var discoveredConfiguration = await context.Options.ConfigurationManager.GetConfigurationAsync(context.HttpContext.RequestAborted);
+            return new
+            {
+                discoveredConfiguration.Issuer,
+                SigningKeysCount = discoveredConfiguration.SigningKeys?.Count ?? 0,
+                SigningKeyIds = discoveredConfiguration.SigningKeys?.Select(key => key.KeyId).ToArray() ?? Array.Empty<string>()
+            };
+        }
+        catch (Exception exception)
+        {
+            return new { Error = exception.Message };
+        }
+    }
+
+    private static void ConfigureValidationParameters(TokenValidationParameters validationParameters, KeycloakConfiguration configuration)
+    {
+        validationParameters.ValidIssuer = configuration.ValidIssuer;
+        validationParameters.ValidateIssuer = true;
+        validationParameters.ValidateAudience = true;
+        validationParameters.ValidateIssuerSigningKey = configuration.ValidateSigningKey;
+        validationParameters.NameClaimType = "preferred_username";
+        validationParameters.RoleClaimType = "role";
+        validationParameters.ValidateLifetime = true;
+        validationParameters.ClockSkew = TimeSpan.Zero;
     }
 }
