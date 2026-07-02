@@ -4,7 +4,7 @@
 	  <IsPackable>true</IsPackable>
 	  <TargetFramework>net10.0</TargetFramework>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <Version>10.3.2-beta1</Version>
+    <Version>10.3.2</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 	  <RepositoryUrl>https://github.com/CAUCA-9-1-1/cause-security-management</RepositoryUrl>
 	  <PackageProjectUrl>https://github.com/CAUCA-9-1-1/cause-security-management</PackageProjectUrl>
@@ -13,7 +13,7 @@
     <Authors>Fred Catellier</Authors>
     <Description>Base models for the Causee.SecurityManagement's library.</Description>
     <Copyright>CAUCA 9-1-1 2025</Copyright>
-    <PackageReleaseNotes>10.3.2-beta1 — Fixes Keycloak JWT authentication returning 401 (IDX10500 "no security keys") under Microsoft.AspNetCore.Authentication.JwtBearer 10.0.9: the Keycloak scheme now configures the framework-provided TokenValidationParameters in place instead of replacing it, so OIDC signing keys resolve from metadata correctly. All published packages must be upgraded together.</PackageReleaseNotes>
+    <PackageReleaseNotes>10.3.2 — Fixes Keycloak JWT authentication returning 401 (IDX10500 "no security keys") under Microsoft.AspNetCore.Authentication.JwtBearer 10.0.9: the Keycloak scheme now configures the framework-provided TokenValidationParameters in place instead of replacing it, so OIDC signing keys resolve from metadata correctly. All published packages must be upgraded together.</PackageReleaseNotes>
     <Company>CAUCA 9-1-1</Company>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
