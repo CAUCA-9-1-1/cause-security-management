@@ -14,11 +14,11 @@
     <Description>Core security services for ASP.NET Core: authentication, authorization, user management and repositories.</Description>
     <Copyright>CAUCA 9-1-1 (c) 2025</Copyright>
     <PackageTags>Cause Security Management Core AspNetCore Cauca</PackageTags>
-    <PackageReleaseNotes>10.3.1 — Bump packages for vulnerability fixes.</PackageReleaseNotes>
-    <Version>10.3.1</Version>
+    <PackageReleaseNotes>10.3.2 — Fixes Keycloak JWT authentication returning 401 (IDX10500 "no security keys") under Microsoft.AspNetCore.Authentication.JwtBearer 10.0.9: the Keycloak scheme now configures the framework-provided TokenValidationParameters in place instead of replacing it, so OIDC signing keys resolve from metadata correctly. All published packages must be upgraded together.</PackageReleaseNotes>
+    <Version>10.3.2</Version>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <AssemblyVersion>10.3.1</AssemblyVersion>
-    <FileVersion>10.3.1</FileVersion>
+    <AssemblyVersion>10.3.2</AssemblyVersion>
+    <FileVersion>10.3.2</FileVersion>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
