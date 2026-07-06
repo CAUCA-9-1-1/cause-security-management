@@ -25,13 +25,15 @@ namespace Cause.SecurityManagement.Core.Repositories
         public ExternalSystem GetByApiKey(string apiKey)
         {
             return context.ExternalSystems
-                .SingleOrDefault(externalSystem => externalSystem.ApiKey == apiKey && externalSystem.IsActive);
+                .SingleOrDefault(externalSystem => externalSystem.ApiKey == apiKey && externalSystem.IsActive
+                    && externalSystem.AuthenticationType == ExternalSystemAuthenticationType.Token);
         }
 
         public ExternalSystem GetByCertificateSubject(string certificateSubject)
         {
             return context.ExternalSystems
-                .SingleOrDefault(externalSystem => externalSystem.CertificateSubjectDn == certificateSubject && externalSystem.IsActive);
+                .SingleOrDefault(externalSystem => externalSystem.CertificateSubjectDn == certificateSubject && externalSystem.IsActive
+                    && externalSystem.AuthenticationType == ExternalSystemAuthenticationType.Certificate);
         }
 
         public ExternalSystem GetById(Guid idExternalSystem)

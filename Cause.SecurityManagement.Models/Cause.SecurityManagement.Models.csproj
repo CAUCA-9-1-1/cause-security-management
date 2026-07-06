@@ -4,16 +4,16 @@
 	  <IsPackable>true</IsPackable>
 	  <TargetFramework>net10.0</TargetFramework>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <Version>10.3.2</Version>
+    <Version>10.4.0-beta1</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 	  <RepositoryUrl>https://github.com/CAUCA-9-1-1/cause-security-management</RepositoryUrl>
 	  <PackageProjectUrl>https://github.com/CAUCA-9-1-1/cause-security-management</PackageProjectUrl>
-    <AssemblyVersion>10.3.2</AssemblyVersion>
-    <FileVersion>10.3.2</FileVersion>
+    <AssemblyVersion>10.4.0</AssemblyVersion>
+    <FileVersion>10.4.0</FileVersion>
     <Authors>Fred Catellier</Authors>
     <Description>Base models for the Causee.SecurityManagement's library.</Description>
     <Copyright>CAUCA 9-1-1 2025</Copyright>
-    <PackageReleaseNotes>10.3.2 — Fixes Keycloak JWT authentication returning 401 (IDX10500 "no security keys") under Microsoft.AspNetCore.Authentication.JwtBearer 10.0.9: the Keycloak scheme now configures the framework-provided TokenValidationParameters in place instead of replacing it, so OIDC signing keys resolve from metadata correctly. All published packages must be upgraded together.</PackageReleaseNotes>
+    <PackageReleaseNotes>Add per-system ExternalSystem authentication method (Token/Certificate) with strict binding, AddDualExternalSystemAuthentication scheme, and split-out Cause.SecurityManagement.Wolverine.ExternalSystem endpoints package. NOTE: AuthenticationType defaults to Token; existing certificate-based external systems must be set to Certificate. Consumers must add and apply a database migration for the new non-nullable AuthenticationType column on the ExternalSystems table (default 0 = Token); this library ships no migrations.</PackageReleaseNotes>
     <Company>CAUCA 9-1-1</Company>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>

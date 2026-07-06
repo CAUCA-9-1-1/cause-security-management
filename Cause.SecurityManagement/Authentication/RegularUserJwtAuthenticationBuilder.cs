@@ -28,7 +28,7 @@ internal static class RegularUserJwtAuthenticationBuilder
         options.Events = new JwtBearerEvents { OnAuthenticationFailed = GetCustomOnAuthenticationFailedResult };
     }
 
-    private static Task GetCustomOnAuthenticationFailedResult(AuthenticationFailedContext context)
+    internal static Task GetCustomOnAuthenticationFailedResult(AuthenticationFailedContext context)
     {
         if (context.Exception is SecurityTokenException && context.HttpContext.User.Identity?.IsAuthenticated == false)
         {
@@ -38,7 +38,7 @@ internal static class RegularUserJwtAuthenticationBuilder
         return Task.CompletedTask;
     }
 
-    private static TokenValidationParameters GetAuthenticationParameters(string secretKey, string issuer, string appName)
+    internal static TokenValidationParameters GetAuthenticationParameters(string secretKey, string issuer, string appName)
     {
         var tokenValidationParameters = new TokenValidationParameters
         {

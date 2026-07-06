@@ -59,7 +59,8 @@ $RepoRoot = $PSScriptRoot
 $PackableProjects = @(
     'Cause.SecurityManagement.Models\Cause.SecurityManagement.Models.csproj',
     'Cause.SecurityManagement.Core\Cause.SecurityManagement.Core.csproj',
-    'Cause.SecurityManagement\Cause.SecurityManagement.csproj'
+    'Cause.SecurityManagement\Cause.SecurityManagement.csproj',
+    'Cause.SecurityManagement.Wolverine.ExternalSystem\Cause.SecurityManagement.Wolverine.ExternalSystem.csproj'
 )
 
 $SolutionFile = Join-Path $RepoRoot 'Cause.SecurityManagement.sln'
