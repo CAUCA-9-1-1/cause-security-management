@@ -21,5 +21,5 @@ public class AuthorizeByPoliciesAttribute : AuthorizeAttribute
 public class AuthorizeForCertificateRoleAttribute() : AuthorizeByRolesAttribute(SecurityRoles.ApiCertificate);
 public class AuthorizeForAdministratorRoleAttribute() : AuthorizeByRolesAttribute(SecurityRoles.Administrator);
 public class AuthorizeForUserAndAdministratorRolesAttribute() : AuthorizeByRolesAttribute(SecurityRoles.User, SecurityRoles.Administrator);
-public class AuthorizeForUserAdministratorAndCertificateRolesAttribute() : AuthorizeByRolesAttribute(SecurityRoles.User, SecurityRoles.Administrator, SecurityRoles.ApiCertificate);
+public class AuthorizeForUserAdministratorAndCertificateRolesAttribute() : AuthorizeByRolesAttribute(SecurityRoles.User, SecurityRoles.Administrator, SecurityRoles.ApiCertificate, SecurityRoles.ExternalSystem);
 public class AuthorizeForUserRolesAttributes() : AuthorizeByRolesAttribute(SecurityRoles.User);

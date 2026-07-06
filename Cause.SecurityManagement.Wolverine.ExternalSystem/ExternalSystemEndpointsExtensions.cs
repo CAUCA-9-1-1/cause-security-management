@@ -1,3 +1,4 @@
+using Cause.SecurityManagement.Wolverine.ExternalSystem.Features.Me;
 using Wolverine;
 
 namespace Cause.SecurityManagement.Wolverine.ExternalSystem;
@@ -21,6 +22,8 @@ public static class ExternalSystemEndpointsExtensions
     public static WolverineOptions AddExternalSystemEndpoints(this WolverineOptions opts)
     {
         opts.Discovery.IncludeAssembly(typeof(ExternalSystemLogonEndpoint).Assembly);
+        opts.Discovery.IncludeAssembly(typeof(ExternalSystemRefreshEndpoint).Assembly);
+        opts.Discovery.IncludeAssembly(typeof(GetCurrentUserEndpoint).Assembly);
         return opts;
     }
 }
