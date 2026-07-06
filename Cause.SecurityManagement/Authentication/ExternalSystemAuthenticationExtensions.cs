@@ -19,6 +19,8 @@ public static class ExternalSystemAuthenticationExtensions
     /// </summary>
     public static IServiceCollection AddDualExternalSystemAuthentication(this IServiceCollection services, SecurityConfiguration configuration)
     {
+        ArgumentNullException.ThrowIfNull(configuration);
+
         JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
         services.AddScoped<IClaimsTransformation, ExternalSystemSidClaimsTransformer>();

@@ -115,4 +115,14 @@ public class ExternalSystemAuthenticationExtensionsTests
         authenticationOptions.DefaultChallengeScheme.Should().Be(CustomAuthSchemes.DualExternalSystemScheme);
         authenticationOptions.DefaultScheme.Should().Be(CustomAuthSchemes.DualExternalSystemScheme);
     }
+
+    [Test]
+    public void AddDualExternalSystemAuthentication_WithNullConfiguration_ShouldThrowArgumentNullException()
+    {
+        var services = new ServiceCollection();
+
+        var act = () => services.AddDualExternalSystemAuthentication(null!);
+
+        act.Should().Throw<ArgumentNullException>();
+    }
 }
