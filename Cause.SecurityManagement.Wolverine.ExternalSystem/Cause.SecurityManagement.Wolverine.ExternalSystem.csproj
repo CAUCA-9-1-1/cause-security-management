@@ -13,7 +13,7 @@
     <Copyright>CAUCA 9-1-1 (c) 2025</Copyright>
     <PackageTags>Cause Security Management Wolverine ExternalSystem Cauca</PackageTags>
     <PackageReleaseNotes>Add per-system ExternalSystem authentication method (Token/Certificate) with strict binding, AddDualExternalSystemAuthentication scheme, and split-out Cause.SecurityManagement.Wolverine.ExternalSystem endpoints package. NOTE: AuthenticationType defaults to Token; existing certificate-based external systems must be set to Certificate. Consumers must add and apply a database migration for the new non-nullable AuthenticationType column on the ExternalSystems table (default 0 = Token); this library ships no migrations.</PackageReleaseNotes>
-    <Version>10.4.0-beta2</Version>
+    <Version>10.4.0-beta3</Version>
     <AssemblyVersion>10.4.0</AssemblyVersion>
     <FileVersion>10.4.0</FileVersion>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
