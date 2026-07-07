@@ -1,4 +1,5 @@
 using Cause.SecurityManagement.Models;
+using Cause.SecurityManagement.Core.Authentication;
 using Cause.SecurityManagement.Core.Repositories;
 using System;
 using System.Threading.Tasks;
@@ -19,7 +20,7 @@ namespace Cause.SecurityManagement.Core.Services
 
             tokenReader.ThrowExceptionWhenTokenIsNotValid(refreshToken, externalSystemToken);
 
-            var newAccessToken = generator.GenerateAccessToken(externalSystem.Id.ToString(), externalSystem.Name, SecurityRoles.ExternalSystem);
+            var newAccessToken = generator.GenerateAccessToken(externalSystem.Id.ToString(), externalSystem.Name, SecurityRoles.ExternalSystem, new CustomClaims(ExternalSystemClaims.AuthenticationType, externalSystem.AuthenticationType.ToString()));
             // ReSharper disable once PossibleNullReferenceException
             externalSystemToken.AccessToken = newAccessToken;
             await repository.SaveChangesAsync();
@@ -32,7 +33,7 @@ namespace Cause.SecurityManagement.Core.Services
             var externalSystemFound = repository.GetByApiKey(secretApiKey);
             if (externalSystemFound != null)
             {
-                var accessToken = generator.GenerateAccessToken(externalSystemFound.Id.ToString(), externalSystemFound.Name, SecurityRoles.ExternalSystem);
+                var accessToken = generator.GenerateAccessToken(externalSystemFound.Id.ToString(), externalSystemFound.Name, SecurityRoles.ExternalSystem, new CustomClaims(ExternalSystemClaims.AuthenticationType, externalSystemFound.AuthenticationType.ToString()));
                 var refreshToken = generator.GenerateRefreshToken();
                 var token = GenerateExternalSystemToken(accessToken, refreshToken, externalSystemFound);
                 repository.AddToken(token);
