@@ -14,8 +14,8 @@
     <Description>Core security services for ASP.NET Core: authentication, authorization, user management and repositories.</Description>
     <Copyright>CAUCA 9-1-1 (c) 2025</Copyright>
     <PackageTags>Cause Security Management Core AspNetCore Cauca</PackageTags>
-    <PackageReleaseNotes>Add per-system ExternalSystem authentication method (Token/Certificate) with strict binding, AddDualExternalSystemAuthentication scheme, and split-out Cause.SecurityManagement.Wolverine.ExternalSystem endpoints package. NOTE: AuthenticationType defaults to Token; existing certificate-based external systems must be set to Certificate. Consumers must add and apply a database migration for the new non-nullable AuthenticationType column on the ExternalSystems table (default 0 = Token); this library ships no migrations. 10.4.0-beta4: stamps an externalSystemAuthenticationType claim (Token/Certificate) on authenticated external-system principals so consumers can distinguish internal (token) from external (certificate) callers.</PackageReleaseNotes>
-    <Version>10.4.0-beta4</Version>
+    <PackageReleaseNotes>Add per-system ExternalSystem authentication method (Token/Certificate) with strict binding, AddDualExternalSystemAuthentication scheme, and split-out Cause.SecurityManagement.Wolverine.ExternalSystem endpoints package. NOTE: AuthenticationType defaults to Token; existing certificate-based external systems must be set to Certificate. Consumers must add and apply a database migration for the new non-nullable AuthenticationType column on the ExternalSystems table (default 0 = Token); this library ships no migrations. 10.4.0-beta4: stamps an externalSystemAuthenticationType claim (Token/Certificate) on authenticated external-system principals so consumers can distinguish internal (token) from external (certificate) callers. 10.4.0-beta5: widen ExternalSystemToken.AccessToken to 2000 chars; the legacy access_token column must be widened accordingly.</PackageReleaseNotes>
+    <Version>10.4.0-beta5</Version>
     <Configurations>Debug;Release;NuGet</Configurations>
     <AssemblyVersion>10.4.0</AssemblyVersion>
     <FileVersion>10.4.0</FileVersion>
