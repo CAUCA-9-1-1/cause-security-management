@@ -7,7 +7,7 @@ namespace Cause.SecurityManagement.Core.Mapping
     {
         protected override void MapProperties(EntityTypeBuilder<ExternalSystemToken> model)
         {
-            model.Property(m => m.AccessToken).HasMaxLength(2000).IsRequired();
+            model.Property(m => m.AccessToken).HasMaxLength(500).IsRequired();
             model.Property(m => m.RefreshToken).HasMaxLength(100).IsRequired();
         }
     }

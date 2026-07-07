@@ -1,10 +1,13 @@
 using Cause.SecurityManagement.Core.Authentication;
 using Cause.SecurityManagement.Core.Authentication.Certificate;
+using Cause.SecurityManagement.Models;
 using Cause.SecurityManagement.Models.Configuration;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Net.Http.Headers;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace Cause.SecurityManagement.Authentication;
 
@@ -34,7 +37,19 @@ public static class ExternalSystemAuthenticationExtensions
                 options.SaveToken = true;
                 options.TokenValidationParameters = RegularUserJwtAuthenticationBuilder.GetAuthenticationParameters(
                     configuration.SecretKey, configuration.Issuer, configuration.PackageName);
-                options.Events = new JwtBearerEvents { OnAuthenticationFailed = RegularUserJwtAuthenticationBuilder.GetCustomOnAuthenticationFailedResult };
+                options.Events = new JwtBearerEvents
+                {
+                    OnAuthenticationFailed = RegularUserJwtAuthenticationBuilder.GetCustomOnAuthenticationFailedResult,
+                    OnTokenValidated = context =>
+                    {
+                        if (context.Principal?.Identity is ClaimsIdentity identity
+                            && !identity.HasClaim(claim => claim.Type == ExternalSystemClaims.AuthenticationType))
+                        {
+                            identity.AddClaim(new Claim(ExternalSystemClaims.AuthenticationType, ExternalSystemAuthenticationType.Token.ToString()));
+                        }
+                        return Task.CompletedTask;
+                    }
+                };
             })
             .AddPolicyScheme(CustomAuthSchemes.DualExternalSystemScheme, CustomAuthSchemes.DualExternalSystemScheme, options =>
             {
