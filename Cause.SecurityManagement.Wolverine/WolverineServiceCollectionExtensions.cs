@@ -1,3 +1,4 @@
+using Cause.SecurityManagement.Wolverine.ExternalSystem;
 using Wolverine;
 
 namespace Cause.SecurityManagement.Wolverine;
@@ -8,7 +9,8 @@ namespace Cause.SecurityManagement.Wolverine;
 public static class WolverineServiceCollectionExtensions
 {
     /// <summary>
-    /// Registers Cause.SecurityManagement Wolverine handlers and sagas with the Wolverine bus.
+    /// Registers Cause.SecurityManagement Wolverine handlers and sagas with the Wolverine bus,
+    /// including the ExternalSystem authentication endpoints (logon/refresh).
     /// Call this inside your <c>UseWolverine</c> configuration action.
     /// </summary>
     /// <example>
@@ -20,6 +22,7 @@ public static class WolverineServiceCollectionExtensions
     public static WolverineOptions AddSecurityManagementHandlers(this WolverineOptions opts)
     {
         opts.Discovery.IncludeAssembly(typeof(WolverineServiceCollectionExtensions).Assembly);
+        opts.AddExternalSystemEndpoints();
         return opts;
     }
 }

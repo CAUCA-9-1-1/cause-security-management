@@ -2,13 +2,20 @@
 
 ## Coordinated Versioning
 
-All three published packable projects share a single, identical `<Version>` value:
+All four published packable projects share a single, identical `<Version>` value:
 
 | Project | Package |
 |---|---|
 | `Cause.SecurityManagement.Models` | `Cause.SecurityManagement.Models` |
 | `Cause.SecurityManagement.Core` | `Cause.SecurityManagement.Core` |
 | `Cause.SecurityManagement` | `Cause.SecurityManagement` |
+| `Cause.SecurityManagement.Wolverine.ExternalSystem` | `Cause.SecurityManagement.Wolverine.ExternalSystem` |
+
+> `Cause.SecurityManagement.Wolverine.ExternalSystem` contains only the
+> external-system authentication Wolverine HTTP endpoints (logon/refresh),
+> isolated in their own assembly so a consumer can register just those without
+> pulling the rest of the (unpublished) `Cause.SecurityManagement.Wolverine`
+> surface. It shares the coordinated version and is in `release.ps1`'s packable list.
 
 These packages form one security platform. Consumers depend on more than one of
 them simultaneously, so a given version number always means a mutually compatible

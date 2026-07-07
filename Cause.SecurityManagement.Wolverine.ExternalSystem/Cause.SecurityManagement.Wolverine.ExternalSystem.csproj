@@ -1,41 +1,32 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <TargetFramework>net10.0</TargetFramework>
-    <ApplicationIcon />
     <OutputType>Library</OutputType>
-    <StartupObject />
     <Authors>Fred Catellier-Poulin, Michael Jolin, Claudine Gagnon</Authors>
     <Company>CAUCA 9-1-1</Company>
     <RepositoryUrl>https://github.com/CAUCA-9-1-1/cause-security-management</RepositoryUrl>
     <PackageProjectUrl>https://github.com/CAUCA-9-1-1/cause-security-management</PackageProjectUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Description>Core security services for ASP.NET Core: authentication, authorization, user management and repositories.</Description>
+    <Description>External-system authentication Wolverine HTTP endpoints (logon/refresh) for Cause.SecurityManagement.</Description>
     <Copyright>CAUCA 9-1-1 (c) 2025</Copyright>
-    <PackageTags>Cause Security Management Core AspNetCore Cauca</PackageTags>
+    <PackageTags>Cause Security Management Wolverine ExternalSystem Cauca</PackageTags>
     <PackageReleaseNotes>Add per-system ExternalSystem authentication method (Token/Certificate) with strict binding, AddDualExternalSystemAuthentication scheme, and split-out Cause.SecurityManagement.Wolverine.ExternalSystem endpoints package. NOTE: AuthenticationType defaults to Token; existing certificate-based external systems must be set to Certificate. Consumers must add and apply a database migration for the new non-nullable AuthenticationType column on the ExternalSystems table (default 0 = Token); this library ships no migrations. 10.4.0-beta4: stamps an externalSystemAuthenticationType claim (Token/Certificate) on authenticated external-system principals so consumers can distinguish internal (token) from external (certificate) callers. 10.4.0-beta6: the Token method is stamped on the principal at JWT validation (OnTokenValidated) rather than embedded in the token, so the stored access_token stays unchanged. 10.4.0-beta7: the OnTokenValidated stamp is gated on the ExternalSystem role.</PackageReleaseNotes>
     <Version>10.4.0-beta7</Version>
-    <Configurations>Debug;Release;NuGet</Configurations>
     <AssemblyVersion>10.4.0</AssemblyVersion>
     <FileVersion>10.4.0</FileVersion>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="README.md" Pack="true" PackagePath="\" />
+    <PackageReference Include="WolverineFx.Http" Version="6.16.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Cause.Core.DataLayerExtensions" Version="10.0.*" />
-    <PackageReference Include="FluentValidation" Version="12.1.*" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.*" />
-    <PackageReference Include="Semver" Version="3.0.0" />
+    <ProjectReference Include="..\Cause.SecurityManagement.Core\Cause.SecurityManagement.Core.csproj" />
   </ItemGroup>
-  
-  <ItemGroup>
-    <ProjectReference Include="..\Cause.SecurityManagement.Models\Cause.SecurityManagement.Models.csproj" />
-  </ItemGroup>
-    
+
 </Project>

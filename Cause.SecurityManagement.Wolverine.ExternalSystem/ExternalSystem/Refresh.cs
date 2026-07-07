@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Wolverine.Http;
 
-namespace Cause.SecurityManagement.Wolverine.Features.ExternalSystem;
+namespace Cause.SecurityManagement.Wolverine.ExternalSystem;
 
 public class ExternalSystemRefreshEndpoint
 {

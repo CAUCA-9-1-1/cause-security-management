@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Http;
 
 using Wolverine.Http;
 
-namespace Cause.SecurityManagement.Wolverine.Features.ExternalSystem;
+namespace Cause.SecurityManagement.Wolverine.ExternalSystem;
 
 public class ExternalSystemLogonEndpoint
 {

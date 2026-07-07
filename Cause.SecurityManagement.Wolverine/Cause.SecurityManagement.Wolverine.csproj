@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Cause.SecurityManagement.Core\Cause.SecurityManagement.Core.csproj" />
+    <ProjectReference Include="..\Cause.SecurityManagement.Wolverine.ExternalSystem\Cause.SecurityManagement.Wolverine.ExternalSystem.csproj" />
   </ItemGroup>
 
 </Project>

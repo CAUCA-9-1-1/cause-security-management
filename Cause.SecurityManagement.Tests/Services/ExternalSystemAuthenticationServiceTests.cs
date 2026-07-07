@@ -49,7 +49,7 @@ namespace Cause.SecurityManagement.Tests.Services
             var someRefreshToken = "asdfa";
             var someAccessToken = "lkjlkj";
             var someKnownApikey = "asdlkfj";
-            var someExternalSystem = new ExternalSystem { Name = "asdf" };
+            var someExternalSystem = new ExternalSystem { Name = "asdf", AuthenticationType = ExternalSystemAuthenticationType.Token };
             repository.GetByApiKey(Arg.Is(someKnownApikey)).Returns(someExternalSystem);
             generator.GenerateAccessToken(Arg.Is(someExternalSystem.Id.ToString()), Arg.Is(someExternalSystem.Name), Arg.Is(SecurityRoles.ExternalSystem)).Returns(someAccessToken);
             generator.GenerateRefreshToken().Returns(someRefreshToken);

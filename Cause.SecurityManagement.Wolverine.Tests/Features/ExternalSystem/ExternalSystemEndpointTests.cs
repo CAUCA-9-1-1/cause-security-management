@@ -1,7 +1,7 @@
 using AwesomeAssertions;
 using Cause.SecurityManagement.Models.DataTransferObjects;
 using Cause.SecurityManagement.Core.Services;
-using Cause.SecurityManagement.Wolverine.Features.ExternalSystem;
+using Cause.SecurityManagement.Wolverine.ExternalSystem;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;

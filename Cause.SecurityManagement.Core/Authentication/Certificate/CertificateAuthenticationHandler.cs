@@ -45,6 +45,7 @@ public class CertificateAuthenticationHandler(
             new Claim(ClaimTypes.Role, SecurityRoles.ExternalSystem),
             new Claim(ClaimTypes.Sid, externalSystem.Id.ToString()),
             new Claim(ClaimTypes.GivenName, externalSystem.Name),
+            new Claim(ExternalSystemClaims.AuthenticationType, externalSystem.AuthenticationType.ToString()),
         };
 
         var claimsIdentity = new ClaimsIdentity(claims, nameof(CertificateAuthenticationHandler));

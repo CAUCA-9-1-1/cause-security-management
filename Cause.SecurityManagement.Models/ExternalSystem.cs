@@ -8,6 +8,7 @@ namespace Cause.SecurityManagement.Models
         public string ApiKey { get; set; } = string.Empty;
         public string CertificateSubjectDn { get; set; } = string.Empty;
         public bool IsActive { get; set; } = true;
+        public ExternalSystemAuthenticationType AuthenticationType { get; set; } = ExternalSystemAuthenticationType.Token;
         public ICollection<ExternalSystemToken> Tokens { get; set; }
     }
 }
