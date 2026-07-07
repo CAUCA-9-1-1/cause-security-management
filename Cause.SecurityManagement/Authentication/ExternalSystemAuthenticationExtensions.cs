@@ -1,3 +1,4 @@
+using Cause.SecurityManagement.Core;
 using Cause.SecurityManagement.Core.Authentication;
 using Cause.SecurityManagement.Core.Authentication.Certificate;
 using Cause.SecurityManagement.Models;
@@ -43,6 +44,7 @@ public static class ExternalSystemAuthenticationExtensions
                     OnTokenValidated = context =>
                     {
                         if (context.Principal?.Identity is ClaimsIdentity identity
+                            && context.Principal.HasClaim(claim => claim.Type == ClaimTypes.Role && claim.Value == SecurityRoles.ExternalSystem)
                             && !identity.HasClaim(claim => claim.Type == ExternalSystemClaims.AuthenticationType))
                         {
                             identity.AddClaim(new Claim(ExternalSystemClaims.AuthenticationType, ExternalSystemAuthenticationType.Token.ToString()));
