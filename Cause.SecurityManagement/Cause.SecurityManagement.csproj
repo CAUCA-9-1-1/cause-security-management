@@ -17,7 +17,7 @@
 authentication (no client certificate). Backwards compatible: AddDualExternalSystemAuthentication
 is unchanged. All published packages must be upgraded together.
     </PackageReleaseNotes>
-    <Version>10.5.0</Version>
+    <Version>10.5.0-beta1</Version>
     <AssemblyVersion>10.5.0</AssemblyVersion>
     <FileVersion>10.5.0</FileVersion>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
