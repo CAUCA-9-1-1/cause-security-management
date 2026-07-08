@@ -14,11 +14,15 @@
     <Description>Core security services for ASP.NET Core: authentication, authorization, user management and repositories.</Description>
     <Copyright>CAUCA 9-1-1 (c) 2025</Copyright>
     <PackageTags>Cause Security Management Core AspNetCore Cauca</PackageTags>
-    <PackageReleaseNotes>Add per-system ExternalSystem authentication method (Token/Certificate) with strict binding and a new AddDualExternalSystemAuthentication scheme that routes each request to certificate or JWT bearer. The authenticated principal is stamped with an externalSystemAuthenticationType claim (Certificate by the certificate handler; Token via OnTokenValidated, gated on the ExternalSystem role) so consumers can tell internal token callers from external certificate callers. Adds the split-out Cause.SecurityManagement.Wolverine.ExternalSystem endpoints package (logon/refresh/GetCurrentUser). NOTE: AuthenticationType defaults to Token; existing certificate-based external systems must be set to Certificate. The ExternalSystems table needs a non-nullable AuthenticationType column (default 0 = Token); this library ships no migrations.</PackageReleaseNotes>
-    <Version>10.4.0</Version>
+    <PackageReleaseNotes>
+10.5.0 — Adds AddExternalSystemTokenAuthentication for token-only external-system
+authentication (no client certificate). Backwards compatible: AddDualExternalSystemAuthentication
+is unchanged. All published packages must be upgraded together.
+    </PackageReleaseNotes>
+    <Version>10.5.0-beta1</Version>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <AssemblyVersion>10.4.0</AssemblyVersion>
-    <FileVersion>10.4.0</FileVersion>
+    <AssemblyVersion>10.5.0</AssemblyVersion>
+    <FileVersion>10.5.0</FileVersion>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>

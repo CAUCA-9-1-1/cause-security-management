@@ -1,8 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using NUnit.Framework;
 using Testcontainers.PostgreSql;
+using Cause.SecurityManagement.Integration.Tests.Infrastructure;
 
-namespace Cause.SecurityManagement.Integration.Tests.Infrastructure;
+namespace Cause.SecurityManagement.Integration.Tests;
 
 [SetUpFixture]
 public class DatabaseFixture
