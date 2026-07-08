@@ -4,16 +4,20 @@
 	  <IsPackable>true</IsPackable>
 	  <TargetFramework>net10.0</TargetFramework>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <Version>10.4.0</Version>
+    <Version>10.5.0</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 	  <RepositoryUrl>https://github.com/CAUCA-9-1-1/cause-security-management</RepositoryUrl>
 	  <PackageProjectUrl>https://github.com/CAUCA-9-1-1/cause-security-management</PackageProjectUrl>
-    <AssemblyVersion>10.4.0</AssemblyVersion>
-    <FileVersion>10.4.0</FileVersion>
+    <AssemblyVersion>10.5.0</AssemblyVersion>
+    <FileVersion>10.5.0</FileVersion>
     <Authors>Fred Catellier</Authors>
     <Description>Base models for the Causee.SecurityManagement's library.</Description>
     <Copyright>CAUCA 9-1-1 2025</Copyright>
-    <PackageReleaseNotes>Add per-system ExternalSystem authentication method (Token/Certificate) with strict binding and a new AddDualExternalSystemAuthentication scheme that routes each request to certificate or JWT bearer. The authenticated principal is stamped with an externalSystemAuthenticationType claim (Certificate by the certificate handler; Token via OnTokenValidated, gated on the ExternalSystem role) so consumers can tell internal token callers from external certificate callers. Adds the split-out Cause.SecurityManagement.Wolverine.ExternalSystem endpoints package (logon/refresh/GetCurrentUser). NOTE: AuthenticationType defaults to Token; existing certificate-based external systems must be set to Certificate. The ExternalSystems table needs a non-nullable AuthenticationType column (default 0 = Token); this library ships no migrations.</PackageReleaseNotes>
+    <PackageReleaseNotes>
+10.5.0 — Adds AddExternalSystemTokenAuthentication for token-only external-system
+authentication (no client certificate). Backwards compatible: AddDualExternalSystemAuthentication
+is unchanged. All published packages must be upgraded together.
+    </PackageReleaseNotes>
     <Company>CAUCA 9-1-1</Company>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>

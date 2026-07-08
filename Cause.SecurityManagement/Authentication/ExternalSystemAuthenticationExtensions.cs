@@ -32,27 +32,7 @@ public static class ExternalSystemAuthenticationExtensions
         services
             .AddAuthenticationWithScheme(CustomAuthSchemes.DualExternalSystemScheme)
             .AddScheme<CertificateAuthenticationOptions, CertificateAuthenticationHandler>(CustomAuthSchemes.CertificateAuthentication, _ => { })
-            .AddJwtBearer(CustomAuthSchemes.ExternalSystemTokenAuthentication, options =>
-            {
-                options.RequireHttpsMetadata = false;
-                options.SaveToken = true;
-                options.TokenValidationParameters = RegularUserJwtAuthenticationBuilder.GetAuthenticationParameters(
-                    configuration.SecretKey, configuration.Issuer, configuration.PackageName);
-                options.Events = new JwtBearerEvents
-                {
-                    OnAuthenticationFailed = RegularUserJwtAuthenticationBuilder.GetCustomOnAuthenticationFailedResult,
-                    OnTokenValidated = context =>
-                    {
-                        if (context.Principal?.Identity is ClaimsIdentity identity
-                            && context.Principal.HasClaim(claim => claim.Type == ClaimTypes.Role && claim.Value == SecurityRoles.ExternalSystem)
-                            && !identity.HasClaim(claim => claim.Type == ExternalSystemClaims.AuthenticationType))
-                        {
-                            identity.AddClaim(new Claim(ExternalSystemClaims.AuthenticationType, ExternalSystemAuthenticationType.Token.ToString()));
-                        }
-                        return Task.CompletedTask;
-                    }
-                };
-            })
+            .AddJwtBearer(CustomAuthSchemes.ExternalSystemTokenAuthentication, options => ConfigureExternalSystemTokenBearer(options, configuration))
             .AddPolicyScheme(CustomAuthSchemes.DualExternalSystemScheme, CustomAuthSchemes.DualExternalSystemScheme, options =>
             {
                 options.ForwardDefaultSelector = context => HasBearerToken(context)
@@ -61,6 +41,48 @@ public static class ExternalSystemAuthenticationExtensions
             });
 
         return services;
+    }
+
+    /// <summary>
+    /// Adds a token-only authentication scheme for external systems. External systems authenticate
+    /// exclusively by bearer token (no client certificate). Use this for APIs that do not support
+    /// certificate authentication.
+    /// </summary>
+    public static IServiceCollection AddExternalSystemTokenAuthentication(this IServiceCollection services, SecurityConfiguration configuration)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+
+        JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+
+        services.AddScoped<IClaimsTransformation, ExternalSystemSidClaimsTransformer>();
+
+        services
+            .AddAuthenticationWithScheme(CustomAuthSchemes.ExternalSystemTokenAuthentication)
+            .AddJwtBearer(CustomAuthSchemes.ExternalSystemTokenAuthentication, options => ConfigureExternalSystemTokenBearer(options, configuration));
+
+        return services;
+    }
+
+    private static void ConfigureExternalSystemTokenBearer(JwtBearerOptions options, SecurityConfiguration configuration)
+    {
+        options.RequireHttpsMetadata = false;
+        options.SaveToken = true;
+        options.TokenValidationParameters = RegularUserJwtAuthenticationBuilder.GetAuthenticationParameters(
+            configuration.SecretKey, configuration.Issuer, configuration.PackageName);
+        options.Events = new JwtBearerEvents
+        {
+            OnAuthenticationFailed = RegularUserJwtAuthenticationBuilder.GetCustomOnAuthenticationFailedResult,
+            OnTokenValidated = context =>
+            {
+                if (context.Principal?.Identity is ClaimsIdentity identity
+                    && context.Principal.HasClaim(claim => claim.Type == ClaimTypes.Role && claim.Value == SecurityRoles.ExternalSystem)
+                    && !identity.HasClaim(claim => claim.Type == ExternalSystemClaims.AuthenticationType))
+                {
+                    identity.AddClaim(new Claim(ExternalSystemClaims.AuthenticationType, ExternalSystemAuthenticationType.Token.ToString()));
+                }
+                return Task.CompletedTask;
+            }
+        };
     }
 
     private static bool HasBearerToken(HttpContext context)
