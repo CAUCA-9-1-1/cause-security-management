@@ -2,6 +2,7 @@ using Cause.SecurityManagement.Core.Authentication;
 using Cause.SecurityManagement.Models.Configuration;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Net.Http.Headers;
+using Microsoft.IdentityModel.Tokens;
 using System.Diagnostics.CodeAnalysis;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -82,13 +83,15 @@ public static class TokenAuthenticationExtensions
             return CustomAuthSchemes.RegularUserAuthentication;
         var token = authorization.Substring("Bearer ".Length).Trim();
         var jwtHandler = new JwtSecurityTokenHandler();
-        
+        if (!TryReadJwtToken(jwtHandler, token, out var jwtToken))
+            return CustomAuthSchemes.RegularUserAuthentication;
+
         string selectedScheme;
-        if (IsKeycloakToken(configuration, jwtHandler, token))
+        if (IsKeycloakToken(configuration, jwtToken))
             selectedScheme = CustomAuthSchemes.KeycloakAuthentication;
-        else if (IsRegularUser(jwtHandler, token))
+        else if (IsRegularUser(jwtToken))
             selectedScheme = CustomAuthSchemes.RegularUserAuthentication;
-        else if (IsConsole(jwtHandler, token))
+        else if (IsConsole(jwtToken))
             selectedScheme = CustomAuthSchemes.ConsoleCertificateAuthentication;
         else
             selectedScheme = CustomAuthSchemes.RegularUserAuthentication;
@@ -98,7 +101,6 @@ public static class TokenAuthenticationExtensions
             var logger = context.RequestServices.GetService<ILogger<object>>();
             if (logger != null)
             {
-                var jwtToken = jwtHandler.ReadJwtToken(token);
                 var claims = string.Join(", ", jwtToken.Claims.Select(c => $"{c.Type}={c.Value}"));
                 logger.LogInformation("Token authentication scheme selection - Scheme: {Scheme}, Claims: [{Claims}]", selectedScheme, claims);
             }
@@ -107,12 +109,28 @@ public static class TokenAuthenticationExtensions
         return selectedScheme;
     }
 
-    private static bool IsKeycloakToken(KeycloakConfiguration? configuration, JwtSecurityTokenHandler jwtHandler, string token)
-        => configuration != null && jwtHandler.ReadJwtToken(token).Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Iss)?.Value == configuration.ValidIssuer;
+    private static bool TryReadJwtToken(JwtSecurityTokenHandler jwtHandler, string token, [NotNullWhen(true)] out JwtSecurityToken? jwtToken)
+    {
+        jwtToken = null;
+        if (!jwtHandler.CanReadToken(token))
+            return false;
+        try
+        {
+            jwtToken = jwtHandler.ReadJwtToken(token);
+            return true;
+        }
+        catch (Exception exception) when (exception is ArgumentException or SecurityTokenException)
+        {
+            return false;
+        }
+    }
 
-    private static bool IsRegularUser(JwtSecurityTokenHandler jwtHandler, string token)
-        => jwtHandler.ReadJwtToken(token).Claims.Any(c => c.Type == ClaimTypes.Role && c.Value == SecurityRoles.User);
+    private static bool IsKeycloakToken(KeycloakConfiguration? configuration, JwtSecurityToken jwtToken)
+        => configuration != null && jwtToken.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Iss)?.Value == configuration.ValidIssuer;
 
-    private static bool IsConsole(JwtSecurityTokenHandler jwtHandler, string token)
-        => jwtHandler.ReadJwtToken(token).Claims.Any(c => c.Type == ClaimTypes.Role && c.Value == SecurityRoles.ApiCertificate);
+    private static bool IsRegularUser(JwtSecurityToken jwtToken)
+        => jwtToken.Claims.Any(c => c.Type == ClaimTypes.Role && c.Value == SecurityRoles.User);
+
+    private static bool IsConsole(JwtSecurityToken jwtToken)
+        => jwtToken.Claims.Any(c => c.Type == ClaimTypes.Role && c.Value == SecurityRoles.ApiCertificate);
 }
