@@ -15,14 +15,12 @@
     <Copyright>CAUCA 9-1-1 (c) 2025</Copyright>
     <PackageTags>Cause Security Management Core AspNetCore Cauca</PackageTags>
     <PackageReleaseNotes>
-10.5.0 — Adds AddExternalSystemTokenAuthentication for token-only external-system
-authentication (no client certificate). Backwards compatible: AddDualExternalSystemAuthentication
-is unchanged. All published packages must be upgraded together.
+10.6.0 — Add fix to not generate an exception on invalid token.
     </PackageReleaseNotes>
-    <Version>10.5.0</Version>
+    <Version>10.6.0</Version>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <AssemblyVersion>10.5.0</AssemblyVersion>
-    <FileVersion>10.5.0</FileVersion>
+    <AssemblyVersion>10.6.0</AssemblyVersion>
+    <FileVersion>10.6.0</FileVersion>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
