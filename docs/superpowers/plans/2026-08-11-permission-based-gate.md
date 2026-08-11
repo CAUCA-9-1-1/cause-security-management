@@ -1692,7 +1692,19 @@ git commit -m "#115 - Add end-to-end permission gate tests against a real databa
 
 ---
 
-### Task 9: Documentation and final verification
+### Task 9: Documentation and final verification — ✅ COMPLETE
+
+README section added, ADR accepted and indexed, all four packable projects at `10.7.0-beta1` with `dotnet pack` verified to produce it. `release.ps1` not run and no tag created — publishing is a separate step and `RELEASING.md` step 6 excludes pre-release sets from tagging.
+
+Also corrected the ADR's Context section, which still carried the disproved "filter stands down" claim and therefore contradicted the corrected section later in the same record.
+
+**One item remains outstanding across the whole plan:** Task 8 Step 4's two MVC-filter hosts (`AskForAuthorizationByDefault` and `AddAuthorizeFiltersControllerConvention`). Those need controllers rather than minimal APIs. The union-not-suppression behavior they would pin — where the legacy `RequireRole(RegularUser)` policy ANDs with the permission policy and denies Keycloak Administrators — is documented in the spec and the ADR from framework-source reading, but has **not** been empirically confirmed. Worth its own issue before a non-beta release.
+
+The original detail follows.
+
+---
+
+### Task 9 (original detail): Documentation and final verification
 
 **Files:**
 - Modify: `README.md`
