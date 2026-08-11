@@ -857,7 +857,19 @@ git commit -m "#115 - Add the permission authorization handler"
 
 ---
 
-### Task 6: Registration extension
+### Task 6: Registration extension — ✅ COMPLETE
+
+Shipped as specified, with all four load-bearing registration choices intact: `Replace` for the policy provider, explicit `AddHttpContextAccessor()`, `TryAddEnumerable` for the handler, `TryAddScoped` for the cache. Seven tests.
+
+**The `Replace` choice was proven, not assumed.** Swapping it back to `TryAddSingleton` made `PermissionRegistrationAfterAuthorization_...` fail with "Expected type to be PermissionAuthorizationPolicyProvider, but found DefaultAuthorizationPolicyProvider" — the exact production bug, where a consumer calling an `AddAuthorizationFor*` helper first would silently keep the default provider and every gated endpoint would 500. The tests resolve from a built provider rather than inspecting `ServiceDescriptor` entries, which is why they catch it; descriptor inspection looks correct either way.
+
+The XML doc records that `AddAuthorizationForKeycloakAndRegularUserSchemes` and `AddAuthorizationForExternalSystem` leave the gate with nothing useful to do. The README in Task 9 must repeat that.
+
+The original detail follows.
+
+---
+
+### Task 6 (original detail): Registration extension
 
 **Files:**
 - Modify: `Cause.SecurityManagement.Core/Authentication/ServiceCollectionAuthorizationExtensions.cs`

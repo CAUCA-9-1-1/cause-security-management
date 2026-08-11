@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Cause.SecurityManagement.Core.Authentication;
 
@@ -107,6 +108,33 @@ public static class ServiceCollectionAuthorizationExtensions
                 .RequireRole(SecurityRoles.User)
                 .Build();
         });
+    }
+
+    /// <summary>
+    /// Adds the permission gate used by [AdministratorOrUserWithPermission] and
+    /// [UserWithPermission]. Opt-in, and composes with the AddAuthorizationFor* extensions
+    /// rather than replacing any of them. Call order relative to those extensions does not
+    /// matter.
+    /// Not useful with AddAuthorizationForKeycloakAndRegularUserSchemes or
+    /// AddAuthorizationForExternalSystem — see the remarks.
+    /// </summary>
+    /// <remarks>
+    /// The dynamic policy inherits the application's AuthorizationOptions.FallbackPolicy, so a
+    /// decorated endpoint is always at least as strict as an undecorated one. Two registrations
+    /// therefore leave the gate with nothing useful to do:
+    /// AddAuthorizationForKeycloakAndRegularUserSchemes admits only Administrator, whom the
+    /// handler passes unconditionally, so [AdministratorOrUserWithPermission] is a no-op and
+    /// [UserWithPermission] denies everyone; AddAuthorizationForExternalSystem admits only
+    /// ExternalSystem, which the handler always denies, so both attributes deny everyone.
+    /// </remarks>
+    public static IServiceCollection AddPermissionBasedAuthorization(this IServiceCollection services)
+    {
+        services.AddHttpContextAccessor();
+        services.Replace(ServiceDescriptor.Singleton<IAuthorizationPolicyProvider, PermissionAuthorizationPolicyProvider>());
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IAuthorizationHandler, PermissionAuthorizationHandler>());
+        services.TryAddScoped<ScopedPermissionCache>();
+
+        return services;
     }
 
     /// <summary>
