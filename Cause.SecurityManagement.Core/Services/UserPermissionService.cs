@@ -15,13 +15,13 @@ namespace Cause.SecurityManagement.Core.Services
     {
         public bool HasPermission(Guid userId, string permissionTag)
         {
-            return GetPermissionsForUser(userId).Exists(permission => permission.FeatureName == permissionTag && permission.Access);
+            return GetPermissionsForUser(userId).Allows(permissionTag);
         }
 
         public async Task<bool> HasPermissionAsync(Guid userId, string permissionTag, CancellationToken cancellationToken)
         {
             var permissions = await GetPermissionsForUserAsync(userId, cancellationToken);
-            return permissions.Exists(permission => permission.FeatureName == permissionTag && permission.Access);
+            return permissions.Allows(permissionTag);
         }
 
         public List<UserMergedPermission> GetPermissionsForUser(Guid userId)

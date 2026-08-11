@@ -33,7 +33,8 @@
 | `Core/Authentication/PermissionRequirement.cs` | The requirement: `Tag`, `AllowAdministrator` |
 | `Core/PermissionAttributes.cs` | Both attributes + the policy-name helpers they share |
 | `Core/Authentication/PermissionAuthorizationPolicyProvider.cs` | Name → policy, delegating unknown names |
-| `Core/Authentication/ScopedPermissionCache.cs` | Per-request memoization of the merged set |
+| `Core/Authentication/ScopedPermissionCache.cs` | Per-request memoization of the merged set — **`internal`** |
+| `Core/UserMergedPermissionExtensions.cs` | The shared `Allows(tag)` predicate — **`internal`** |
 | `Core/Authentication/PermissionAuthorizationHandler.cs` | The role rules |
 | `Core/Authentication/PermissionTagValidationHostedService.cs` | Opt-in startup tag validation |
 | `Core/Authentication/ServiceCollectionAuthorizationExtensions.cs` | Registration (modify) |
@@ -41,6 +42,8 @@
 | `Core/Repositories/I*PermissionRepository.cs` + impls | Async reads (modify) |
 
 Task order is dependency order: the async data path (Tasks 1–2) comes before the cache that consumes it (Task 3), which comes before the handler (Task 5).
+
+**Default to `internal` for anything consumers do not need to name.** These are published NuGet packages, so every public type is a permanent commitment under `docs/RELEASING.md` — `internal` → `public` later is a MINOR change, but `public` → `internal` is MAJOR. Core already has `InternalsVisibleTo` for both test assemblies, so `internal` costs nothing in testability. Only the two attributes, the requirement, the policy provider, and the registration extension need to be public.
 
 ---
 
@@ -108,7 +111,13 @@ The group query deliberately does not reuse `GetForUser`, whose query-expression
 
 **Verification (Release, `--no-incremental`):** `0 Avertissement(s)`, `0 Erreur(s)`. Unit tests 219/219. Integration tests 65/65, including the new `GroupPermissionRepositoryTests` which seeds a user in two groups and asserts both the tag and the `IsAllowed` flag round-trip, covering the `false` case.
 
-### Task 2: Async permission service path
+### Task 2: Async permission service path — ✅ COMPLETE
+
+Shipped as planned, with two additions from code review: three tests proving the interface default bodies delegate to the synchronous members (the fixture's `SynchronousOnlyPermissionService` stub compiling *is* the MINOR-compatibility proof), and a mirrored deny-wins case. The methods sit beside their synchronous counterparts so a maintainer editing one sees the other — they execute different SQL.
+
+`GetPermissionsForUserAsync` awaits the two repositories **sequentially, deliberately**. Both resolve the same scoped `DbContext` through `IScopedDbContextProvider`, so `Task.WhenAll` would throw on a second concurrent operation — intermittently, inside an authorization handler. Do not "optimize" this.
+
+The original detail follows.
 
 **Files:**
 - Modify: `Cause.SecurityManagement.Core/Services/IUserPermissionService.cs`
@@ -342,228 +351,78 @@ git commit -m "#115 - Add an async permission path to IUserPermissionService"
 
 ---
 
-### Task 3: Per-request permission cache
+### Task 3: Per-request permission cache — ✅ COMPLETE
+
+**Shipped with two changes from the original plan.** This section records what exists, because Tasks 5 and 6 depend on it.
 
 **Files:**
-- Create: `Cause.SecurityManagement.Core/Authentication/ScopedPermissionCache.cs`
-- Test: `Cause.SecurityManagement.Tests/Authentication/ScopedPermissionCacheTests.cs`
+- `Cause.SecurityManagement.Core/Authentication/ScopedPermissionCache.cs` (new)
+- `Cause.SecurityManagement.Core/UserMergedPermissionExtensions.cs` (new)
+- `Cause.SecurityManagement.Core/Services/UserPermissionService.cs` (modified — two call sites)
+- `Cause.SecurityManagement.Tests/Authentication/ScopedPermissionCacheTests.cs` (new, 7 tests)
 
-**Interfaces:**
-- Consumes: `IUserPermissionService.HasPermissionAsync` from Task 2.
-- Produces: `Task<bool> ScopedPermissionCache.HasPermissionAsync(Guid userId, string permissionTag, CancellationToken cancellationToken)` — registered `Scoped`, so one instance per request.
-
-**Why:** a single request can check permissions several times (multiple requirements, or the handler plus a business-layer `HasPermission` call as in `UserGroupPermissionService`). Each miss costs two database reads.
-
-**Risk resolved in Task 1 — no action needed, but read this.** These tests stub `IUserPermissionService.GetPermissionsForUserAsync`, which Task 2 adds as a **default interface implementation**. That was flagged as an open risk when this plan was written; it has since been probed directly:
-
-**NSubstitute *does* intercept default interface members.** It does not fall through to the default body. So `.Returns(...)` works normally and the hand-written fake below is **not** needed.
-
-The trap is the inverse of what was feared: a substitute whose async member is left unstubbed returns a non-null `Task` whose `Result` is `null`. A test that stubs only the synchronous member and expects the async one to delegate will NRE inside the service rather than failing with a readable assertion. **Stub both async members explicitly in every fixture.**
-
-Keep the fake below only as a reference in case a future NSubstitute upgrade changes this behavior:
+**Actual API:**
 
 ```csharp
-private sealed class FakePermissionService(List<UserMergedPermission> permissions) : IUserPermissionService
+internal class ScopedPermissionCache(IUserPermissionService permissionService)
 {
-    public int GetPermissionsCallCount { get; private set; }
-
-    public bool HasPermission(Guid userId, string permissionTag)
-        => throw new NotSupportedException("The gate uses the async path.");
-
-    public List<UserMergedPermission> GetPermissionsForUser(Guid userId)
-        => throw new NotSupportedException("The gate uses the async path.");
-
-    public Task<bool> HasPermissionAsync(Guid userId, string permissionTag, CancellationToken cancellationToken)
-        => Task.FromResult(permissions.Exists(permission => permission.FeatureName == permissionTag && permission.Access));
-
-    public Task<List<UserMergedPermission>> GetPermissionsForUserAsync(Guid userId, CancellationToken cancellationToken)
-    {
-        GetPermissionsCallCount++;
-        return Task.FromResult(permissions);
-    }
+    Task<bool> HasPermissionAsync(Guid userId, string permissionTag, CancellationToken cancellationToken)
 }
 ```
 
-Use the substitute. Do not leave a test that passes for the wrong reason — if a stubbed value appears to be ignored, stop and report it rather than working around it.
+#### Change 1 — the type is `internal`, not `public`
 
-- [ ] **Step 1: Write the failing test**
+Code review flagged this as blocking, and it is irreversible once published: this release is MINOR (10.7.0) per `docs/RELEASING.md`, so narrowing `public` → `internal` afterward would require a MAJOR bump.
 
-Create `Cause.SecurityManagement.Tests/Authentication/ScopedPermissionCacheTests.cs`:
+The cache uses a plain non-thread-safe `Dictionary`. That is **correct** for the designed path — the reviewer verified against the ASP.NET Core 10 source that `DefaultAuthorizationService.AuthorizeAsync` and `AuthorizationHandler<T>.HandleAsync` both invoke in a sequential awaited `foreach`, with no `Task.WhenAll` at either level. So multiple requirements on one endpoint are evaluated strictly sequentially against one instance.
+
+But `public` would let a consumer write `Task.WhenAll(userIds.Select(id => cache.HasPermissionAsync(...)))`. With no synchronization context those continuations land on different thread-pool threads, and two concurrent misses write the dictionary unsynchronized — which during a resize can corrupt the bucket chain and spin forever inside `TryGetValue`, hanging a request thread. That is a denial-of-service surface in an authorization path, not a cosmetic race.
+
+`internal` makes the sequential-access guarantee structural rather than assumed, and costs nothing: `Cause.SecurityManagement.Core/Properties/AssemblyInfo.cs` already declares `InternalsVisibleTo` for both `Cause.SecurityManagement.Tests` and `Cause.SecurityManagement.Integration.Tests`, internal types resolve through DI normally, and every consumer (the handler in Task 5, the registration in Task 6) lives inside the Core assembly.
+
+**Do not add `ConcurrentDictionary`.** The plain `Dictionary` is correct once access is confined to the assembly, and a concurrent collection would imply a guarantee this type does not have.
+
+**Known consumer caveat, worth remembering:** in a Blazor Server host a "scoped" lifetime is the *circuit* lifetime — hours, concurrently accessed — not a request. `internal` contains that too.
+
+#### Change 2 — `PermissionSetExtensions` renamed to `UserMergedPermissionExtensions`
+
+The predicate `FeatureName == tag && Access` had reached three occurrences (`HasPermission`, `HasPermissionAsync`, the cache), triggering the Rule of Three. It was extracted to an `internal` extension — internal so it adds no public API surface to a published package.
+
+The original name pointed at a `PermissionSet` type that does not exist. Renamed to match the type it actually extends. Block namespace and tab indentation, matching its neighbour `PermissionMergeTool.cs`.
 
 ```csharp
-namespace Cause.SecurityManagement.Tests.Authentication;
-
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using AwesomeAssertions;
-using Cause.SecurityManagement.Core.Authentication;
-using Cause.SecurityManagement.Core.Services;
-using Cause.SecurityManagement.Models.DataTransferObjects;
-using NSubstitute;
-using NUnit.Framework;
-
-[TestFixture]
-public class ScopedPermissionCacheTests
+internal static class UserMergedPermissionExtensions
 {
-    private const string AllowedTag = "CanEditBuilding";
-    private const string DeniedTag = "CanDeleteBuilding";
-
-    private IUserPermissionService permissionService;
-    private ScopedPermissionCache cache;
-    private Guid someUserId;
-
-    [SetUp]
-    public void SetUp()
-    {
-        permissionService = Substitute.For<IUserPermissionService>();
-        someUserId = Guid.NewGuid();
-
-        permissionService.GetPermissionsForUserAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
-            .Returns(new List<UserMergedPermission>
-            {
-                new() { FeatureName = AllowedTag, Access = true },
-            });
-
-        cache = new ScopedPermissionCache(permissionService);
-    }
-
-    [Test]
-    public async Task SameUserTwice_WhenHasPermissionAsync_ShouldLoadPermissionsOnce()
-    {
-        await cache.HasPermissionAsync(someUserId, AllowedTag, CancellationToken.None);
-        await cache.HasPermissionAsync(someUserId, DeniedTag, CancellationToken.None);
-
-        await permissionService.Received(1).GetPermissionsForUserAsync(someUserId, Arg.Any<CancellationToken>());
-    }
-
-    [Test]
-    public async Task TwoDifferentUsers_WhenHasPermissionAsync_ShouldLoadPermissionsOncePerUser()
-    {
-        var otherUserId = Guid.NewGuid();
-
-        await cache.HasPermissionAsync(someUserId, AllowedTag, CancellationToken.None);
-        await cache.HasPermissionAsync(otherUserId, AllowedTag, CancellationToken.None);
-
-        await permissionService.Received(1).GetPermissionsForUserAsync(someUserId, Arg.Any<CancellationToken>());
-        await permissionService.Received(1).GetPermissionsForUserAsync(otherUserId, Arg.Any<CancellationToken>());
-    }
-
-    [Test]
-    public async Task AllowedTag_WhenHasPermissionAsync_ShouldReturnTrue()
-    {
-        var result = await cache.HasPermissionAsync(someUserId, AllowedTag, CancellationToken.None);
-
-        result.Should().BeTrue();
-    }
-
-    [Test]
-    public async Task TagNotGranted_WhenHasPermissionAsync_ShouldReturnFalse()
-    {
-        var result = await cache.HasPermissionAsync(someUserId, DeniedTag, CancellationToken.None);
-
-        result.Should().BeFalse();
-    }
-
-    [Test]
-    public async Task TagPresentButNotAllowed_WhenHasPermissionAsync_ShouldReturnFalse()
-    {
-        permissionService.GetPermissionsForUserAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
-            .Returns(new List<UserMergedPermission>
-            {
-                new() { FeatureName = AllowedTag, Access = false },
-            });
-
-        var result = await cache.HasPermissionAsync(someUserId, AllowedTag, CancellationToken.None);
-
-        result.Should().BeFalse();
-    }
-
-    [Test]
-    public async Task SameUserInTwoScopes_WhenHasPermissionAsync_ShouldLoadPermissionsOncePerScope()
-    {
-        var services = new ServiceCollection();
-        services.AddSingleton(permissionService);
-        services.AddScoped<ScopedPermissionCache>();
-        using var provider = services.BuildServiceProvider();
-
-        using (var firstScope = provider.CreateScope())
-            await firstScope.ServiceProvider.GetRequiredService<ScopedPermissionCache>()
-                .HasPermissionAsync(someUserId, AllowedTag, CancellationToken.None);
-
-        using (var secondScope = provider.CreateScope())
-            await secondScope.ServiceProvider.GetRequiredService<ScopedPermissionCache>()
-                .HasPermissionAsync(someUserId, AllowedTag, CancellationToken.None);
-
-        await permissionService.Received(2).GetPermissionsForUserAsync(someUserId, Arg.Any<CancellationToken>());
-    }
+    public static bool Allows(this List<UserMergedPermission> permissions, string permissionTag)
+        => permissions.Exists(permission => permission.FeatureName == permissionTag && permission.Access);
 }
 ```
 
-The last test needs `using Microsoft.Extensions.DependencyInjection;`. It pins the cache to *request* lifetime deliberately: a permission revoked between two requests must be seen by the second one.
+All three call sites use it. The 12 `UserPermissionServiceTests` passed unmodified, and the reviewer confirmed by reading that the extraction is behavior-preserving including the null-receiver case.
 
-- [ ] **Step 2: Run the test to verify it fails**
+#### Design details that must be preserved
 
-Run: `dotnet test Cause.SecurityManagement.Tests/Cause.SecurityManagement.Tests.csproj --nologo --filter ScopedPermissionCacheTests`
-Expected: compile error — `ScopedPermissionCache` does not exist.
+**It caches `List<T>`, not `Task<List<T>>`.** This is the non-obvious part. The usual implementation of this pattern memoizes the `Task` to deduplicate in-flight loads, and then permanently caches a **faulted** task when the first load fails — turning one transient database blip into a request-wide authorization failure. Storing the materialized list *after* a successful await avoids that: the dictionary write sits after the `await`, so a throw skips it and the next call retries cleanly. `LoadFailsThenSucceeds_WhenHasPermissionAsync_ShouldNotCacheTheFailure` pins this.
 
-- [ ] **Step 3: Implement the cache**
+**Cancellation is uniform.** `GetPermissionsAsync` calls `cancellationToken.ThrowIfCancellationRequested()` first, so a cache hit and a cache miss behave the same under a cancelled token. Without it, a hit returned a value while a miss threw.
 
-Create `Cause.SecurityManagement.Core/Authentication/ScopedPermissionCache.cs`. This folder uses **file-scoped namespaces**:
+**The cached list never escapes.** `GetPermissionsAsync` is private and the only public member returns `bool`, so no caller can mutate the cache. If a later task adds a public list-returning member to this type, it must return `IReadOnlyList<UserMergedPermission>`.
 
-```csharp
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Cause.SecurityManagement.Core.Services;
-using Cause.SecurityManagement.Models.DataTransferObjects;
+**Indentation:** `ScopedPermissionCache.cs` uses 4 spaces, matching the other five files in `Core/Authentication/`. `UserMergedPermissionExtensions.cs` uses tabs, matching `PermissionMergeTool.cs`. `Core/` root is genuinely split 4-4 between tabs and spaces and `.editorconfig` sets no `indent_style`, so match the neighbouring file rather than normalizing.
 
-namespace Cause.SecurityManagement.Core.Authentication;
+#### Tests — 7
 
-/// <summary>
-/// Memoizes a user's merged permission set for the lifetime of one request.
-/// Registered as scoped; a user's permissions cannot change mid-request, so no invalidation is needed.
-/// </summary>
-public class ScopedPermissionCache(IUserPermissionService permissionService)
-{
-    private readonly Dictionary<Guid, List<UserMergedPermission>> permissionsByUser = [];
+Cache hit (one load for two different tags), per-user isolation, per-scope isolation via a real `ServiceCollection` asserting `Received(2)` — caching across scopes would be a bug, since a permission revoked between requests must be visible to the next — allowed tag, absent tag, present-but-denied tag, and failed-load-then-retry.
 
-    public async Task<bool> HasPermissionAsync(Guid userId, string permissionTag, CancellationToken cancellationToken)
-    {
-        var permissions = await GetPermissionsAsync(userId, cancellationToken);
-        return permissions.Any(permission => permission.FeatureName == permissionTag && permission.Access);
-    }
+The `SetUp` stub returns a **fresh list per call** via `Returns(_ => Task.FromResult(...))`. A single `Returns(new List<...>)` is evaluated once, handing every caller the same instance, which would make the tests structurally unable to detect cross-user aliasing.
 
-    private async Task<List<UserMergedPermission>> GetPermissionsAsync(Guid userId, CancellationToken cancellationToken)
-    {
-        if (permissionsByUser.TryGetValue(userId, out var cached))
-            return cached;
+#### Carried forward to Task 6
 
-        var permissions = await permissionService.GetPermissionsForUserAsync(userId, cancellationToken);
-        permissionsByUser[userId] = permissions;
-        return permissions;
-    }
-}
-```
+Registration **must** be `AddScoped`. `IUserPermissionService` is scoped, so a singleton would both create a captive dependency and silently defeat the design — the cache would live for the application's lifetime and a revoked permission would never become visible. The Task 6 registration test asserts `ServiceLifetime.Scoped` for exactly this reason.
 
-A plain `Dictionary` is correct here: a scoped instance is used by one request, and authorization runs sequentially before the action.
+The Task 6 registration test resolves `ScopedPermissionCache` by type from `Cause.SecurityManagement.Tests`, which works because of the existing `InternalsVisibleTo`.
 
-- [ ] **Step 4: Run the test to verify it passes**
-
-Run: `dotnet test Cause.SecurityManagement.Tests/Cause.SecurityManagement.Tests.csproj --nologo --filter ScopedPermissionCacheTests`
-Expected: 6 passed.
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add Cause.SecurityManagement.Core/Authentication/ScopedPermissionCache.cs Cause.SecurityManagement.Tests/Authentication/ScopedPermissionCacheTests.cs
-git commit -m "#115 - Add a per-request permission cache"
-```
-
----
+**Verification (Release, `--no-incremental`):** `0 Avertissement(s)`, `0 Erreur(s)`. Unit 238/238. Integration 65/65.
 
 ### Task 4: Requirement, attributes, and policy provider
 
