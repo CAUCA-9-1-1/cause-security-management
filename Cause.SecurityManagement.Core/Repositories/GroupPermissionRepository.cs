@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Cause.SecurityManagement.Models;
+using Cause.SecurityManagement.Models.DataTransferObjects;
 using Cause.SecurityManagement.Core.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -31,6 +34,15 @@ namespace Cause.SecurityManagement.Core.Repositories
                 where userGroup.IdUser == userId
                 from groupPermission in userGroup.Group.Permissions
                 select groupPermission;
+        }
+
+        public Task<List<UserMergedPermission>> GetForUserAsync(Guid userId, CancellationToken cancellationToken)
+        {
+            return context.GroupPermissions.AsNoTracking()
+                .Where(groupPermission => context.UserGroups
+                    .Any(userGroup => userGroup.IdUser == userId && userGroup.IdGroup == groupPermission.IdGroup))
+                .Select(groupPermission => new UserMergedPermission { Access = groupPermission.IsAllowed, FeatureName = groupPermission.Permission.Tag })
+                .ToListAsync(cancellationToken);
         }
 
         public GroupPermission Get(Guid groupPermissinId)

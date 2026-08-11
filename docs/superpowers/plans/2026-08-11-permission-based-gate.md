@@ -42,92 +42,69 @@ Task order is dependency order: the async data path (Tasks 1–2) comes before t
 
 ---
 
-### Task 1: Async repository reads
+### Task 1: Async repository reads — ✅ COMPLETE
 
-**Files:**
-- Modify: `Cause.SecurityManagement.Core/Repositories/IUserPermissionRepository.cs`
-- Modify: `Cause.SecurityManagement.Core/Repositories/UserPermissionRepository.cs`
-- Modify: `Cause.SecurityManagement.Core/Repositories/IGroupPermissionRepository.cs`
-- Modify: `Cause.SecurityManagement.Core/Repositories/GroupPermissionRepository.cs`
+**Shipped differently from the original plan.** Two decisions changed during execution; this section records what actually exists, because Tasks 2 and 3 depend on it.
 
-**Interfaces:**
-- Consumes: nothing.
-- Produces:
-  - `Task<List<UserPermission>> IUserPermissionRepository.GetForUserAsync(Guid userId, CancellationToken cancellationToken)`
-  - `Task<List<GroupPermission>> IGroupPermissionRepository.GetForUserAsync(Guid userId, CancellationToken cancellationToken)`
+**Files changed:**
+- `Cause.SecurityManagement.Core/Repositories/IUserPermissionRepository.cs`
+- `Cause.SecurityManagement.Core/Repositories/UserPermissionRepository.cs`
+- `Cause.SecurityManagement.Core/Repositories/IGroupPermissionRepository.cs`
+- `Cause.SecurityManagement.Core/Repositories/GroupPermissionRepository.cs`
+- `Cause.SecurityManagement.Integration.Tests/Repositories/GroupPermissionRepositoryTests.cs` (new)
 
-**Why these are needed:** `UserPermissionService` must not reference `Microsoft.EntityFrameworkCore` (it currently does not), so `ToListAsync` has to happen inside the repositories, which already do.
-
-- [ ] **Step 1: Read the existing repositories to match style**
-
-Read `Cause.SecurityManagement.Core/Repositories/UserPermissionRepository.cs` and `GroupPermissionRepository.cs`. Note the block-namespace style and that `GetForUser` on the group repository returns `IQueryable` while the user one returns `List`.
-
-- [ ] **Step 2: Add the async method to `IUserPermissionRepository`**
-
-Add to the interface (it already has `using System.Threading.Tasks;`; add `using System.Threading;`):
+**Actual signature — both interfaces:**
 
 ```csharp
-Task<List<UserPermission>> GetForUserAsync(Guid userId, CancellationToken cancellationToken);
+Task<List<UserMergedPermission>> GetForUserAsync(Guid userId, CancellationToken cancellationToken)
 ```
 
-- [ ] **Step 3: Implement it in `UserPermissionRepository`**
+#### Change 1 — default interface implementations, not abstract members
 
-Mirror the existing synchronous `GetForUser`:
+`docs/RELEASING.md:41` makes a breaking public-API change a MAJOR bump. These are public interfaces in a published NuGet package, so an abstract member would break consumers with hand-written implementations and force 11.0.0 instead of 10.7.0. Both members ship as default implementations delegating to the synchronous `GetForUser`; the library's own repository classes override them with genuinely async versions.
+
+The default bodies reference no EF Core. `Include` and `ToListAsync` are EF extensions that fail on a non-EF query provider, and an interface default body must not assume EF.
+
+#### Change 2 — projection, not entities
+
+Originally planned to return `List<UserPermission>` / `List<GroupPermission>`. Code review established that returning entities was wrong on three counts, and the maintainer approved the change:
+
+1. EF materialized ~10 columns across two tables per row, and `UserPermissionService` then discarded all but two fields in memory — a payload regression on a hot authorization path.
+2. Returning entities required an `Include` to populate `Permission`, which an interface default body cannot do, leaving a documented "implementors must populate this" trap that NREs inside an authorization path.
+3. A public interface return type cannot change after 10.7.0 publishes without a MAJOR bump, so the window to fix it was now.
+
+Projecting inside the query solved all three: reading `Permission.Tag` inside a `Select` makes EF emit the join, so no `Include` is needed and there is no navigation left to forget. There was precedent — `IUserPermissionRepository.GetUserPermissionsAsync` already returns `List<AuthenticationUserPermission>`.
+
+**Concrete implementations:**
 
 ```csharp
-public Task<List<UserPermission>> GetForUserAsync(Guid userId, CancellationToken cancellationToken)
+// UserPermissionRepository
+public Task<List<UserMergedPermission>> GetForUserAsync(Guid userId, CancellationToken cancellationToken)
 {
     return context.UserPermissions.AsNoTracking()
-        .Where(uc => uc.IdUser == userId)
-        .Include(uc => uc.Permission)
+        .Where(userPermission => userPermission.IdUser == userId)
+        .Select(userPermission => new UserMergedPermission { Access = userPermission.IsAllowed, FeatureName = userPermission.Permission.Tag })
         .ToListAsync(cancellationToken);
 }
-```
 
-Add `using System.Threading;` if absent.
-
-- [ ] **Step 4: Add the async method to `IGroupPermissionRepository`**
-
-```csharp
-Task<List<GroupPermission>> GetForUserAsync(Guid userId, CancellationToken cancellationToken);
-```
-
-Add `using System.Collections.Generic;` and `using System.Threading;` if absent.
-
-- [ ] **Step 5: Implement it in `GroupPermissionRepository`**
-
-The existing `GetForUser` is a query-expression `SelectMany` over `userGroup.Group.Permissions` and does **not** `Include` the `Permission` navigation — it doesn't need to, because its only caller projects `g.Permission.Tag`, which EF translates as a join.
-
-`GetForUserAsync` returns entities, so it **does** need the navigation populated. Do not reuse `GetForUser` — `Include` after a `SelectMany` is fragile. Write an equivalent `Where` + `Include` instead, mirroring the shape already used in `UserPermissionRepository.GetUserPermissionsAsync`:
-
-```csharp
-public Task<List<GroupPermission>> GetForUserAsync(Guid userId, CancellationToken cancellationToken)
+// GroupPermissionRepository
+public Task<List<UserMergedPermission>> GetForUserAsync(Guid userId, CancellationToken cancellationToken)
 {
     return context.GroupPermissions.AsNoTracking()
         .Where(groupPermission => context.UserGroups
             .Any(userGroup => userGroup.IdUser == userId && userGroup.IdGroup == groupPermission.IdGroup))
-        .Include(groupPermission => groupPermission.Permission)
+        .Select(groupPermission => new UserMergedPermission { Access = groupPermission.IsAllowed, FeatureName = groupPermission.Permission.Tag })
         .ToListAsync(cancellationToken);
 }
 ```
 
-Add `using System.Collections.Generic;` and `using System.Threading;`.
+The group query deliberately does not reuse `GetForUser`, whose query-expression `SelectMany` shape makes chained operators fragile. Code review verified the `Where` + `context.UserGroups.Any(...)` form translates to `WHERE EXISTS (...)` fully server-side, and that it returns the same set as `GetForUser` — with one benign improvement: `UserGroupMapping` has no unique index on `(IdUser, IdGroup)`, so `GetForUser` can emit duplicate rows where this form cannot. `PermissionMergeTool` groups by `FeatureName`, so duplicates were already idempotent.
 
-This is semantically the same set as `GetForUser` — group permissions of every group the user belongs to — expressed so EF can translate it and populate `Permission` reliably.
+#### Verified findings that affect later tasks
 
-- [ ] **Step 6: Build**
+**NSubstitute *does* intercept default interface members** — it does not fall through to them. A substitute returns a non-null `Task` whose `Result` is `null`. So the hand-written-fake fallback described in Task 3 is unnecessary, but **every fixture must stub the async members explicitly**; stubbing only the synchronous member produces an NRE inside the service rather than a useful assertion failure.
 
-Run: `dotnet build Cause.SecurityManagement.Core/Cause.SecurityManagement.Core.csproj -c Debug --nologo -p:GeneratePackageOnBuild=false`
-Expected: `0 Avertissement(s)`, `0 Erreur(s)`.
-
-- [ ] **Step 7: Commit**
-
-```bash
-git add Cause.SecurityManagement.Core/Repositories/
-git commit -m "#115 - Add async permission reads to the permission repositories"
-```
-
----
+**Verification (Release, `--no-incremental`):** `0 Avertissement(s)`, `0 Erreur(s)`. Unit tests 219/219. Integration tests 65/65, including the new `GroupPermissionRepositoryTests` which seeds a user in two groups and asserts both the tag and the `IsAllowed` flag round-trip, covering the `false` case.
 
 ### Task 2: Async permission service path
 
@@ -144,6 +121,8 @@ git commit -m "#115 - Add async permission reads to the permission repositories"
 
 **Design note:** these are **default interface implementations** delegating to the synchronous members, so external implementors of `IUserPermissionService` keep compiling. `UserPermissionService` overrides both with genuinely async versions.
 
+**Updated after Task 1.** The repositories now return `List<UserMergedPermission>` rather than entities, so the service no longer projects — it merges what the repositories hand it. The test doubles must return `UserMergedPermission` too. NSubstitute *does* intercept default interface members (verified in Task 1), so `.Returns(...)` works, but **both async members must be stubbed explicitly** — stubbing only the synchronous one yields a `Task` whose `Result` is `null` and an NRE rather than a useful assertion failure.
+
 - [ ] **Step 1: Write the failing tests**
 
 Create `Cause.SecurityManagement.Tests/Services/UserPermissionServiceTests.cs`:
@@ -159,7 +138,7 @@ namespace Cause.SecurityManagement.Tests.Services
     using AwesomeAssertions;
     using Cause.SecurityManagement.Core.Repositories;
     using Cause.SecurityManagement.Core.Services;
-    using Cause.SecurityManagement.Models;
+    using Cause.SecurityManagement.Models.DataTransferObjects;
     using NSubstitute;
     using NUnit.Framework;
 
@@ -181,24 +160,21 @@ namespace Cause.SecurityManagement.Tests.Services
             someUserId = Guid.NewGuid();
 
             userPermissionRepository.GetForUserAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
-                .Returns(new List<UserPermission>());
+                .Returns(new List<UserMergedPermission>());
             groupPermissionRepository.GetForUserAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
-                .Returns(new List<GroupPermission>());
+                .Returns(new List<UserMergedPermission>());
 
             service = new UserPermissionService(groupPermissionRepository, userPermissionRepository);
         }
 
-        private static UserPermission UserPermissionFor(string tag, bool isAllowed)
-            => new() { IsAllowed = isAllowed, Permission = new ModulePermission { Tag = tag } };
-
-        private static GroupPermission GroupPermissionFor(string tag, bool isAllowed)
-            => new() { IsAllowed = isAllowed, Permission = new ModulePermission { Tag = tag } };
+        private static UserMergedPermission PermissionFor(string tag, bool isAllowed)
+            => new() { Access = isAllowed, FeatureName = tag };
 
         [Test]
         public async Task UserWithAllowedPermission_WhenHasPermissionAsync_ShouldReturnTrue()
         {
             userPermissionRepository.GetForUserAsync(someUserId, Arg.Any<CancellationToken>())
-                .Returns([UserPermissionFor(SomeTag, isAllowed: true)]);
+                .Returns([PermissionFor(SomeTag, isAllowed: true)]);
 
             var result = await service.HasPermissionAsync(someUserId, SomeTag, CancellationToken.None);
 
@@ -209,7 +185,7 @@ namespace Cause.SecurityManagement.Tests.Services
         public async Task UserWithDeniedPermission_WhenHasPermissionAsync_ShouldReturnFalse()
         {
             userPermissionRepository.GetForUserAsync(someUserId, Arg.Any<CancellationToken>())
-                .Returns([UserPermissionFor(SomeTag, isAllowed: false)]);
+                .Returns([PermissionFor(SomeTag, isAllowed: false)]);
 
             var result = await service.HasPermissionAsync(someUserId, SomeTag, CancellationToken.None);
 
@@ -228,9 +204,9 @@ namespace Cause.SecurityManagement.Tests.Services
         public async Task GroupDenyAndUserAllow_WhenHasPermissionAsync_ShouldReturnFalseBecauseDenyWins()
         {
             userPermissionRepository.GetForUserAsync(someUserId, Arg.Any<CancellationToken>())
-                .Returns([UserPermissionFor(SomeTag, isAllowed: true)]);
+                .Returns([PermissionFor(SomeTag, isAllowed: true)]);
             groupPermissionRepository.GetForUserAsync(someUserId, Arg.Any<CancellationToken>())
-                .Returns([GroupPermissionFor(SomeTag, isAllowed: false)]);
+                .Returns([PermissionFor(SomeTag, isAllowed: false)]);
 
             var result = await service.HasPermissionAsync(someUserId, SomeTag, CancellationToken.None);
 
@@ -241,9 +217,9 @@ namespace Cause.SecurityManagement.Tests.Services
         public async Task UserAndGroupPermissions_WhenGetPermissionsForUserAsync_ShouldMergeBoth()
         {
             userPermissionRepository.GetForUserAsync(someUserId, Arg.Any<CancellationToken>())
-                .Returns([UserPermissionFor("FromUser", isAllowed: true)]);
+                .Returns([PermissionFor("FromUser", isAllowed: true)]);
             groupPermissionRepository.GetForUserAsync(someUserId, Arg.Any<CancellationToken>())
-                .Returns([GroupPermissionFor("FromGroup", isAllowed: true)]);
+                .Returns([PermissionFor("FromGroup", isAllowed: true)]);
 
             var result = await service.GetPermissionsForUserAsync(someUserId, CancellationToken.None);
 
@@ -257,7 +233,7 @@ namespace Cause.SecurityManagement.Tests.Services
             using var cancellation = new CancellationTokenSource();
             cancellation.Cancel();
             userPermissionRepository.GetForUserAsync(someUserId, Arg.Any<CancellationToken>())
-                .Returns<List<UserPermission>>(_ => throw new OperationCanceledException());
+                .Returns<List<UserMergedPermission>>(_ => throw new OperationCanceledException());
 
             var act = async () => await service.HasPermissionAsync(someUserId, SomeTag, cancellation.Token);
 
@@ -315,16 +291,15 @@ public async Task<List<UserMergedPermission>> GetPermissionsForUserAsync(Guid us
     var userPermissions = await userPermissionRepository.GetForUserAsync(userId, cancellationToken);
     var groupPermissions = await groupPermissionRepository.GetForUserAsync(userId, cancellationToken);
 
-    return new PermissionMergeTool().MergeUserAndGroupPermissions(
-        ToMergedPermissions(groupPermissions.Select(permission => (permission.IsAllowed, permission.Permission.Tag))),
-        ToMergedPermissions(userPermissions.Select(permission => (permission.IsAllowed, permission.Permission.Tag))));
+    return new PermissionMergeTool().MergeUserAndGroupPermissions(groupPermissions, userPermissions);
 }
-
-private static List<UserMergedPermission> ToMergedPermissions(IEnumerable<(bool IsAllowed, string Tag)> permissions)
-    => permissions.Select(permission => new UserMergedPermission { Access = permission.IsAllowed, FeatureName = permission.Tag }).ToList();
 ```
 
 Add `using System.Threading;` and `using System.Threading.Tasks;`. `PermissionMergeTool` lives in `Cause.SecurityManagement.Core`, already imported transitively — add `using Cause.SecurityManagement.Core;` if the compiler asks.
+
+Note how much simpler this is than the synchronous `GetPermissionsForUser` above it: because Task 1's repositories project to `UserMergedPermission` server-side, the service has nothing left to map. Do **not** add a projection helper here — there is nothing to project.
+
+Argument order matters: `MergeUserAndGroupPermissions(groupPermissions, userPermissions)` — group first, matching the existing synchronous call. The merge itself is order-independent (`Access = group.All(...)`), but keep the call sites consistent.
 
 - [ ] **Step 5: Run the tests to verify they pass**
 
@@ -357,7 +332,13 @@ git commit -m "#115 - Add an async permission path to IUserPermissionService"
 
 **Why:** a single request can check permissions several times (multiple requirements, or the handler plus a business-layer `HasPermission` call as in `UserGroupPermissionService`). Each miss costs two database reads.
 
-**Known risk — verify at Step 2.** These tests stub `IUserPermissionService.GetPermissionsForUserAsync`, which Task 2 added as a **default interface implementation**. NSubstitute must be able to intercept it for `.Returns(...)` to take effect. Castle DynamicProxy generally does proxy default interface members, but confirm it rather than assume: if the stub is ignored (the substitute returns an empty list no matter what you configure), replace the substitute with a hand-written fake in both this task and Task 5:
+**Risk resolved in Task 1 — no action needed, but read this.** These tests stub `IUserPermissionService.GetPermissionsForUserAsync`, which Task 2 adds as a **default interface implementation**. That was flagged as an open risk when this plan was written; it has since been probed directly:
+
+**NSubstitute *does* intercept default interface members.** It does not fall through to the default body. So `.Returns(...)` works normally and the hand-written fake below is **not** needed.
+
+The trap is the inverse of what was feared: a substitute whose async member is left unstubbed returns a non-null `Task` whose `Result` is `null`. A test that stubs only the synchronous member and expects the async one to delegate will NRE inside the service rather than failing with a readable assertion. **Stub both async members explicitly in every fixture.**
+
+Keep the fake below only as a reference in case a future NSubstitute upgrade changes this behavior:
 
 ```csharp
 private sealed class FakePermissionService(List<UserMergedPermission> permissions) : IUserPermissionService
@@ -381,7 +362,7 @@ private sealed class FakePermissionService(List<UserMergedPermission> permission
 }
 ```
 
-Report which path you took. Do not leave a test that passes for the wrong reason.
+Use the substitute. Do not leave a test that passes for the wrong reason — if a stubbed value appears to be ignored, stop and report it rather than working around it.
 
 - [ ] **Step 1: Write the failing test**
 
