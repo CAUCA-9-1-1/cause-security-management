@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <IsPackable>false</IsPackable>
@@ -21,7 +21,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="WolverineFx.Http" Version="6.16.0" />
+    <PackageReference Include="WolverineFx.Http" Version="6.25.*" />
   </ItemGroup>
 
   <ItemGroup>
