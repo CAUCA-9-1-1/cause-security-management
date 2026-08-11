@@ -1,9 +1,11 @@
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using AwesomeAssertions;
 using Cause.SecurityManagement.Core.Authentication;
 using Cause.SecurityManagement.Core.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
@@ -43,6 +45,23 @@ public class PermissionRegistrationTests
         var policyProvider = provider.GetRequiredService<IAuthorizationPolicyProvider>();
 
         policyProvider.Should().BeOfType<PermissionAuthorizationPolicyProvider>();
+    }
+
+    [Test]
+    public async Task PermissionRegistrationAfterAuthorization_WhenResolvingTheFallbackPolicy_ShouldPreserveTheConfiguredRoleRequirement()
+    {
+        using var provider = BuildProvider(services =>
+        {
+            services.AddAuthorizationForRegularUser();
+            services.AddPermissionBasedAuthorization();
+        });
+
+        var fallbackPolicy = await provider.GetRequiredService<IAuthorizationPolicyProvider>()
+            .GetFallbackPolicyAsync();
+
+        fallbackPolicy.Should().NotBeNull(
+            "AddAuthorization() must not clear the fallback policy the AddAuthorizationFor* extension configured");
+        fallbackPolicy.Requirements.Should().ContainItemsAssignableTo<RolesAuthorizationRequirement>();
     }
 
     [Test]

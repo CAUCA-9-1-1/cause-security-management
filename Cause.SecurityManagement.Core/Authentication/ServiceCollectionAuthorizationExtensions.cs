@@ -115,6 +115,10 @@ public static class ServiceCollectionAuthorizationExtensions
     /// [UserWithPermission]. Opt-in, and composes with the AddAuthorizationFor* extensions
     /// rather than replacing any of them. Call order relative to those extensions does not
     /// matter.
+    /// Also registers the authorization services required by UseAuthorization() — the
+    /// AddAuthorizationFor* extensions call AddAuthorizationCore alone, which is not enough for
+    /// UseAuthorization()'s VerifyServicesRegistered check, so a minimal-API application relying
+    /// solely on this library would otherwise crash at startup.
     /// Not useful with AddAuthorizationForKeycloakAndRegularUserSchemes or
     /// AddAuthorizationForExternalSystem — see the remarks.
     /// </summary>
@@ -129,6 +133,7 @@ public static class ServiceCollectionAuthorizationExtensions
     /// </remarks>
     public static IServiceCollection AddPermissionBasedAuthorization(this IServiceCollection services)
     {
+        services.AddAuthorization();
         services.AddHttpContextAccessor();
         services.Replace(ServiceDescriptor.Singleton<IAuthorizationPolicyProvider, PermissionAuthorizationPolicyProvider>());
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IAuthorizationHandler, PermissionAuthorizationHandler>());

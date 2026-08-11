@@ -635,6 +635,74 @@ bypass. They are requirements, not suggestions.
    framework's "requirements were not met" log line would then emit the permission
    tag.
 
+## Findings From The HTTP Pipeline Tests
+
+Both were discovered by running the gate through a real pipeline for the first time.
+Neither was predictable from the unit tests.
+
+### `AddAuthorizationCore` does not satisfy `UseAuthorization()`
+
+Every test host failed at **startup**:
+
+```
+InvalidOperationException: Please add all the required services by calling
+'IServiceCollection.AddAuthorization' in the application startup code.
+```
+
+All five `AddAuthorizationFor*` extensions call `AddAuthorizationCore(...)`, which does
+not register the marker service that `AuthorizationAppBuilderExtensions.VerifyServicesRegistered`
+checks. Only the framework's own `AddAuthorization()` does.
+
+MVC applications get it incidentally through `AddControllers()`. A **minimal-API**
+application relying solely on this library's helpers crashes on boot — a path that
+matters here precisely because `PermissionPolicy.NameFor` is public so minimal-API
+endpoints can gate with `.RequireAuthorization(policyName)`.
+
+`AddPermissionBasedAuthorization()` therefore calls `services.AddAuthorization()`
+first. A test confirms this does **not** clear the `FallbackPolicy` an
+`AddAuthorizationFor*` extension already configured — which would have silently undone
+the inheritance the whole security model rests on. The fix is proven rather than
+assumed: the pipeline fixture's explicit workaround was removed and all eighteen of
+its tests still pass.
+
+### The inherited scheme list must correspond to registered handlers
+
+Running the `AddAuthorizationForRegularUserKeycloakAndApiCertificate` host without
+handlers registered under its three scheme names did not produce a 401 or 403 — it
+threw `InvalidOperationException: No authentication handler is registered for the
+scheme 'KeycloakAuthentication'` from `PolicyEvaluator.AuthenticateAsync`, on **every**
+request touching that fallback, gated or ungated, before authorization ran at all.
+
+This is pre-existing behavior of that registration variant, not something this feature
+introduced, and `AddTokenAuthenticationWithCertificates` does register all three. It
+confirms the scheme inheritance is worth having: gated endpoints now authenticate
+identically to ungated ones instead of falling back to the default scheme alone.
+
+### Observed status codes
+
+Every expected result held. Recorded here because the Administrator rows are the ones
+that look wrong at a glance:
+
+| Host registration | Principal | Endpoint | Result |
+|---|---|---|---|
+| `AddAuthorizationForRegularUser` | none | gated | 401 |
+| `AddAuthorizationForRegularUser` | `RegularUser` with the tag | gated | 200 |
+| `AddAuthorizationForRegularUser` | `RegularUser` without it | gated | 403 |
+| `AddAuthorizationForRegularUser` | `Administrator` | gated | **403** — the inherited `RequireRole(RegularUser)` excludes them |
+| `AddAuthorizationForRegularUser` | none | `[AllowAnonymous]` + gated | **200** — the gate is bypassed |
+| `AddAuthorizationForRegularUser` | `ExternalSystem` | ungated | 403 — the fallback is intact on undecorated endpoints |
+| `...KeycloakAndApiCertificate` | `Administrator` | gated | **200** — that fallback admits them |
+| `...KeycloakAndApiCertificate` | `Administrator` | `[UserWithPermission]` | 403 |
+| `...KeycloakAndApiCertificate` | `Console` | gated | 403 — the handler denies it |
+| `...KeycloakAndApiCertificate` | `Console` | ungated | 200 — proving the handler, not the fallback, is what denies it |
+
+**Administrators pass only where the application's own baseline admits them.** That is
+the "stricter, never looser" rule, and it is the single most likely thing to be
+misread as a defect.
+
+The per-request cache is also confirmed at this level: one request triggers exactly one
+permission load, two requests for the same user trigger two.
+
 ## Pre-Existing Security Fix Included In This Branch
 
 Security review of the handler found a verified privilege escalation in
