@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,12 +14,13 @@ namespace Cause.SecurityManagement.Core.Authentication;
 /// scoped IUserPermissionService and defeat the design, because a revoked permission would
 /// never become visible. A user's permissions cannot change mid-request, so no invalidation
 /// is needed, and a permission revoked between requests is visible to the next request.
-/// Not thread-safe by design; access is confined to this assembly and the authorization
-/// pipeline invokes handlers sequentially.
+/// Concurrent reads and writes are safe. A consumer may perform resource-based authorization
+/// checks concurrently within one request, which can trigger a benign double-load for the
+/// same user; both loads return equivalent data, so this is harmless.
 /// </summary>
 internal class ScopedPermissionCache(IUserPermissionService permissionService)
 {
-    private readonly Dictionary<Guid, List<UserMergedPermission>> permissionsByUser = [];
+    private readonly ConcurrentDictionary<Guid, List<UserMergedPermission>> permissionsByUser = new();
 
     public async Task<bool> HasPermissionAsync(Guid userId, string permissionTag, CancellationToken cancellationToken)
     {

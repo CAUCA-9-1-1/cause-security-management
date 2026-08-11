@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AwesomeAssertions;
@@ -122,5 +123,16 @@ public class ScopedPermissionCacheTests
                 .HasPermissionAsync(someUserId, AllowedTag, CancellationToken.None);
 
         await permissionService.Received(2).GetPermissionsForUserAsync(someUserId, Arg.Any<CancellationToken>());
+    }
+
+    [Test]
+    public async Task ManyConcurrentChecksForDifferentUsers_WhenHasPermissionAsync_ShouldNotThrow()
+    {
+        var userIds = Enumerable.Range(0, 200).Select(_ => Guid.NewGuid()).ToList();
+
+        var act = async () => await Task.WhenAll(userIds.Select(id =>
+            cache.HasPermissionAsync(id, AllowedTag, CancellationToken.None)));
+
+        await act.Should().NotThrowAsync();
     }
 }

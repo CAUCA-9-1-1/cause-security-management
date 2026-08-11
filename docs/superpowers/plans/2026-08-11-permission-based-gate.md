@@ -527,7 +527,29 @@ The 12 originals plus: `AllowsCachingPolicies` is true; `GetDefaultPolicyAsync` 
 
 **Verification (Release, `--no-incremental`):** `0 Avertissement(s)`, `0 Erreur(s)`. Unit 260/260. Integration 65/65.
 
-### Task 5: The authorization handler
+### Task 5: The authorization handler — ✅ COMPLETE
+
+Shipped as specified. `internal sealed`, `context.Succeed(requirement)` on the passed instance only, no `context.Fail()`, scoped services from `HttpContext.RequestServices` with the child scope as a non-HTTP fallback, and no database read on any Administrator or non-`RegularUser` path. 25 tests.
+
+Three changes came out of review, all verified against the framework source rather than reasoned about:
+
+1. **The guard became `context.User?.Identity?.IsAuthenticated != true`.** `Identity is null` did not cover its own rationale: a `ClaimsIdentity` built with no `authenticationType` has a non-null `Identity`, `IsAuthenticated == false`, and `IsInRole("RegularUser") == true`, so such a principal carrying a real user's `Sid` reached the lookup. Not reachable through library code, since the provider always adds `RequireAuthenticatedUser()`, but `PermissionRequirement` is publicly constructible.
+2. **`ScopedPermissionCache` moved to `ConcurrentDictionary`.** The earlier conclusion that `internal` made single-threaded access structural was wrong — a consumer can drive concurrent resource-based authorization through the public `IAuthorizationService` with a public policy name, sharing one request scope and therefore one cache.
+3. **A pre-existing privilege escalation in `MultiJwtClaimsTransformer` was fixed on this branch**, with maintainer approval. See the spec section "Pre-Existing Security Fix Included In This Branch".
+
+**Verified framework behavior worth not re-deriving:**
+
+* `ClaimsPrincipal.IsInRole` tests each identity against **that identity's own** `RoleClaimType`. The Keycloak JWT identity has `RoleClaimType = "role"` and never carries the Administrator role; `MultiJwtClaimsTransformer` grafts a second identity whose default `RoleClaimType` is `ClaimTypes.Role`, and that is what matches. The `RoleClaimType = "role"` setting is a red herring for this handler. A test now pins that two-identity shape — moving the claim one identity over would deny every Administrator and, before that test, every other test would still have passed.
+* **An exception from the handler is fail-closed.** Both a transient fault and `OperationCanceledException` propagate to a 500 with the endpoint never reached; nothing converts a throw into a pass.
+* **A real client abort logs nothing at warning or error level** and does not reach the endpoint — `RequestAborted` does not produce confusing 500s.
+* **Allowed and denied cost the same** — the cache fetches the whole merged set and compares in memory, so there is no permission-enumeration timing oracle.
+* **A requirement with no registered handler stays pending** → denied. A missing policy provider makes the framework throw. Both fail closed.
+
+The original detail follows.
+
+---
+
+### Task 5 (original detail): The authorization handler
 
 **Files:**
 - Create: `Cause.SecurityManagement.Core/Authentication/PermissionAuthorizationHandler.cs`
@@ -927,6 +949,12 @@ public static IServiceCollection AddPermissionBasedAuthorization(this IServiceCo
     return services;
 }
 ```
+
+**Also required, from the Task 5 security review:**
+
+* **Call `services.AddHttpContextAccessor()` explicitly.** The handler depends on `IHttpContextAccessor`; assuming the consumer registered it means the first gated request throws at DI resolution.
+* **Document `AddAuthorizationForKeycloakAndRegularUserSchemes` and `AddAuthorizationForExternalSystem` as unsupported** for this feature. In the first, `[AdministratorOrUserWithPermission]` is a no-op — the fallback admits only `Administrator` and the handler passes every `Administrator` unconditionally — while `[UserWithPermission]` is deny-all. In the second, everything is deny-all because the handler always denies `ExternalSystem`. Neither is a security hole; both make the feature useless, which developers must be told rather than left to discover.
+* **Consider guarding the explicit-policy-shadowing case.** `GetPolicyAsync` consults the default provider first, so a consumer who registers a policy literally named `Permission:AdministratorOrUser:SomeTag` — for instance by copying the `AddMetricsPolicy` pattern, which is `RequireAssertion(_ => true)` — gets an endpoint that looks gated and is not. Low likelihood, silent failure, ungated result. Either throw at startup on such a collision or combine both policies.
 
 **`Replace`, not `TryAddSingleton` — this is a correctness bug, not a style preference.** An earlier draft of this plan used `TryAddSingleton`. `AddAuthorizationCore()`, which every one of the five `AddAuthorizationFor*` helpers calls, already does `TryAddSingleton<IAuthorizationPolicyProvider, DefaultAuthorizationPolicyProvider>()`. So a consumer writing
 

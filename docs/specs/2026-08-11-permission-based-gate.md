@@ -574,6 +574,50 @@ than prevented, because each is standard ASP.NET Core behavior.
   integrations rather than a security weakness; enumerate affected endpoints per
   consuming application before rollout.
 
+## Registration Variants Where The Gate Does Not Help
+
+Established by security review once full fallback inheritance was adopted. Neither
+case is a security hole — both fail closed — but in both the feature fails to do
+anything useful, which is worth documenting rather than discovering.
+
+**`AddAuthorizationForKeycloakAndRegularUserSchemes`** has a fallback of
+`RequireAuthenticatedUser().RequireRole(Administrator)`:
+
+| Attribute | Effect in that application |
+|---|---|
+| `[AdministratorOrUserWithPermission]` | The fallback admits only `Administrator`, and the handler passes every `Administrator` unconditionally. The decorated endpoint is **exactly as permissive as an undecorated one** — permission enforcement is a no-op. It fails closed in the framework's terms but fails open relative to developer intent: the developer believes they narrowed the endpoint and they did not. |
+| `[UserWithPermission]` | The fallback requires `Administrator`; the handler denies `Administrator`. **Deny-all, permanently.** |
+
+**`AddAuthorizationForExternalSystem`** requires the `ExternalSystem` role, which the
+handler always denies, so any decorated endpoint is deny-all there too.
+
+Both must be documented in the README as unsupported for this feature.
+
+## Cache Concurrency — Correcting An Earlier Conclusion
+
+An earlier revision concluded that a plain `Dictionary` in `ScopedPermissionCache`
+was safe because the authorization pipeline invokes handlers sequentially, and that
+making the type `internal` turned that into a structural guarantee.
+
+**The second half was wrong.** `PermissionPolicy.NameFor` is public and
+`IAuthorizationService` is public, so a consumer can drive concurrent
+resource-based authorization inside one request:
+
+```csharp
+await Task.WhenAll(items.Select(i =>
+    authService.AuthorizeAsync(user, i, PermissionPolicy.NameFor(tag, true))));
+```
+
+Those all share one request scope and therefore one cache instance. The consumer
+never names the cache type, so `internal` does not prevent it. Concurrent
+`Dictionary` writes can throw and, during a resize, can corrupt the bucket chain and
+spin a thread indefinitely — an availability risk inside an authorization path.
+
+The cache therefore uses `ConcurrentDictionary`. It deliberately does **not** use
+`GetOrAdd` with a factory: `GetOrAdd` cannot await, and caching a `Task` would
+reintroduce the faulted-task problem the design avoids. A concurrent double-load is
+accepted — both loads return equivalent data.
+
 ## Requirements Carried Into The Handler
 
 Security review identified these as the ways the handler could introduce a real
@@ -590,6 +634,38 @@ bypass. They are requirements, not suggestions.
 3. **`PermissionRequirement` must not gain a `ToString()` override.** The
    framework's "requirements were not met" log line would then emit the permission
    tag.
+
+## Pre-Existing Security Fix Included In This Branch
+
+Security review of the handler found a verified privilege escalation in
+`MultiJwtClaimsTransformer`, pre-existing and not introduced by this feature. The
+maintainer approved fixing it here because the permission gate turns it into a full
+bypass.
+
+`else if (issuer == keycloakConfiguration?.Value?.ValidIssuer)` matched when **both**
+sides were `null`. An application that does not configure Keycloak still resolves
+`IOptions<KeycloakConfiguration>` to a default instance whose `ValidIssuer` is
+`null`, and `CertificateAuthenticationHandler` builds its principal with no `iss`
+claim. `AddTokenAuthenticationWithCertificates` takes `keycloakConfiguration` as an
+optional parameter and registers both the transformer and certificate
+authentication unconditionally, so the path is reachable in a normal configuration.
+
+The result was that a certificate-authenticated **external system** received the
+`Administrator` role. That already let certificate principals satisfy
+`AddAuthorizationForKeycloakAndRegularUserSchemes`, whose baseline is
+`RequireRole(Administrator)`. With this feature it would additionally bypass every
+`[AdministratorOrUserWithPermission]` endpoint without any permission lookup, because
+that mode skips the lookup for Administrators.
+
+The fix returns early on a null or empty issuer and requires a non-empty
+`ValidIssuer` before matching the Keycloak branch. It also replaces the
+`"Administrator"` string literal with `SecurityRoles.Administrator` — that literal
+had become the load-bearing link making Keycloak principals pass the gate, and a
+rename of the constant would have decoupled them with no compile error.
+
+Five regression tests cover it, including one asserting the intended Keycloak path
+still grants the role. This required adding `InternalsVisibleTo` to the
+`Cause.SecurityManagement` package, which previously had none.
 
 ## Out Of Scope
 
