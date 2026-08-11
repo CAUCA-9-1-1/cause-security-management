@@ -1,6 +1,6 @@
 # Permission-Based Authorization Gate For Regular Users
 
-* Status: proposed
+* Status: accepted
 * Date: 2026-08-11
 * Deciders: Cause.SecurityManagement maintainers
 * Technical Story: Issue #115
@@ -20,12 +20,18 @@ merge in `PermissionMergeTool`) and is already exposed to clients through
 authorization pipeline.
 
 A complication constrains the design. The repository's default authorization
-convention, recorded in
-[2026-06-04-default-authorization-and-controller-conventions.md](2026-06-04-default-authorization-and-controller-conventions.md),
-applies the fallback policy through `UseDefaultAuthorizationWhenNotSpecifiedFilter`,
-which stands down whenever another authorization filter is present on the
-endpoint. Any attribute deriving from `AuthorizeAttribute` therefore suppresses
-the application's configured fallback policy on the endpoint it decorates.
+convention is recorded in
+[2026-06-04-default-authorization-and-controller-conventions.md](2026-06-04-default-authorization-and-controller-conventions.md).
+Any attribute deriving from `AuthorizeAttribute` suppresses the application's
+configured `AuthorizationOptions.FallbackPolicy` on the endpoint it decorates,
+because `AuthorizationPolicy.CombineAsync` consults the fallback only when an
+endpoint carries no authorize data at all.
+
+An earlier draft of this record additionally claimed that such an attribute makes
+`UseDefaultAuthorizationWhenNotSpecifiedFilter` stand down. **That was wrong**, and
+the correction is in "Interaction With The Default Authorization Convention" below.
+The two mechanisms are separate and behave differently; do not read the fallback-policy
+suppression as covering the MVC filter path.
 
 ## Decision Drivers
 
@@ -43,9 +49,11 @@ the application's configured fallback policy on the endpoint it decorates.
 
 * **Option A**: A dynamic policy provider plus an authorization handler. A
   permission attribute maps to a `"Permission:..."` policy created on demand. The
-  policy requires an authenticated user and carries the application's configured
-  authentication schemes, but does not require a role; role differentiation lives
-  in the handler.
+  policy requires an authenticated user and inherits the application's configured
+  fallback policy, but adds no role requirement of its own; role differentiation for
+  the permission decision lives in the handler. (As first considered, this option
+  copied only the authentication scheme list; see the Decision Outcome for why full
+  inheritance replaced that.)
 * **Option B**: A static policy per permission, registered at startup. Requires
   every application to enumerate its permission tags in `Program.cs` and keep
   that list in sync with the database.
@@ -276,29 +284,30 @@ warrants its own issue and ADR.
 <!-- Crucial section so Claude Code knows how to execute it -->
 Full detail in [docs/specs/2026-08-11-permission-based-gate.md](../../specs/2026-08-11-permission-based-gate.md).
 
-- [ ] Task 1: Add `PermissionRequirement` (`Tag`, `AllowAdministrator`), both
+- [x] Task 1: Add `PermissionRequirement` (`Tag`, `AllowAdministrator`), both
       attributes in `Cause.SecurityManagement.Core/PermissionAttributes.cs`, and
       `PermissionAuthorizationPolicyProvider` under
       `Cause.SecurityManagement.Core/Authentication/`.
-- [ ] Task 2: Add async members to `IUserPermissionService` as default interface
+- [x] Task 2: Add async members to `IUserPermissionService` as default interface
       implementations, with real async overrides in `UserPermissionService`, plus
       `GetForUserAsync` on `IUserPermissionRepository`,
       `IGroupPermissionRepository`, and both implementations.
-- [ ] Task 3: Add `ScopedPermissionCache` and `PermissionAuthorizationHandler`.
-- [ ] Task 4: Add `AddPermissionBasedAuthorization(bool validateTagsAtStartup =
+- [x] Task 3: Add `ScopedPermissionCache` and `PermissionAuthorizationHandler`.
+- [x] Task 4: Add `AddPermissionBasedAuthorization(bool validateTagsAtStartup =
       false)` to `ServiceCollectionAuthorizationExtensions`, plus
       `PermissionTagValidationHostedService`. Document both attributes, the
       consumer-side `Permission` constants pattern, and the `[UserWithPermission]`
       Keycloak lockout warning in `README.md`.
-- [ ] Task 5: Write unit tests for the handler, the policy provider, the cache,
+- [x] Task 5: Write unit tests for the handler, the policy provider, the cache,
       and tag validation, per the tables in the spec. The handler matrix runs
       against both `AllowAdministrator` values.
-- [ ] Task 6: Write integration tests under `Cause.SecurityManagement.Integration.Tests`
+- [x] Task 6: Write integration tests under `Cause.SecurityManagement.Integration.Tests`
       covering unauthenticated access, each configured authentication scheme, the
       denied cases, an undecorated endpoint in the same application, and the
       Keycloak-principal contrast between the two attributes.
-- [ ] Task 7: Confirm the scheme-list hypothesis in the spec. If the integration
-      tests show the scheme list is unnecessary, remove the copying and simplify
-      the policy provider.
-- [ ] Task 8: Build with no warnings, run the full unit and integration suites,
+- [x] Task 7: Confirm the scheme-list hypothesis in the spec. Resolved: the dynamic
+      policy inherits the fallback policy in full via `AuthorizationPolicyBuilder.Combine`,
+      which copies both `Requirements` and `AuthenticationSchemes`. There is no
+      separate scheme-copying code to simplify or remove.
+- [x] Task 8: Build with no warnings, run the full unit and integration suites,
       and flip this ADR to `accepted`.
