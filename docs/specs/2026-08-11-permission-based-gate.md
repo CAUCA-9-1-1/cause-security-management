@@ -107,48 +107,95 @@ if (context.Filters.Any(item => item is IAsyncAuthorizationFilter && item != thi
     return Task.FromResult(0);
 ```
 
-`Cause.SecurityManagement/AddAuthorizeFiltersControllerConvention.cs` likewise
-skips the default filter when the controller type carries any
-`AuthorizeAttribute`.
+> **Correction, 2026-08-11.** An earlier revision of this spec claimed the two
+> attributes suppress that filter. **That was wrong on the MVC filter path**, and
+> security review established it against the ASP.NET Core source. Both halves are
+> recorded below because they behave differently and both matter.
 
-Because both attributes derive from `AuthorizeAttribute`, decorating an endpoint
-with either one **suppresses the application's configured fallback policy on that
-endpoint**. The `Permission:` policy becomes the only gate.
+### What is true: the fallback *policy* is suppressed
 
-Two requirements follow, and both are load-bearing for security rather than
-stylistic:
+`AuthorizationPolicy.CombineAsync` consults `GetFallbackPolicyAsync()` **only when
+the endpoint carries no authorize data at all**. Both attributes derive from
+`AuthorizeAttribute`, so decorating an endpoint does suppress
+`AuthorizationOptions.FallbackPolicy` there.
 
-1. The dynamic policy must include `RequireAuthenticatedUser()` itself.
-2. The handler must verify the role positively, because no other filter is
-   verifying it.
+This is not new behavior introduced by this feature — the library's existing
+`AuthorizeByRolesAttribute` family already does it.
+
+### What is false: the MVC *filter* is not suppressed, it is unioned
+
+`AuthorizationApplicationModelProvider.OnProvidersExecuting` returns immediately
+when `MvcOptions.EnableEndpointRouting` is true, which is the default. Authorization
+attributes are therefore **never converted into `IAsyncAuthorizationFilter`
+instances**, so the guard above never trips. `UseDefaultAuthorizationWhenNotSpecifiedFilter`
+runs, and `AuthorizeFilter.GetEffectivePolicyAsync` gathers the endpoint's
+`IAuthorizeData` metadata and **unions** it with its own policy. A union of
+requirements is an AND.
+
+**Consequence for applications using `AskForAuthorizationByDefault` or
+`AddAuthorizeFiltersControllerConvention`:** the legacy `"defaultpolicy"`
+(`RequireRole(SecurityRoles.User)`) is ANDed with the permission policy. A Keycloak
+principal holds `Administrator` and not `RegularUser`, so
+`[AdministratorOrUserWithPermission]` would **deny every Administrator** on those
+applications regardless of what the handler decides.
+
+That fails closed, but it presents as "the new gate is broken," and the tempting
+remedy — loosening the legacy policy — is the dangerous one. The HTTP pipeline
+tests must cover both filter-based registrations explicitly and the outcome must be
+documented rather than discovered in production.
 
 ## Policy Composition
 
-The dynamic policy is built as:
+**The dynamic policy inherits the application's fallback policy in full and adds
+the permission requirement on top. A permission attribute may only make an
+endpoint stricter, never looser.**
 
-* `RequireAuthenticatedUser()`
-* the authentication scheme list read from
-  `AuthorizationOptions.FallbackPolicy?.AuthenticationSchemes`, obtained by
-  injecting `IOptions<AuthorizationOptions>` into the provider. Empty when the
-  application configured no fallback policy or named no schemes.
-* `PermissionRequirement(tag, allowAdministrator)`
+```csharp
+var builder = new AuthorizationPolicyBuilder().RequireAuthenticatedUser();
+if (fallbackPolicy is not null)
+    builder.Combine(fallbackPolicy);       // requirements AND schemes
+builder.AddRequirements(new PermissionRequirement(tag, allowAdministrator));
+```
 
-The policy deliberately does **not** call `RequireRole`. Role differentiation
-lives in the handler so that both attributes behave identically in
-`RegularUser`-default and `Administrator`-default applications.
+`AuthorizationPolicyBuilder.Combine` copies both `Requirements` and
+`AuthenticationSchemes`, so there is no separate scheme-copying step.
 
-### Why The Scheme List Is Copied
+The policy still does **not** add its own `RequireRole` — role differentiation for
+the permission decision lives in the handler. What it inherits is whatever role
+requirement the *application* configured, which is a different thing.
 
-`AddAuthorizationForRegularUserKeycloakAndApiCertificate` sets an explicit
-three-scheme list on its fallback policy
-(`Cause.SecurityManagement.Core/Authentication/ServiceCollectionAuthorizationExtensions.cs`).
-A dynamic policy that omits the scheme list is evaluated against the default
-scheme only, which risks a 401 for principals authenticated under one of the
-other schemes even when they hold the permission.
+### Why Full Inheritance, Not Just Schemes
 
-This is a hypothesis about ASP.NET Core policy evaluation, not a verified fact.
-It must be confirmed by the integration test listed below rather than assumed —
-if the test shows the scheme list is unnecessary, drop the copying and simplify.
+An earlier revision copied only `AuthenticationSchemes` and discarded the fallback
+policy's `Requirements`. Security review found this widened access in one
+registration variant. `AddAuthorizationForKeycloakAndRegularUserSchemes` has a
+fallback requiring role `Administrator` **only**, so:
+
+| Principal | Undecorated endpoint | Decorated, schemes-only composition |
+|---|---|---|
+| Keycloak `Administrator` | allowed | allowed |
+| `RegularUser` holding the tag | **denied** | **allowed** |
+
+A `RegularUser` token — issued by this library's own anonymous login endpoints —
+would reach an endpoint the application reserves for Keycloak principals. That is
+vertical privilege escalation on exactly the endpoints a developer believed they
+were restricting.
+
+Discarding `Requirements` was also unbounded in scope: any consumer-defined
+fallback requirement — tenant scoping, MFA-completed, IP allowlist, arbitrary
+`RequireAssertion` — vanished silently on every decorated endpoint.
+
+Full inheritance closes both. It also resolves the scheme-list question that this
+spec previously carried as an unverified hypothesis: `Combine` brings the schemes
+along, so no separate justification is needed. The framework confirms the
+underlying concern was real — `PolicyEvaluator.AuthenticateAsync` is documented as a
+no-op when a policy names no schemes, meaning it would trust only whatever the
+default scheme placed in `HttpContext.User`.
+
+**Documented limitation:** the scheme list must live on
+`AuthorizationOptions.FallbackPolicy`. Schemes configured only on `DefaultPolicy`
+are not inherited, because `CombineAsync` does not consult `DefaultPolicy` once a
+named policy resolves.
 
 ## Caching
 
@@ -503,6 +550,46 @@ reference to the MVC package is required.
 
 The deny-wins case and the mismatched-`Sid` case are the two that justify this
 layer existing; neither is reachable from the other two test layers.
+
+## Composition Behaviors Consumers Will Get Wrong
+
+Surfaced by security review; documented on the attributes and in the README rather
+than prevented, because each is standard ASP.NET Core behavior.
+
+* **Stacking ANDs.** `AuthorizeAttribute` sets `AllowMultiple = true` and is
+  `Inherited = true`, so two tags on one action require **both** permissions, and a
+  controller-level attribute combines with an action-level one. Mixing the two
+  attribute types produces requirements with conflicting `AllowAdministrator`,
+  which denies Administrators.
+* **`[AllowAnonymous]` disables the gate entirely**, including when inherited from a
+  base controller. This library's own `BaseAuthenticationController` uses
+  `AllowAnonymous` heavily, so the pattern is native to these codebases.
+* **A blank tag fails at request time, not build time** — mitigated by
+  `ArgumentException.ThrowIfNullOrWhiteSpace` in `PermissionPolicy.NameFor`, so the
+  failure surfaces when endpoint metadata is built.
+* **`Console`/`ApiCertificate` principals lose access** on endpoints retrofitted
+  with a permission attribute under
+  `AddAuthorizationForRegularUserKeycloakAndApiCertificate`, whose baseline admits
+  them but whose permission handler does not. An availability risk on console
+  integrations rather than a security weakness; enumerate affected endpoints per
+  consuming application before rollout.
+
+## Requirements Carried Into The Handler
+
+Security review identified these as the ways the handler could introduce a real
+bypass. They are requirements, not suggestions.
+
+1. **The handler must call `context.Succeed(requirement)` on the specific
+   requirement instance passed to `HandleRequirementAsync`** — never iterate
+   `context.Requirements` and succeed them all. That would turn stacked
+   attributes' AND into an OR, which is the single most likely way to create a
+   bypass.
+2. **The handler must not assume an authenticated principal.**
+   `PermissionRequirement` has a public constructor, so a consumer can attach it to
+   a hand-built policy that lacks `RequireAuthenticatedUser()`.
+3. **`PermissionRequirement` must not gain a `ToString()` override.** The
+   framework's "requirements were not met" log line would then emit the permission
+   tag.
 
 ## Out Of Scope
 

@@ -138,11 +138,42 @@ startup, and the gate already fails closed.
 
 ### Interaction With The Default Authorization Convention
 
-Because both permission attributes derive from `AuthorizeAttribute`, the
-fallback policy does not run on a decorated endpoint. The dynamic policy
-therefore carries `RequireAuthenticatedUser()` and the fallback policy's
-authentication scheme list itself, and the handler verifies the role positively.
-This is a security requirement of the design, not an implementation preference.
+Because both permission attributes derive from `AuthorizeAttribute`,
+`AuthorizationPolicy.CombineAsync` no longer consults
+`AuthorizationOptions.FallbackPolicy` on a decorated endpoint — it does so only
+when an endpoint carries no authorize data at all. The library's existing
+`AuthorizeByRolesAttribute` family already had this property, so it is not new.
+
+**The dynamic policy therefore inherits the fallback policy in full** — its
+requirements and its authentication schemes — and adds the permission requirement
+on top, via `AuthorizationPolicyBuilder.Combine`. A permission attribute may only
+make an endpoint stricter, never looser.
+
+An earlier revision of this decision copied only the authentication scheme list and
+discarded the fallback policy's requirements. Security review found that widened
+access under `AddAuthorizationForKeycloakAndRegularUserSchemes`, whose fallback
+requires role `Administrator` only: a `RegularUser` holding the tag would pass an
+endpoint the application's baseline denies. It also silently dropped any
+consumer-defined fallback requirement such as tenant scoping or an MFA-completed
+check. Full inheritance closes both.
+
+### Correction: The MVC Filter Is Unioned, Not Suppressed
+
+An earlier revision claimed the attributes suppress
+`UseDefaultAuthorizationWhenNotSpecifiedFilter`. That is wrong.
+`AuthorizationApplicationModelProvider` returns early when
+`MvcOptions.EnableEndpointRouting` is true, which is the default, so authorization
+attributes never become filters and that filter's guard never trips. It runs, and
+`AuthorizeFilter.GetEffectivePolicyAsync` **unions** its policy with the endpoint's
+metadata — a union of requirements being an AND.
+
+Applications using `AskForAuthorizationByDefault` or
+`AddAuthorizeFiltersControllerConvention` therefore AND the legacy
+`"defaultpolicy"` (`RequireRole(SecurityRoles.User)`) with the permission policy,
+which **denies every Keycloak Administrator** on decorated endpoints. This fails
+closed, but it presents as a broken gate, and the tempting remedy — loosening the
+legacy policy — is the dangerous one. The HTTP pipeline tests must cover both
+filter-based registrations and the outcome must be documented.
 
 ### Caching
 
@@ -194,9 +225,25 @@ warrants its own issue and ADR.
 - The handler must fail closed. It succeeds only on an explicit positive match.
 - The dynamic policy must always include `RequireAuthenticatedUser()`, because the
   fallback policy does not run on decorated endpoints.
-- The dynamic policy must not call `RequireRole`. Role differentiation stays in
-  the handler so the attribute behaves identically regardless of the
-  application's default role set.
+- The dynamic policy must inherit the application's `FallbackPolicy` in full. A
+  permission attribute may only make an endpoint stricter, never looser. Copying
+  only the authentication schemes reintroduces a privilege-widening gap.
+- The dynamic policy must not add its own `RequireRole`. Role differentiation for
+  the permission decision stays in the handler; what the policy inherits is
+  whatever role requirement the application configured, which is a different thing.
+- `AllowsCachingPolicies` must stay `true`. The interface default is `false`, and
+  because this provider replaces `DefaultAuthorizationPolicyProvider` globally,
+  the default would disable `AuthorizationPolicyCache` for every endpoint in the
+  consuming application, not only permission-gated ones.
+- The handler must call `context.Succeed(requirement)` on the requirement instance
+  passed to it, never on everything in `context.Requirements`. Stacked attributes
+  AND; succeeding them all would turn that into an OR and create a real bypass.
+- The registration must not use `TryAddSingleton` for `IAuthorizationPolicyProvider`.
+  `AddAuthorizationCore()` already registers the default provider that way, so a
+  consumer calling an `AddAuthorizationFor*` helper first would make the
+  registration a silent no-op and every permission-gated endpoint would fail.
+- `PermissionRequirement` must not gain a `ToString()` override — the framework's
+  "requirements were not met" log line would then emit the permission tag.
 - `PermissionAuthorizationPolicyProvider` must delegate every policy name lacking
   the `"Permission:"` prefix to `DefaultAuthorizationPolicyProvider`, so existing
   named policies keep working.

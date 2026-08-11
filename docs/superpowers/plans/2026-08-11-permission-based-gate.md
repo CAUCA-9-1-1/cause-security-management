@@ -424,317 +424,108 @@ The Task 6 registration test resolves `ScopedPermissionCache` by type from `Caus
 
 **Verification (Release, `--no-incremental`):** `0 Avertissement(s)`, `0 Erreur(s)`. Unit 238/238. Integration 65/65.
 
-### Task 4: Requirement, attributes, and policy provider
+### Task 4: Requirement, attributes, and policy provider — ✅ COMPLETE
+
+**Shipped with one significant design change and several hardening fixes.** Read this before Tasks 5, 6, and 8 — all three depend on it.
 
 **Files:**
-- Create: `Cause.SecurityManagement.Core/Authentication/PermissionRequirement.cs`
-- Create: `Cause.SecurityManagement.Core/PermissionAttributes.cs`
-- Create: `Cause.SecurityManagement.Core/Authentication/PermissionAuthorizationPolicyProvider.cs`
-- Test: `Cause.SecurityManagement.Tests/Authentication/PermissionAuthorizationPolicyProviderTests.cs`
+- `Cause.SecurityManagement.Core/Authentication/PermissionRequirement.cs` (public)
+- `Cause.SecurityManagement.Core/Authentication/PermissionPolicy.cs` (public; `TryParse` internal)
+- `Cause.SecurityManagement.Core/PermissionAttributes.cs` (both attributes, public)
+- `Cause.SecurityManagement.Core/Authentication/PermissionAuthorizationPolicyProvider.cs` (public)
+- `Cause.SecurityManagement.Tests/Authentication/PermissionAuthorizationPolicyProviderTests.cs` (22 tests)
 
-**Interfaces:**
-- Consumes: nothing from earlier tasks.
-- Produces:
-  - `PermissionRequirement` with `string Tag { get; }` and `bool AllowAdministrator { get; }`
-  - `PermissionPolicy.Prefix` = `"Permission:"`, `PermissionPolicy.NameFor(string tag, bool allowAdministrator)`, `PermissionPolicy.TryParse(string policyName, out string tag, out bool allowAdministrator)`
-  - `AdministratorOrUserWithPermissionAttribute(string tag)`, `UserWithPermissionAttribute(string tag)`
-  - `PermissionAuthorizationPolicyProvider : IAuthorizationPolicyProvider`
+Policy names: `Permission:AdministratorOrUser:<tag>` and `Permission:User:<tag>`.
 
-**Policy names:** `Permission:AdministratorOrUser:<tag>` and `Permission:User:<tag>`.
+#### Change 1 — the dynamic policy inherits the fallback policy in full
 
-- [ ] **Step 1: Write the failing tests**
+Originally it copied only `AuthorizationOptions.FallbackPolicy.AuthenticationSchemes` and discarded the requirements. Security review found that **widened access**, and the maintainer approved the change.
 
-Create `Cause.SecurityManagement.Tests/Authentication/PermissionAuthorizationPolicyProviderTests.cs`:
+`AuthorizationPolicy.CombineAsync` consults the fallback policy only when an endpoint carries no authorize data, so decorating an endpoint replaces the application's baseline gate. Under `AddAuthorizationForKeycloakAndRegularUserSchemes`, whose fallback requires role `Administrator` **only**:
 
-```csharp
-namespace Cause.SecurityManagement.Tests.Authentication;
+| Principal | Undecorated | Decorated, schemes-only composition |
+|---|---|---|
+| Keycloak `Administrator` | allowed | allowed |
+| `RegularUser` holding the tag | **denied** | **allowed** ← escalation |
 
-using System.Linq;
-using System.Threading.Tasks;
-using AwesomeAssertions;
-using Cause.SecurityManagement.Core;
-using Cause.SecurityManagement.Core.Authentication;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.Options;
-using NUnit.Framework;
+A `RegularUser` token from this library's own anonymous login endpoints would reach an endpoint reserved for Keycloak principals. Discarding requirements was also unbounded for consumers — tenant scoping, MFA-completed checks, IP allowlists all vanished silently.
 
-[TestFixture]
-public class PermissionAuthorizationPolicyProviderTests
-{
-    private const string SomeTag = "CanEditBuilding";
-
-    private AuthorizationOptions options;
-    private PermissionAuthorizationPolicyProvider provider;
-
-    [SetUp]
-    public void SetUp()
-    {
-        options = new AuthorizationOptions();
-        options.AddPolicy("ExistingPolicy", policy => policy.RequireAssertion(_ => true));
-        provider = new PermissionAuthorizationPolicyProvider(Options.Create(options));
-    }
-
-    private static PermissionRequirement RequirementOf(AuthorizationPolicy policy)
-        => policy.Requirements.OfType<PermissionRequirement>().Single();
-
-    [Test]
-    public async Task AdministratorOrUserPolicyName_WhenGetPolicyAsync_ShouldCarryTagAndAllowAdministrator()
-    {
-        var policy = await provider.GetPolicyAsync(PermissionPolicy.NameFor(SomeTag, allowAdministrator: true));
-
-        RequirementOf(policy).Tag.Should().Be(SomeTag);
-        RequirementOf(policy).AllowAdministrator.Should().BeTrue();
-    }
-
-    [Test]
-    public async Task UserPolicyName_WhenGetPolicyAsync_ShouldNotAllowAdministrator()
-    {
-        var policy = await provider.GetPolicyAsync(PermissionPolicy.NameFor(SomeTag, allowAdministrator: false));
-
-        RequirementOf(policy).Tag.Should().Be(SomeTag);
-        RequirementOf(policy).AllowAdministrator.Should().BeFalse();
-    }
-
-    [Test]
-    public async Task PermissionPolicyName_WhenGetPolicyAsync_ShouldDenyAnonymous()
-    {
-        var policy = await provider.GetPolicyAsync(PermissionPolicy.NameFor(SomeTag, allowAdministrator: true));
-
-        policy.Requirements.Should().ContainItemsAssignableTo<DenyAnonymousAuthorizationRequirement>(
-            "the fallback policy does not run on endpoints carrying an AuthorizeAttribute");
-    }
-
-    [Test]
-    public async Task TagContainingAColon_WhenGetPolicyAsync_ShouldPreserveTheWholeTag()
-    {
-        var tagWithColon = "Module:CanEdit";
-
-        var policy = await provider.GetPolicyAsync(PermissionPolicy.NameFor(tagWithColon, allowAdministrator: true));
-
-        RequirementOf(policy).Tag.Should().Be(tagWithColon);
-    }
-
-    [Test]
-    public async Task UnrecognizedMode_WhenGetPolicyAsync_ShouldReturnNull()
-    {
-        var policy = await provider.GetPolicyAsync($"{PermissionPolicy.Prefix}Bogus:{SomeTag}");
-
-        policy.Should().BeNull("an unrecognized mode must not degrade to a weaker gate");
-    }
-
-    [Test]
-    public async Task ExistingPolicyName_WhenGetPolicyAsync_ShouldDelegateToTheDefaultProvider()
-    {
-        var policy = await provider.GetPolicyAsync("ExistingPolicy");
-
-        policy.Should().NotBeNull();
-        policy.Requirements.OfType<PermissionRequirement>().Should().BeEmpty();
-    }
-
-    [Test]
-    public async Task UnknownPolicyName_WhenGetPolicyAsync_ShouldReturnNull()
-    {
-        var policy = await provider.GetPolicyAsync("NoSuchPolicy");
-
-        policy.Should().BeNull();
-    }
-
-    [Test]
-    public async Task FallbackPolicyWithSchemes_WhenGetPolicyAsync_ShouldCopyTheSchemeList()
-    {
-        options.FallbackPolicy = new AuthorizationPolicyBuilder()
-            .RequireAuthenticatedUser()
-            .AddAuthenticationSchemes("SchemeOne", "SchemeTwo")
-            .Build();
-
-        var policy = await provider.GetPolicyAsync(PermissionPolicy.NameFor(SomeTag, allowAdministrator: true));
-
-        policy.AuthenticationSchemes.Should().BeEquivalentTo(["SchemeOne", "SchemeTwo"]);
-    }
-
-    [Test]
-    public async Task NoFallbackPolicy_WhenGetPolicyAsync_ShouldStillProduceAPolicy()
-    {
-        options.FallbackPolicy = null;
-
-        var policy = await provider.GetPolicyAsync(PermissionPolicy.NameFor(SomeTag, allowAdministrator: true));
-
-        policy.Should().NotBeNull();
-        policy.AuthenticationSchemes.Should().BeEmpty();
-    }
-
-    [Test]
-    public void BothAttributes_WhenConstructed_ShouldSetMatchingPolicyNames()
-    {
-        new AdministratorOrUserWithPermissionAttribute(SomeTag).Policy
-            .Should().Be(PermissionPolicy.NameFor(SomeTag, allowAdministrator: true));
-        new UserWithPermissionAttribute(SomeTag).Policy
-            .Should().Be(PermissionPolicy.NameFor(SomeTag, allowAdministrator: false));
-    }
-}
-```
-
-- [ ] **Step 2: Run the tests to verify they fail**
-
-Run: `dotnet test Cause.SecurityManagement.Tests/Cause.SecurityManagement.Tests.csproj --nologo --filter PermissionAuthorizationPolicyProviderTests`
-Expected: compile errors — the types do not exist.
-
-- [ ] **Step 3: Create `PermissionRequirement`**
-
-`Cause.SecurityManagement.Core/Authentication/PermissionRequirement.cs`, file-scoped namespace:
+**The rule now: a permission attribute may only make an endpoint stricter, never looser.**
 
 ```csharp
-using Microsoft.AspNetCore.Authorization;
-
-namespace Cause.SecurityManagement.Core.Authentication;
-
-/// <summary>
-/// Requires the named permission. <paramref name="allowAdministrator"/> decides whether an
-/// Administrator principal passes without holding the permission.
-/// </summary>
-public class PermissionRequirement(string tag, bool allowAdministrator) : IAuthorizationRequirement
+private AuthorizationPolicy BuildPolicy(string tag, bool allowAdministrator)
 {
-    public string Tag { get; } = tag;
-    public bool AllowAdministrator { get; } = allowAdministrator;
+    var builder = new AuthorizationPolicyBuilder().RequireAuthenticatedUser();
+
+    var fallbackPolicy = authorizationOptions.FallbackPolicy;
+    if (fallbackPolicy is not null)
+        builder.Combine(fallbackPolicy);
+
+    builder.AddRequirements(new PermissionRequirement(tag, allowAdministrator));
+
+    return builder.Build();
 }
 ```
 
-- [ ] **Step 4: Create the attributes and the policy-name helper**
+`AuthorizationPolicyBuilder.Combine(AuthorizationPolicy)` — confirmed present in the net10.0 ref assembly — copies both `Requirements` and `AuthenticationSchemes`, so there is no separate scheme-copying step.
 
-`Cause.SecurityManagement.Core/PermissionAttributes.cs`. This sits beside the existing `AuthorizeByRolesAttribute.cs`, which also holds several attributes in one file and uses a **file-scoped namespace**:
+**This also closes the spec's unverified scheme-list hypothesis.** `Combine` brings the schemes along, and the framework confirms the underlying concern was real: `PolicyEvaluator.AuthenticateAsync` is documented as a no-op when a policy names no schemes, so it would trust only whatever the default scheme placed in `HttpContext.User`. Task 8 no longer needs to decide whether to delete the scheme copying — there is none to delete.
 
-```csharp
-using Microsoft.AspNetCore.Authorization;
+**Documented limitation:** the scheme list must live on `FallbackPolicy`. Schemes on `DefaultPolicy` are not inherited, because `CombineAsync` does not consult `DefaultPolicy` once a named policy resolves.
 
-namespace Cause.SecurityManagement.Core;
+#### Change 2 — `AllowsCachingPolicies => true`
 
-/// <summary>
-/// Builds and parses the dynamic policy names used by the permission attributes.
-/// </summary>
-public static class PermissionPolicy
-{
-    public const string Prefix = "Permission:";
+The interface default is `false`, and `DefaultAuthorizationPolicyProvider` overrides it to `true` only for its own exact type. Because registering this provider **replaces** the default globally, leaving the default would disable `AuthorizationPolicyCache` for **every endpoint in the consuming application** — not just permission-gated ones — re-running policy resolution and `CombineAsync` on every request app-wide.
 
-    private const string AdministratorOrUserMode = "AdministratorOrUser";
-    private const string UserMode = "User";
+Safe because the built policy is a pure function of the policy name plus `AuthorizationOptions`, which is a singleton snapshot fixed after startup. A test pins it so it cannot regress to the interface default.
 
-    public static string NameFor(string tag, bool allowAdministrator)
-        => $"{Prefix}{(allowAdministrator ? AdministratorOrUserMode : UserMode)}:{tag}";
+#### Change 3 — the default provider is consulted first
 
-    public static bool TryParse(string policyName, out string tag, out bool allowAdministrator)
-    {
-        tag = null;
-        allowAdministrator = false;
+`GetPolicyAsync` now tries `fallbackProvider.GetPolicyAsync(policyName)` before parsing. A consumer who explicitly registered a policy literally named `"Permission:..."` keeps it, and a whole class of misparse-to-500 failures disappears.
 
-        if (policyName is null || !policyName.StartsWith(Prefix))
-            return false;
+It also guards `ArgumentNullException.ThrowIfNull(policyName)`, matching `DefaultAuthorizationPolicyProvider`, which throws `ArgumentNullException` rather than the `NullReferenceException` the earlier version produced. Null is not reachable from the framework — `CombineAsync` skips whitespace-only names and `DefaultAuthorizationService` guards first — but this class is a public drop-in replacement.
 
-        var remainder = policyName[Prefix.Length..];
-        var separatorIndex = remainder.IndexOf(':');
-        if (separatorIndex <= 0 || separatorIndex == remainder.Length - 1)
-            return false;
+#### Change 4 — ordinal comparison and tag validation
 
-        var mode = remainder[..separatorIndex];
-        if (mode != AdministratorOrUserMode && mode != UserMode)
-            return false;
+`TryParse` uses `StringComparison.Ordinal` for the prefix check. The previous culture-sensitive `StartsWith` was not exploitable (policy names come from compile-time constants, never requests, and every crafted variant failed closed at the ordinal mode comparison) but it was unsound: a linguistic match does not guarantee the prefix occupies exactly `Prefix.Length` characters, yet the next line slices at that ordinal index. It also resolved differently under request localization or `InvariantGlobalization=true`.
 
-        allowAdministrator = mode == AdministratorOrUserMode;
-        tag = remainder[(separatorIndex + 1)..];
-        return true;
-    }
-}
+**Leave the mode comparison as `!=` on strings** — that is ordinal, and it is what keeps the parse fail-closed. Do not "consistently" make it linguistic.
 
-/// <summary>
-/// Administrators pass without a permission lookup. RegularUsers pass only when they hold
-/// <paramref name="tag"/>. Every other principal is denied. Use this in applications that use Keycloak.
-/// </summary>
-public class AdministratorOrUserWithPermissionAttribute : AuthorizeAttribute
-{
-    public AdministratorOrUserWithPermissionAttribute(string tag)
-        => Policy = PermissionPolicy.NameFor(tag, allowAdministrator: true);
-}
+`PermissionPolicy.NameFor` now calls `ArgumentException.ThrowIfNullOrWhiteSpace(tag)`. `[UserWithPermission("")]` previously produced `"Permission:User:"`, which failed to parse and 500'd on **every request** with the tag in the log; a whitespace tag parsed into a requirement that could never match, silently denying everyone. Both failed closed but were diagnosed in production.
 
-/// <summary>
-/// RegularUsers pass only when they hold <paramref name="tag"/>. Every other principal is denied,
-/// including Administrators. Intended for applications that have no Administrator principals.
-/// Warning: Keycloak-authenticated principals hold Administrator and not RegularUser, so this
-/// attribute denies all of them.
-/// </summary>
-public class UserWithPermissionAttribute : AuthorizeAttribute
-{
-    public UserWithPermissionAttribute(string tag)
-        => Policy = PermissionPolicy.NameFor(tag, allowAdministrator: false);
-}
-```
+#### Change 5 — `PermissionPolicy` moved to its own file
 
-Splitting on the *first* colon after the prefix is what preserves a tag containing a colon.
+It now lives in `Core/Authentication/PermissionPolicy.cs`, beside the analogous `SecurityPolicy.cs`. The `AuthorizeByRolesAttribute.cs` precedent justifies grouping several *attributes* in one file, not a policy-name helper — and `PermissionAttributes.cs` was a misleading place to look for `NameFor`, the member consumers need for minimal-API gating. Free pre-publication; a MAJOR break afterward.
 
-- [ ] **Step 5: Create the policy provider**
+#### Verified framework behavior worth not re-deriving
 
-`Cause.SecurityManagement.Core/Authentication/PermissionAuthorizationPolicyProvider.cs`:
+- **A `null` policy from a provider is fail-closed.** `AuthorizationPolicy.CombineAsync`, `AuthorizationMiddleware.Invoke`, `AuthorizeFilter.ComputePolicyAsync`, and `DefaultAuthorizationService.GetPolicyAsync` all throw `InvalidOperationException`. None treats `null` as unprotected. So returning `null` for an unrecognized mode yields 500, not open access.
+- **The tag never reaches SQL.** `GetPermissionsForUserAsync` fetches by `userId` and projects `Permission.Tag`; the comparison happens in memory in `UserMergedPermissionExtensions.Allows` using `==` (ordinal). No injection, no collation dependency. **Do not** "optimize" Task 5 into a server-side `Where(p => p.Tag == tag)` without pinning the collation.
+- **Missing `UseAuthorization()` is fail-closed** — `EndpointMiddleware` throws when an endpoint has authorization metadata and the middleware never ran.
 
-```csharp
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.Options;
+#### Corrected: the MVC filter is unioned, not suppressed
 
-namespace Cause.SecurityManagement.Core.Authentication;
+An earlier revision of the spec, ADR, and this plan claimed these attributes suppress `UseDefaultAuthorizationWhenNotSpecifiedFilter`. **Wrong on the MVC filter path.** `AuthorizationApplicationModelProvider.OnProvidersExecuting` returns early when `MvcOptions.EnableEndpointRouting` is true (the default), so authorization attributes never become filters and the guard never trips. The filter runs, and `AuthorizeFilter.GetEffectivePolicyAsync` **unions** its policy with the endpoint's metadata — a union of requirements being an AND.
 
-/// <summary>
-/// Creates permission policies on demand so consuming applications never enumerate their tags.
-/// Any other policy name is delegated to the default provider.
-/// </summary>
-public class PermissionAuthorizationPolicyProvider(IOptions<AuthorizationOptions> options)
-    : IAuthorizationPolicyProvider
-{
-    private readonly AuthorizationOptions authorizationOptions = options.Value;
-    private readonly DefaultAuthorizationPolicyProvider fallbackProvider = new(options);
+So on applications using `AskForAuthorizationByDefault` or `AddAuthorizeFiltersControllerConvention`, the legacy `"defaultpolicy"` (`RequireRole(SecurityRoles.User)`) is ANDed with the permission policy, and **every Keycloak Administrator is denied** on decorated endpoints. Fails closed, but presents as a broken gate — and the tempting remedy, loosening the legacy policy, is the dangerous one. Task 8 must cover both filter-based registrations.
 
-    public Task<AuthorizationPolicy> GetDefaultPolicyAsync() => fallbackProvider.GetDefaultPolicyAsync();
+The fallback-*policy* half of the original claim is correct, and is not new: the existing `AuthorizeByRolesAttribute` family already suppresses `FallbackPolicy` the same way.
 
-    public Task<AuthorizationPolicy> GetFallbackPolicyAsync() => fallbackProvider.GetFallbackPolicyAsync();
+#### Tests — 22
 
-    public Task<AuthorizationPolicy> GetPolicyAsync(string policyName)
-    {
-        if (!policyName.StartsWith(PermissionPolicy.Prefix))
-            return fallbackProvider.GetPolicyAsync(policyName);
+The 12 originals plus: `AllowsCachingPolicies` is true; `GetDefaultPolicyAsync` and `GetFallbackPolicyAsync` each return the configured policy (previously untested — transposing those two one-line bodies would have passed everything); null policy name throws `ArgumentNullException`; a fallback role requirement is inherited; a fallback custom requirement is inherited; an explicitly registered `Permission:`-prefixed policy wins; and blank tags throw.
 
-        if (!PermissionPolicy.TryParse(policyName, out var tag, out var allowAdministrator))
-            return Task.FromResult<AuthorizationPolicy>(null);
+#### Carried into later tasks
 
-        return Task.FromResult(BuildPolicy(tag, allowAdministrator));
-    }
+**Task 5** — see the non-negotiable requirements listed in that task. The highest-risk one: succeed only the requirement instance passed in.
 
-    private AuthorizationPolicy BuildPolicy(string tag, bool allowAdministrator)
-    {
-        var builder = new AuthorizationPolicyBuilder()
-            .RequireAuthenticatedUser()
-            .AddRequirements(new PermissionRequirement(tag, allowAdministrator));
+**Task 6** — registration must use `Replace`, not `TryAddSingleton`.
 
-        var schemes = authorizationOptions.FallbackPolicy?.AuthenticationSchemes;
-        if (schemes is { Count: > 0 })
-            builder.AddAuthenticationSchemes([.. schemes]);
+**Task 8** — cover `AskForAuthorizationByDefault` and `AddAuthorizeFiltersControllerConvention` hosts, and the `[AllowAnonymous]` bypass.
 
-        return builder.Build();
-    }
-}
-```
+**Out of scope, worth its own issue:** `AuthorizeByPoliciesAttribute` in `AuthorizeByRolesAttribute.cs` joins policy names with a comma into a single `Policy` value. The framework treats `Policy` as one name, so any use with more than one policy is a guaranteed 500. Developers may reach for it with the new policy names.
 
-The scheme list is copied because `AddAuthorizationForRegularUserKeycloakAndApiCertificate` names three schemes explicitly; a policy omitting them risks a 401 for principals authenticated under a non-default scheme. `PermissionPolicy` is in `Cause.SecurityManagement.Core`, the parent namespace, so no extra `using` is needed.
-
-- [ ] **Step 6: Run the tests to verify they pass**
-
-Run: `dotnet test Cause.SecurityManagement.Tests/Cause.SecurityManagement.Tests.csproj --nologo --filter PermissionAuthorizationPolicyProviderTests`
-Expected: 10 passed. If `AddRequirements` is reported obsolete, use `builder.Requirements.Add(new PermissionRequirement(tag, allowAdministrator))` — zero warnings is a hard constraint.
-
-- [ ] **Step 7: Commit**
-
-```bash
-git add Cause.SecurityManagement.Core/Authentication/PermissionRequirement.cs Cause.SecurityManagement.Core/Authentication/PermissionAuthorizationPolicyProvider.cs Cause.SecurityManagement.Core/PermissionAttributes.cs Cause.SecurityManagement.Tests/Authentication/PermissionAuthorizationPolicyProviderTests.cs
-git commit -m "#115 - Add the permission attributes, requirement, and dynamic policy provider"
-```
-
----
+**Verification (Release, `--no-incremental`):** `0 Avertissement(s)`, `0 Erreur(s)`. Unit 260/260. Integration 65/65.
 
 ### Task 5: The authorization handler
 
@@ -749,6 +540,17 @@ git commit -m "#115 - Add the permission attributes, requirement, and dynamic po
 **The rule.** `Administrator` → succeed when `AllowAdministrator`, otherwise deny, never a database read. `RegularUser` → succeed only when the permission is held. Everything else → deny with no database read.
 
 Read scoped services from `HttpContext.RequestServices`, **not** a new child scope: `CreateAsyncScope()` per check would produce a fresh `ScopedPermissionCache` each time and memoize nothing.
+
+#### Non-negotiable requirements from the Task 4 security review
+
+These are the identified ways this handler could introduce a real authorization bypass.
+
+1. **Call `context.Succeed(requirement)` on the requirement instance passed to `HandleRequirementAsync` — never iterate `context.Requirements` and succeed them all.** `AuthorizeAttribute` sets `AllowMultiple = true` and is `Inherited = true`, so stacked attributes produce several `PermissionRequirement`s that must **all** be satisfied (AND). Succeeding them all from one check turns that into an OR. This was named the single highest-risk line in the task.
+2. **Do not assume an authenticated principal.** `PermissionRequirement` has a public constructor, so a consumer can attach it to a hand-built policy with no `RequireAuthenticatedUser()`. Check `context.User` defensively rather than dereferencing it.
+3. **Do not add a `ToString()` override to `PermissionRequirement`.** The framework's "requirements were not met" log line would then emit the permission tag.
+4. **Test the two-attribute AND case explicitly** — two `PermissionRequirement`s on one context where the principal holds only one of the tags must not succeed.
+5. **Add `AddAuthorizationForKeycloakAndRegularUserSchemes` to the test matrix.** It is the one registration variant where the mode rules are not a subset of the application's baseline, so it is where a composition mistake would widen access rather than narrow it.
+6. **`[AllowAnonymous]` disables the gate entirely**, including inherited from a base controller. Add an HTTP-level test asserting the bypass so it is a known, pinned contract rather than a surprise.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -1117,7 +919,7 @@ Append to `ServiceCollectionAuthorizationExtensions` (file-scoped namespace, `Ad
 public static IServiceCollection AddPermissionBasedAuthorization(this IServiceCollection services)
 {
     services.AddHttpContextAccessor();
-    services.TryAddSingleton<IAuthorizationPolicyProvider, PermissionAuthorizationPolicyProvider>();
+    services.Replace(ServiceDescriptor.Singleton<IAuthorizationPolicyProvider, PermissionAuthorizationPolicyProvider>());
     services.TryAddEnumerable(
         ServiceDescriptor.Singleton<IAuthorizationHandler, PermissionAuthorizationHandler>());
     services.TryAddScoped<ScopedPermissionCache>();
@@ -1126,7 +928,18 @@ public static IServiceCollection AddPermissionBasedAuthorization(this IServiceCo
 }
 ```
 
-`TryAddSingleton` for the policy provider matters: it lets a consuming application substitute its own provider, and avoids a duplicate registration silently winning.
+**`Replace`, not `TryAddSingleton` — this is a correctness bug, not a style preference.** An earlier draft of this plan used `TryAddSingleton`. `AddAuthorizationCore()`, which every one of the five `AddAuthorizationFor*` helpers calls, already does `TryAddSingleton<IAuthorizationPolicyProvider, DefaultAuthorizationPolicyProvider>()`. So a consumer writing
+
+```csharp
+services.AddAuthorizationForRegularUser();      // registers the default provider
+services.AddPermissionBasedAuthorization();     // TryAdd → silent no-op
+```
+
+would get the default provider, and **every permission-gated endpoint would fail with `InvalidOperationException` → 500**, because the default provider cannot resolve a `Permission:` name. `Replace` makes registration order irrelevant.
+
+Needs `using Microsoft.Extensions.DependencyInjection.Extensions;` for `Replace`.
+
+**The registration test must build the provider and resolve `IAuthorizationPolicyProvider` in both registration orders.** Asserting on `ServiceDescriptor` entries alone would not have caught this — the descriptor list looks correct either way.
 
 - [ ] **Step 4: Run the test to verify it passes**
 
@@ -1682,16 +1495,25 @@ Expected: 6 passed.
 
 If `UnauthenticatedRequest...ShouldReturnUnauthorized` fails with 403 instead of 401, that is a real finding, not a test bug: it means the policy is not challenging correctly. Fix the provider, not the assertion.
 
-- [ ] **Step 4: Verify the scheme-list hypothesis**
+- [ ] **Step 4: Cover the MVC filter interactions — this replaces the obsolete scheme-list step**
 
-The spec records as an **unverified hypothesis** that a dynamic policy omitting the fallback policy's authentication scheme list risks a 401 under `AddAuthorizationForRegularUserKeycloakAndApiCertificate`.
+The scheme-list hypothesis is **resolved and no longer needs testing**: Task 4 now inherits the whole fallback policy via `Combine`, which brings the schemes along, so there is no scheme-copying code left to delete.
 
-Test it: temporarily comment out the `AddAuthenticationSchemes` block in `PermissionAuthorizationPolicyProvider.BuildPolicy`, add a second fixture host registering **two** authentication schemes with the non-default one naming the principal, and see whether a request authenticated under the non-default scheme still passes.
+What replaces it is more important. Security review established that `AuthorizationApplicationModelProvider` returns early under endpoint routing, so these attributes never become filters — meaning `UseDefaultAuthorizationWhenNotSpecifiedFilter` is **not** suppressed as the spec originally claimed. It runs, and `AuthorizeFilter.GetEffectivePolicyAsync` **unions** its policy with the endpoint metadata, which ANDs the requirements.
 
-- If removing the scheme copying breaks a test, keep it and record the confirmation in the spec.
-- If it changes nothing, **delete the scheme-copying code and its test**, and update the spec's "Why The Scheme List Is Copied" section to record that it proved unnecessary. Do not keep unexercised code.
+Add two more fixture hosts and determine empirically what each does:
 
-Report which outcome you observed, with the test output.
+| Host registration | Endpoint | Assert |
+|---|---|---|
+| `MvcOptionsExtensions.AskForAuthorizationByDefault` + `[AdministratorOrUserWithPermission]` on an action | controller action | Keycloak `Administrator` — expected **403**, because `"defaultpolicy"` requires `RegularUser` |
+| same | controller action | `RegularUser` holding the tag — expected **200** |
+| `AddAuthorizeFiltersControllerConvention` + the attribute on an **action** (controller type undecorated) | controller action | Keycloak `Administrator` — expected **403** |
+| `AddAuthorizeFiltersControllerConvention` + the attribute on the **controller type** | controller action | the convention skips its default filter; record what actually happens |
+| Any host, endpoint carrying `[AllowAnonymous]` **and** a permission attribute | either | unauthenticated request — expected **200**, the gate is bypassed |
+
+**Report the actual observed status codes, not the expected ones.** If any differ from the table, that is a finding about the framework, not a test bug — record it in the spec and stop rather than adjusting the assertion to match.
+
+The `[AllowAnonymous]` case is pinned deliberately: it is standard framework behavior, `AllowAnonymousAttribute` is `Inherited = true`, and this library's own `BaseAuthenticationController` uses it heavily — so a base controller carrying it would silently disable the gate on every derived controller. Better a known contract than a discovery.
 
 - [ ] **Step 5: Commit**
 
