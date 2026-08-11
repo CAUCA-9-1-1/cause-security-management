@@ -13,7 +13,9 @@
 
 ## Global Constraints
 
-- **Zero warnings.** The current baseline is `0 Avertissement(s)`. Any new warning is a task failure.
+- **Zero warnings.** The current baseline is `0 Avertissement(s)`. Any new warning is a task failure. Verify with `--no-incremental` in Release — a plain incremental build skips up-to-date projects and will not re-emit their warnings, so "0 warnings" from an incremental run is not evidence.
+- **XML doc `<param>` tags: all or none.** `GenerateDocumentationFile=True` on the packable projects, and CS1591 is `severity = none` in `.editorconfig` so missing docs are fine. But **CS1573 is not suppressed** and fires when *some* parameters are documented and others are not. Adding a single `<param>` tag to a method without tagging every parameter breaks the zero-warning gate.
+- **Any test asserting on a `Task` must `await` the assertion.** `ThrowAsync`, `NotThrowAsync`, and NSubstitute's `Received()` on an async member all return awaitables. A `[Test]` containing one must be `async Task`, never `void` — CS4014 does not fire in a `void` method, so an un-awaited assertion passes vacuously.
 - **All projects target `net10.0`** — single TFM. Default interface implementations are available and used deliberately.
 - **English identifiers only.** No abbreviations except established ones.
 - **No comments** unless they explain *why*. No section separators, no change logs.
@@ -228,20 +230,40 @@ namespace Cause.SecurityManagement.Tests.Services
         }
 
         [Test]
-        public void CancelledToken_WhenHasPermissionAsync_ShouldPropagateOperationCanceled()
+        public async Task BothRepositories_WhenGetPermissionsForUserAsync_ShouldReceiveTheCancellationToken()
         {
             using var cancellation = new CancellationTokenSource();
-            cancellation.Cancel();
+
+            await service.GetPermissionsForUserAsync(someUserId, cancellation.Token);
+
+            await userPermissionRepository.Received(1).GetForUserAsync(someUserId, cancellation.Token);
+            await groupPermissionRepository.Received(1).GetForUserAsync(someUserId, cancellation.Token);
+        }
+
+        [Test]
+        public async Task RepositoryThrowsOperationCanceled_WhenHasPermissionAsync_ShouldPropagate()
+        {
             userPermissionRepository.GetForUserAsync(someUserId, Arg.Any<CancellationToken>())
                 .Returns<List<UserMergedPermission>>(_ => throw new OperationCanceledException());
 
-            var act = async () => await service.HasPermissionAsync(someUserId, SomeTag, cancellation.Token);
+            var act = async () => await service.HasPermissionAsync(someUserId, SomeTag, CancellationToken.None);
 
-            act.Should().ThrowAsync<OperationCanceledException>();
+            await act.Should().ThrowAsync<OperationCanceledException>();
         }
     }
 }
 ```
+
+> **This corrects a defect in an earlier draft of this plan.** The cancellation test
+> was originally written as `public void` with a bare, un-awaited
+> `act.Should().ThrowAsync<...>();`. That compiles silently — CS4014 only fires
+> inside an `async` method — and passes no matter what the code does. It also
+> pre-cancelled a token the mocked repositories ignore, so the cancellation was
+> decorative.
+>
+> **Any test asserting on a `Task` must `await` the assertion.** `ThrowAsync`,
+> `NotThrowAsync`, and `Received()` on an async member all return awaitables. A
+> `[Test]` method containing one must be `async Task`, never `void`.
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
@@ -1821,6 +1843,100 @@ git commit -m "#115 - Add HTTP pipeline tests for the permission gate"
 
 ---
 
+### Task 8b: End-to-end gate test against a real database
+
+**Files:**
+- Modify: `Cause.SecurityManagement.Integration.Tests/Cause.SecurityManagement.Integration.Tests.csproj`
+- Create: `Cause.SecurityManagement.Integration.Tests/Authentication/PermissionGateEndToEndTests.cs`
+
+**Interfaces:**
+- Consumes: everything from Tasks 1–7.
+- Produces: nothing.
+
+**Why this task exists — it is the most valuable test in the feature.**
+
+Task 1 proves the SQL. Task 8 proves the HTTP pipeline but stubs `IUserPermissionService`. Nothing proves the two connect. Every one of these failures leaves both other layers green while production is broken:
+
+* The DI registration is wrong, so `ScopedPermissionCache` or `IUserPermissionService` fails to resolve inside the handler.
+* The handler resolves the cache from `HttpContext.RequestServices` but the request scope does not contain the security services.
+* The `Sid` claim on the token does not match the `IdUser` column the repositories filter on, so every lookup silently returns nothing and every `RegularUser` gets 403.
+
+That last one is the dangerous case: it fails closed, so it looks like a permissions-data problem in production rather than a bug.
+
+**Placement.** This belongs in `Cause.SecurityManagement.Integration.Tests` — it needs Testcontainers PostgreSQL, which only that project has. It needs **only** `Microsoft.AspNetCore.TestHost` added; no reference to the `Cause.SecurityManagement` MVC package, because the whole gate (attributes, requirement, policy provider, handler, cache, registration) lives in `Core`, which the project already references. Use minimal-API endpoints with `.RequireAuthorization(PermissionPolicy.NameFor(...))` rather than controllers.
+
+- [ ] **Step 1: Add the TestHost package**
+
+```bash
+dotnet add Cause.SecurityManagement.Integration.Tests/Cause.SecurityManagement.Integration.Tests.csproj package Microsoft.AspNetCore.TestHost --version 10.0.10
+```
+
+Pin `10.0.10` to match `Cause.SecurityManagement.Tests`. Confirm the csproj diff shows only that one addition.
+
+- [ ] **Step 2: Read the two patterns you are combining**
+
+Read `Cause.SecurityManagement.Integration.Tests/Infrastructure/IntegrationTestBase.cs` and `Infrastructure/DatabaseFixture.cs` for the database side, and the `PermissionGateEndpointTests` you wrote in Task 8 for the TestServer side. Also re-read `Cause.SecurityManagement.Integration.Tests/Repositories/GroupPermissionRepositoryTests.cs` for the seeding helpers — reuse that seeding approach rather than inventing another.
+
+`IntegrationTestBase` builds a bare `ServiceCollection`, not a web host, so this fixture will **not** inherit it. Build a `HostBuilder().ConfigureWebHost(...)` host whose services include the real `TestSecurityContext` from `DatabaseFixture.CreateContext()`, then `InjectSecurityServices<TestUser>()` and `AddPermissionBasedAuthorization()`.
+
+- [ ] **Step 3: Write the tests**
+
+Create `Cause.SecurityManagement.Integration.Tests/Authentication/PermissionGateEndToEndTests.cs`.
+
+Seed **real rows** — a `TestUser`, a `Module`, two `ModulePermission` rows, and `UserPermission` rows granting one and denying the other. Authenticate with a principal carrying `ClaimTypes.Role = SecurityRoles.User` and `JwtRegisteredClaimNames.Sid = <the seeded user's Id>`. Use the same header-driven `AuthenticationHandler` approach as Task 8 so no real token signing is needed.
+
+Required cases:
+
+| Case | Expected | What it catches |
+|---|---|---|
+| Seeded user holds the permission | 200 | the full chain works |
+| Seeded user's row has `IsAllowed = false` | 403 | the flag is honored end to end, not just parsed |
+| Seeded user has no row for the tag | 403 | absence denies |
+| Permission granted via a **group** the user belongs to | 200 | the group query path, which the user-permission path does not cover |
+| Group denies while the user row allows the same tag | 403 | deny-wins survives the whole chain, not just `PermissionMergeTool` |
+| `Sid` claim set to a random Guid that matches no user | 403 | proves the claim is actually used to look up rows |
+| Two requests in one test, same user | 200 twice | the per-request cache does not leak or corrupt state across requests |
+
+The deny-wins case and the mismatched-`Sid` case are the two that justify this task. Do not drop them.
+
+**Also add one sync/async equivalence assertion here.** The synchronous and asynchronous permission paths now execute *different SQL* for the same logical question — the sync path materializes entities and projects in memory, the async path projects server-side and reaches group permissions through `WHERE EXISTS`. Both are correct today, but nothing would notice if they drifted, and "drifted" means an authorization gate and a permissions UI disagreeing about whether a user holds a permission.
+
+Unit tests cannot catch this because they mock the repositories. With real rows already seeded here, it costs one test:
+
+```csharp
+var service = Resolve<IUserPermissionService>();
+
+var synchronous = service.GetPermissionsForUser(user.Id);
+var asynchronous = await service.GetPermissionsForUserAsync(user.Id, CancellationToken.None);
+
+asynchronous.Should().BeEquivalentTo(synchronous,
+    "the sync and async paths run different SQL and must not answer differently");
+```
+
+Seed the user with both a direct `UserPermission` and a group-derived `GroupPermission`, including one denial, so the assertion exercises both sources and the deny-wins merge.
+
+- [ ] **Step 4: Run the tests**
+
+Run: `dotnet test Cause.SecurityManagement.Integration.Tests/Cause.SecurityManagement.Integration.Tests.csproj --nologo --filter PermissionGateEndToEndTests`
+Expected: all pass. Requires Docker. **If Docker is unavailable, report the tests as written-but-not-executed — do not claim they passed.**
+
+If the mismatched-`Sid` case returns 200, stop: that means the handler is not filtering by user and every authenticated `RegularUser` would pass every gate. That is a critical finding, not a test bug.
+
+- [ ] **Step 5: Run the full suites and commit**
+
+```bash
+dotnet build Cause.SecurityManagement.sln -c Release --nologo --no-incremental -p:GeneratePackageOnBuild=false
+dotnet test Cause.SecurityManagement.Tests/Cause.SecurityManagement.Tests.csproj --nologo
+dotnet test Cause.SecurityManagement.Integration.Tests/Cause.SecurityManagement.Integration.Tests.csproj --nologo
+```
+
+```bash
+git add Cause.SecurityManagement.Integration.Tests/
+git commit -m "#115 - Add end-to-end permission gate tests against a real database"
+```
+
+---
+
 ### Task 9: Documentation and final verification
 
 **Files:**
@@ -1896,13 +2012,21 @@ memoized for the request. Administrators are never looked up. There is no
 cross-request cache, so revoking a permission takes effect on the next request.
 ````
 
-- [ ] **Step 3: Flip the ADR to accepted**
+- [ ] **Step 3: Bump the package versions to 10.7.0**
+
+`docs/RELEASING.md` § Semver Bump Rules classifies this feature as **additive → MINOR**, and requires the same version across all three published packages. Every interface member added in this work is a default implementation specifically to keep it additive.
+
+All three of `Cause.SecurityManagement.Models`, `Cause.SecurityManagement.Core`, and `Cause.SecurityManagement` currently read `10.6.0`. In each `.csproj` update `<Version>`, `<AssemblyVersion>`, and `<FileVersion>` to `10.7.0`, and add a `<PackageReleaseNotes>` line describing the permission gate.
+
+Do **not** run `release.ps1` — publishing is a separate deliberate step per the multi-package release governance ADR.
+
+- [ ] **Step 4: Flip the ADR to accepted**
 
 In `docs/adr/records/2026-08-11-permission-based-authorization-gate.md`, change `* Status: proposed` to `* Status: accepted`, tick every `Implementation Plan` checkbox that is done, and update Task 7's entry to record the scheme-list outcome from Task 8 Step 4.
 
 In `docs/adr/records/overview.md`, change this ADR's Status column from `proposed` to `accepted`.
 
-- [ ] **Step 4: Full verification**
+- [ ] **Step 5: Full verification**
 
 Run each and paste the actual output including exit codes:
 
@@ -1922,11 +2046,11 @@ The integration test project needs Docker for Testcontainers PostgreSQL. Run it 
 dotnet test Cause.SecurityManagement.Integration.Tests/Cause.SecurityManagement.Integration.Tests.csproj --nologo
 ```
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
-git add README.md docs/
-git commit -m "#115 - Document the permission gate and accept the ADR"
+git add README.md docs/ Cause.SecurityManagement.Models/ Cause.SecurityManagement.Core/ Cause.SecurityManagement/
+git commit -m "#115 - Document the permission gate, bump to 10.7.0, and accept the ADR"
 ```
 
 ---

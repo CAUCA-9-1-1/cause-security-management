@@ -474,6 +474,36 @@ Follow the existing `KeycloakJwtBearerIntegrationTests` pattern:
 | `ExternalSystem` token | 403 |
 | Endpoint with no permission attribute in the same application | fallback policy still applies |
 
+### End-To-End Tests Against A Real Database
+
+The HTTP pipeline tests above stub `IUserPermissionService`, and the repository
+tests exercise no HTTP. Neither proves the two connect, so a third layer is
+required in `Cause.SecurityManagement.Integration.Tests` (Testcontainers
+PostgreSQL), seeding real rows and asserting real status codes.
+
+This is the layer that catches a wrong DI registration, a `ScopedPermissionCache`
+that fails to resolve from `HttpContext.RequestServices`, or a `Sid` claim that
+does not match the `IdUser` column the repositories filter on. That last failure
+is the dangerous one: it fails closed, so every `RegularUser` gets 403 and it
+presents as a permissions-data problem rather than a bug.
+
+Only `Microsoft.AspNetCore.TestHost` is needed there — the whole gate lives in
+`Core`, so minimal-API endpoints with `.RequireAuthorization(...)` suffice and no
+reference to the MVC package is required.
+
+| Case | Expected |
+|---|---|
+| Seeded user holds the permission | 200 |
+| Seeded user's row has `IsAllowed = false` | 403 |
+| Seeded user has no row for the tag | 403 |
+| Permission granted through a group the user belongs to | 200 |
+| Group denies while the user row allows the same tag | 403 |
+| `Sid` claim matching no user | 403 |
+| Two requests in one test for the same user | 200 twice |
+
+The deny-wins case and the mismatched-`Sid` case are the two that justify this
+layer existing; neither is reachable from the other two test layers.
+
 ## Out Of Scope
 
 * Cross-request or distributed permission caching.

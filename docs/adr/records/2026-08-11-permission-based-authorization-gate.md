@@ -219,6 +219,11 @@ warrants its own issue and ADR.
   into a silent privilege escalation.
 - Startup tag validation must never throw, and must log at warning level when it
   skips rather than failing silently.
+- Maintain the end-to-end tests that seed real permission rows and assert real
+  status codes through the gate. The HTTP-pipeline tests stub the permission
+  service and the repository tests exercise no HTTP, so only this layer proves a
+  `Sid` claim actually resolves to the rows the repositories filter on. A break
+  there fails closed and presents as a data problem rather than a bug.
 
 ## Implementation Plan
 <!-- Crucial section so Claude Code knows how to execute it -->
