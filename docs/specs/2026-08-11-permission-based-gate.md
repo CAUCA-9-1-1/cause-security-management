@@ -373,7 +373,7 @@ services.AddHostedService<PermissionTagValidationHostedService>();
 | `Cause.SecurityManagement.Tests/Authentication/PermissionAuthorizationPolicyProviderTests.cs` | Unit tests |
 | `Cause.SecurityManagement.Tests/Authentication/ScopedPermissionCacheTests.cs` | Unit tests |
 | `Cause.SecurityManagement.Tests/Authentication/PermissionTagValidationHostedServiceTests.cs` | Unit tests |
-| `Cause.SecurityManagement.Integration.Tests/Authentication/PermissionGateEndpointTests.cs` | Integration tests |
+| `Cause.SecurityManagement.Tests/Authentication/PermissionGateEndpointTests.cs` | HTTP pipeline tests (see placement note) |
 
 ### Modified
 
@@ -444,10 +444,25 @@ must be asserted directly, not inferred.
 | Catalog access throws | a "validation skipped" warning; startup still succeeds |
 | `IPermissionCatalogService` not registered | a "validation skipped" warning; startup still succeeds |
 
-### Integration Tests
+### HTTP Pipeline Tests
 
 These cover the default-policy-stands-down hazard and cannot be replaced by unit
-tests.
+tests, because the hazard lives in filter composition rather than in any single
+class.
+
+**Placement note.** They belong in `Cause.SecurityManagement.Tests`, not in
+`Cause.SecurityManagement.Integration.Tests`:
+
+* `Cause.SecurityManagement.Tests` references `Microsoft.AspNetCore.TestHost`
+  and **both** `Core` and `Cause.SecurityManagement`, so it can see
+  `UseDefaultAuthorizationWhenNotSpecifiedFilter`.
+* `Cause.SecurityManagement.Integration.Tests` has no `TestHost` package, no HTTP
+  pipeline (it builds a bare `ServiceCollection` over Testcontainers PostgreSQL),
+  and references Core only — so it cannot see the filter under test.
+
+Follow the existing `KeycloakJwtBearerIntegrationTests` pattern:
+`HostBuilder().ConfigureWebHost(webBuilder => webBuilder.UseTestServer())`. Stub
+`IUserPermissionService` so these tests need no database.
 
 | Case | Expected |
 |---|---|
