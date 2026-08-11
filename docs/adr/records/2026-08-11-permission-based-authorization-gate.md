@@ -42,16 +42,23 @@ the application's configured fallback policy on the endpoint it decorates.
 ## Considered Options
 
 * **Option A**: A dynamic policy provider plus an authorization handler. A
-  `[RequirePermission("tag")]` attribute maps to a `"Permission:<tag>"` policy
-  created on demand. The policy requires an authenticated user and carries the
-  application's configured authentication schemes, but does not require a role;
-  role differentiation lives in the handler.
+  permission attribute maps to a `"Permission:..."` policy created on demand. The
+  policy requires an authenticated user and carries the application's configured
+  authentication schemes, but does not require a role; role differentiation lives
+  in the handler.
 * **Option B**: A static policy per permission, registered at startup. Requires
   every application to enumerate its permission tags in `Program.cs` and keep
   that list in sync with the database.
 * **Option C**: Permissions embedded as JWT claims, checked with
   `RequireClaim`. No database read per check.
 * **Option D**: An MVC action filter rather than an authorization handler.
+
+On attribute naming, considered separately:
+
+* **Naming 1**: A single `[RequirePermission(tag)]`, with the Administrator bypass
+  documented in the handler and this ADR.
+* **Naming 2**: Two attributes whose names state the passing principals —
+  `[AdministratorOrUserWithPermission(tag)]` and `[UserWithPermission(tag)]`.
 
 ## Decision Outcome
 
@@ -71,20 +78,67 @@ Option D was rejected because action filters run after authorization, produce
 inconsistent status codes relative to the rest of the pipeline, and cannot
 participate in policy composition.
 
+On naming, chosen option: **Naming 2**. A single `[RequirePermission]` hides the
+Administrator bypass from anyone reading the controller, and the codebase already
+favours explicit descriptive attribute names
+(`OpenToExternalSystemWithCertificateAttribute`,
+`AuthorizeForUserAndAdministratorRolesAttribute`). The second attribute is not
+speculative generality: applications that do not use Keycloak have no
+`Administrator` principals, so naming one in their endpoint attributes would be
+misleading. Nothing has shipped under the `RequirePermission` name, so there is no
+compatibility cost to the rename.
+
 ### Authorization Rule
 
 Only `RegularUser` principals are gated by permissions. Every other principal
 type keeps its current behavior.
 
-| Principal | Result |
-|---|---|
-| `Administrator` | pass, without a database read |
-| `RegularUser` | pass only if the merged permission set allows the tag |
-| `ExternalSystem`, `Console`, temporary roles, no recognized role | fail (403) |
+Two attributes make the passing principals explicit at the call site rather than
+hiding the Administrator bypass in the handler:
+
+| Attribute | `Administrator` | `RegularUser` | Everyone else |
+|---|---|---|---|
+| `[AdministratorOrUserWithPermission(tag)]` | pass, no database read | pass only if the merged set allows the tag | fail (403) |
+| `[UserWithPermission(tag)]` | fail (403) | pass only if the merged set allows the tag | fail (403) |
+
+One requirement type and one handler serve both, differing only by an
+`AllowAdministrator` flag.
+
+### Administrator And RegularUser Are Mutually Exclusive
+
+This constrains the design and is easy to misread, so it is recorded here.
+`BaseAuthenticator.GetSecurityRole` issues only `SecurityRoles.User`;
+`MultiJwtClaimsTransformer` grants `Administrator` to every
+Keycloak-authenticated principal with no `RegularUser` role alongside it; and
+`TokenGenerator` writes one role claim per token.
+
+In this codebase `Administrator` therefore means **"authenticated through
+Keycloak"**, and such a principal's `Sid` need not correspond to a `User` row.
+That is why the bypass is necessary rather than merely convenient: there are
+generally no permission rows to evaluate for a Keycloak principal.
+
+The practical guidance follows directly. Keycloak applications use
+`[AdministratorOrUserWithPermission]`. Applications without Keycloak have no
+`Administrator` principals at all, so `[UserWithPermission]` is the honest name
+and both attributes behave identically.
+
+### Permission Tags Stay Strings
+
+`ModulePermission.Tag` is a string column and tags are database rows defined per
+application, so the library cannot ship an enumeration of them. Consuming
+applications obtain compile-time safety by declaring their own `const string`
+members, which satisfy the compile-time-constant requirement for attribute
+arguments. No library type is introduced for this.
+
+An opt-in startup validation compares the tags found on registered endpoints
+against `IPermissionCatalogService` and logs a warning per unknown tag. It
+deliberately warns rather than throwing: a shared database missing a row must not
+take a 9-1-1 application down at boot, the database may not be migrated yet at
+startup, and the gate already fails closed.
 
 ### Interaction With The Default Authorization Convention
 
-Because `RequirePermissionAttribute` derives from `AuthorizeAttribute`, the
+Because both permission attributes derive from `AuthorizeAttribute`, the
 fallback policy does not run on a decorated endpoint. The dynamic policy
 therefore carries `RequireAuthenticatedUser()` and the fallback policy's
 authentication scheme list itself, and the handler verifies the role positively.
@@ -108,13 +162,15 @@ warrants its own issue and ADR.
 
 * Good: Endpoints express permission requirements declaratively and consistently
   across consuming applications.
+* Good: The attribute name states which principals pass, so a reviewer reading a
+  controller sees the Administrator bypass without consulting the handler.
 * Good: The gate is opt-in and additive. Existing consumers are unaffected until
   they call `AddPermissionBasedAuthorization()`.
 * Good: Role logic is concentrated in one testable handler instead of scattered
   through controller actions.
 * Good: No revocation staleness window is introduced.
-* Bad: `[RequirePermission]` suppresses the fallback policy on the endpoint it
-  decorates. The dynamic policy compensates, but the coupling is subtle and must
+* Bad: Either permission attribute suppresses the fallback policy on the endpoint
+  it decorates. The dynamic policy compensates, but the coupling is subtle and must
   stay covered by integration tests.
 * Bad: Each gated endpoint adds a database read for `RegularUser` principals.
   Accepted for now; revisit only with profiling data.
@@ -124,6 +180,14 @@ warrants its own issue and ADR.
 * Bad: The handler is a singleton reaching scoped services through
   `HttpContext.RequestServices`, which is correct but less obvious than
   constructor injection, and needs a documented fallback for the non-HTTP case.
+* Bad: `[UserWithPermission]` denies every Keycloak-authenticated principal,
+  because they hold `Administrator` and not `RegularUser`. Invisible in a
+  non-Keycloak application, a hard lockout in a Keycloak one. Mitigated by a
+  prominent README warning and an integration test pinning the behavior, but the
+  shorter name will still read as the more general one to some developers.
+* Bad: This design depends on `MultiJwtClaimsTransformer` granting `Administrator`
+  to Keycloak principals — behavior carrying an unresolved maintainer comment
+  questioning it. If that changes, both attributes must be revisited.
 
 ## Maintenance Invariants
 <!-- Behaviors to preserve; this decision is implemented -->
@@ -136,7 +200,7 @@ warrants its own issue and ADR.
 - `PermissionAuthorizationPolicyProvider` must delegate every policy name lacking
   the `"Permission:"` prefix to `DefaultAuthorizationPolicyProvider`, so existing
   named policies keep working.
-- Maintain integration tests proving that a `[RequirePermission]` endpoint still
+- Maintain integration tests proving that a permission-gated endpoint still
   rejects unauthenticated callers and still accepts every authentication scheme
   the application has configured.
 - Maintain unit tests proving `Administrator` succeeds without any permission
@@ -147,12 +211,21 @@ warrants its own issue and ADR.
 - The handler must resolve scoped services from `HttpContext.RequestServices` so
   the cache spans the request. Creating a child scope per authorization check
   would silently reduce the cache to per-check and defeat it.
+- Maintain the test asserting that `Administrator` passes
+  `[AdministratorOrUserWithPermission]` and is denied `[UserWithPermission]`.
+  That contrast is the entire reason two attributes exist.
+- A policy name carrying the `"Permission:"` prefix with an unrecognized mode
+  segment must return no policy. Falling back to a weaker gate would turn a typo
+  into a silent privilege escalation.
+- Startup tag validation must never throw, and must log at warning level when it
+  skips rather than failing silently.
 
 ## Implementation Plan
 <!-- Crucial section so Claude Code knows how to execute it -->
 Full detail in [docs/specs/2026-08-11-permission-based-gate.md](../../specs/2026-08-11-permission-based-gate.md).
 
-- [ ] Task 1: Add `PermissionRequirement`, `RequirePermissionAttribute`, and
+- [ ] Task 1: Add `PermissionRequirement` (`Tag`, `AllowAdministrator`), both
+      attributes in `Cause.SecurityManagement.Core/PermissionAttributes.cs`, and
       `PermissionAuthorizationPolicyProvider` under
       `Cause.SecurityManagement.Core/Authentication/`.
 - [ ] Task 2: Add async members to `IUserPermissionService` as default interface
@@ -160,14 +233,18 @@ Full detail in [docs/specs/2026-08-11-permission-based-gate.md](../../specs/2026
       `GetForUserAsync` on `IUserPermissionRepository`,
       `IGroupPermissionRepository`, and both implementations.
 - [ ] Task 3: Add `ScopedPermissionCache` and `PermissionAuthorizationHandler`.
-- [ ] Task 4: Add `AddPermissionBasedAuthorization()` to
-      `ServiceCollectionAuthorizationExtensions`, and document the attribute in
-      `README.md`.
-- [ ] Task 5: Write unit tests for the handler, the policy provider, and the
-      cache, per the tables in the spec.
+- [ ] Task 4: Add `AddPermissionBasedAuthorization(bool validateTagsAtStartup =
+      false)` to `ServiceCollectionAuthorizationExtensions`, plus
+      `PermissionTagValidationHostedService`. Document both attributes, the
+      consumer-side `Permission` constants pattern, and the `[UserWithPermission]`
+      Keycloak lockout warning in `README.md`.
+- [ ] Task 5: Write unit tests for the handler, the policy provider, the cache,
+      and tag validation, per the tables in the spec. The handler matrix runs
+      against both `AllowAdministrator` values.
 - [ ] Task 6: Write integration tests under `Cause.SecurityManagement.Integration.Tests`
       covering unauthenticated access, each configured authentication scheme, the
-      denied cases, and an undecorated endpoint in the same application.
+      denied cases, an undecorated endpoint in the same application, and the
+      Keycloak-principal contrast between the two attributes.
 - [ ] Task 7: Confirm the scheme-list hypothesis in the spec. If the integration
       tests show the scheme list is unnecessary, remove the copying and simplify
       the policy provider.

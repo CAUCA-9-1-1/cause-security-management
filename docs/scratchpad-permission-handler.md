@@ -1,5 +1,21 @@
 # Scratchpad: Permission-Based Authorization Handler
 
+> **Superseded — do not implement from this file.**
+> The authoritative design is
+> [docs/specs/2026-08-11-permission-based-gate.md](specs/2026-08-11-permission-based-gate.md)
+> and [ADR 2026-08-11](adr/records/2026-08-11-permission-based-authorization-gate.md).
+>
+> This scratchpad is kept for history. It differs from the final design in four
+> ways that matter:
+>
+> 1. `[RequirePermission]` became `[AdministratorOrUserWithPermission]` and
+>    `[UserWithPermission]`, so the passing principals are named at the call site.
+> 2. The handler resolves scoped services from `HttpContext.RequestServices`, not
+>    a per-check `CreateAsyncScope()` — the latter would have defeated the cache.
+> 3. The dynamic policy copies the application's authentication scheme list.
+> 4. The open question about `IUserPermissionService` is resolved: default
+>    interface implementations, since all projects target a single `net10.0` TFM.
+
 ## Goal
 
 Add a granular, per-endpoint permission gate usable across all API patterns.
