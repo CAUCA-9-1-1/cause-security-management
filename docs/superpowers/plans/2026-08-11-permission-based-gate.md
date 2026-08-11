@@ -1000,7 +1000,21 @@ git commit -m "#115 - Add AddPermissionBasedAuthorization registration extension
 
 ---
 
-### Task 7: Startup tag validation
+### Task 7: Startup tag validation — ✅ COMPLETE
+
+Shipped as specified. `internal sealed PermissionTagValidationHostedService`, opt-in via `AddPermissionBasedAuthorization(validateTagsAtStartup: true)`, 8 tests plus 2 registration tests.
+
+It reads `EndpointDataSource` rather than scanning assemblies, so it sees the policy names the pipeline will actually use and covers MVC controllers and minimal-API endpoints alike. It never throws — a shared database missing a row must not take a 9-1-1 application down at boot, the database may not be migrated yet, and the gate already fails closed. Both skip paths log at warning level rather than passing silently.
+
+The case-mismatch test earns its place: the runtime comparison is ordinal, so `[UserWithPermission("caneditbuilding")]` against a stored `CanEditBuilding` silently denies everyone. That is the most likely real-world typo and it now warns at startup.
+
+CS1573 note: the parameter is described in the `<summary>` rather than a `<param>` tag, because the existing doc documents no parameters at all and adding one only for the new parameter would have fired CS1573 for the undocumented `services`.
+
+The original detail follows.
+
+---
+
+### Task 7 (original detail): Startup tag validation
 
 **Files:**
 - Create: `Cause.SecurityManagement.Core/Authentication/PermissionTagValidationHostedService.cs`
@@ -1329,7 +1343,17 @@ git commit -m "#115 - Warn at startup when a permission tag is missing from the 
 
 ---
 
-### Task 8: HTTP pipeline tests
+### Task 8: HTTP pipeline tests — ✅ COMPLETE
+
+18 tests across two host fixtures. Every expected status code held. Surfaced and fixed the `AddAuthorizationCore` / `UseAuthorization()` startup crash for minimal-API consumers, and confirmed the inherited scheme list matters. Details in the spec section "Findings From The HTTP Pipeline Tests".
+
+Still outstanding from Step 4: the two MVC-filter hosts (`AskForAuthorizationByDefault`, `AddAuthorizeFiltersControllerConvention`). Those need controllers rather than minimal APIs and were deferred; the union-not-suppression behavior they would pin is documented in the spec but not yet empirically confirmed.
+
+The original detail follows.
+
+---
+
+### Task 8 (original detail): HTTP pipeline tests
 
 **Files:**
 - Create: `Cause.SecurityManagement.Tests/Authentication/PermissionGateEndpointTests.cs`
@@ -1564,7 +1588,17 @@ git commit -m "#115 - Add HTTP pipeline tests for the permission gate"
 
 ---
 
-### Task 8b: End-to-end gate test against a real database
+### Task 8b: End-to-end gate test against a real database — ✅ COMPLETE
+
+8 tests against real PostgreSQL rows with the real `IUserPermissionService`, no stubs. Every case matched expectation, including the critical one: a `Sid` matching no user returns 403, not 200. The sync/async equivalence assertion holds. **No production code changes were needed** — the registration chain resolved and executed correctly end to end on the first attempt, which is itself the useful result.
+
+Only `Microsoft.AspNetCore.TestHost` was added to the integration project.
+
+The original detail follows.
+
+---
+
+### Task 8b (original detail): End-to-end gate test against a real database
 
 **Files:**
 - Modify: `Cause.SecurityManagement.Integration.Tests/Cause.SecurityManagement.Integration.Tests.csproj`
@@ -1733,13 +1767,28 @@ memoized for the request. Administrators are never looked up. There is no
 cross-request cache, so revoking a permission takes effect on the next request.
 ````
 
-- [ ] **Step 3: Bump the package versions to 10.7.0**
+- [ ] **Step 3: Bump the package versions to `10.7.0-beta1`**
 
-`docs/RELEASING.md` § Semver Bump Rules classifies this feature as **additive → MINOR**, and requires the same version across all three published packages. Every interface member added in this work is a default implementation specifically to keep it additive.
+`docs/RELEASING.md` § Semver Bump Rules classifies this feature as **additive → MINOR**. Every interface member added in this work is a default implementation specifically to keep it additive. The maintainer chose to publish a **beta first**, so the coordinated version is `10.7.0-beta1`.
 
-All three of `Cause.SecurityManagement.Models`, `Cause.SecurityManagement.Core`, and `Cause.SecurityManagement` currently read `10.6.0`. In each `.csproj` update `<Version>`, `<AssemblyVersion>`, and `<FileVersion>` to `10.7.0`, and add a `<PackageReleaseNotes>` line describing the permission gate.
+**There are FOUR packable projects, not three.** An earlier draft of this plan said three; `release.ps1:59-64` lists:
 
-Do **not** run `release.ps1` — publishing is a separate deliberate step per the multi-package release governance ADR.
+| Project | Current version |
+|---|---|
+| `Cause.SecurityManagement.Models` | `10.6.0` |
+| `Cause.SecurityManagement.Core` | `10.6.0` |
+| `Cause.SecurityManagement` | `10.6.0` |
+| `Cause.SecurityManagement.Wolverine.ExternalSystem` | `10.6.0` |
+
+`release.ps1` reads `<Version>` from each and **aborts if any differs**, so all four must move together. `Cause.SecurityManagement.Wolverine` (without `.ExternalSystem`) is *not* packable and must not be touched.
+
+**`-beta1`, not `-preview1`.** `RELEASING.md` uses `-preview1` and `-experimental*` in its examples, but the convention actually used in this repository is `-beta1` — see `10.5.0-beta1` and `10.3.2-beta1` in the history. Follow the practice.
+
+In each of the four `.csproj` files set `<Version>` to `10.7.0-beta1`. Leave `<AssemblyVersion>` and `<FileVersion>` at `10.7.0` — those elements do not accept a prerelease suffix and NuGet does not require one there.
+
+Add a `<PackageReleaseNotes>` entry to each, written from the whole-platform perspective as `RELEASING.md` § Release Notes requires. It must mention the security fix, since consumers need to know it is in this set.
+
+Do **not** run `release.ps1`, and do **not** create a git tag — `RELEASING.md` step 6 says pre-release sets are not tagged, and publishing is a separate deliberate step per the multi-package release governance ADR.
 
 - [ ] **Step 4: Flip the ADR to accepted**
 

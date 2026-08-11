@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using NSubstitute;
 using NUnit.Framework;
 
@@ -137,5 +138,25 @@ public class PermissionRegistrationTests
         var policyProvider = provider.GetRequiredService<IAuthorizationPolicyProvider>();
 
         policyProvider.AllowsCachingPolicies.Should().BeTrue();
+    }
+
+    [Test]
+    public void PermissionRegistrationWithoutValidation_WhenInspectingServices_ShouldNotRegisterTheHostedService()
+    {
+        using var provider = BuildProvider(services => services.AddPermissionBasedAuthorization());
+
+        var hostedServices = provider.GetServices<IHostedService>();
+
+        hostedServices.OfType<PermissionTagValidationHostedService>().Should().BeEmpty();
+    }
+
+    [Test]
+    public void PermissionRegistrationWithValidation_WhenInspectingServices_ShouldRegisterTheHostedService()
+    {
+        using var provider = BuildProvider(services => services.AddPermissionBasedAuthorization(validateTagsAtStartup: true));
+
+        var hostedServices = provider.GetServices<IHostedService>();
+
+        hostedServices.OfType<PermissionTagValidationHostedService>().Should().ContainSingle();
     }
 }
