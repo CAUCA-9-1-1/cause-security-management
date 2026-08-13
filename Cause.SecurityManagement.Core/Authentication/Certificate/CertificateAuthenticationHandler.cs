@@ -25,6 +25,13 @@ public class CertificateAuthenticationHandler(
             certificateValidator.ValidateCertificate(Request.Headers);
             return Task.FromResult(AuthenticateResult.Success(GenerateTicket()));
         }
+        catch (DuplicateCertificateSubjectException exception)
+        {
+            Logger.LogError(exception,
+                "Multiple active certificate-bound external systems share certificate subject DN {CertificateSubjectDn}. Deactivate the duplicates so exactly one remains.",
+                exception.CertificateSubjectDn);
+            throw;
+        }
         catch (Exception exception)
         {
             Logger.LogInformation(exception, "Certificate authentication failed.");

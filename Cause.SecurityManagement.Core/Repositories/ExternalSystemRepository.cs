@@ -2,6 +2,7 @@ using Cause.SecurityManagement.Models;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Cause.SecurityManagement.Core.Authentication.Exceptions;
 using Cause.SecurityManagement.Core.Services;
 
 namespace Cause.SecurityManagement.Core.Repositories
@@ -31,9 +32,18 @@ namespace Cause.SecurityManagement.Core.Repositories
 
         public ExternalSystem GetByCertificateSubject(string certificateSubject)
         {
-            return context.ExternalSystems
-                .SingleOrDefault(externalSystem => externalSystem.CertificateSubjectDn == certificateSubject && externalSystem.IsActive
-                    && externalSystem.AuthenticationType == ExternalSystemAuthenticationType.Certificate);
+            var matchingExternalSystems = context.ExternalSystems
+                .Where(externalSystem => externalSystem.CertificateSubjectDn == certificateSubject && externalSystem.IsActive
+                    && externalSystem.AuthenticationType == ExternalSystemAuthenticationType.Certificate)
+                .Take(2)
+                .ToList();
+
+            if (matchingExternalSystems.Count > 1)
+            {
+                throw new DuplicateCertificateSubjectException(certificateSubject);
+            }
+
+            return matchingExternalSystems.FirstOrDefault();
         }
 
         public ExternalSystem GetById(Guid idExternalSystem)
