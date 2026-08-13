@@ -13,7 +13,12 @@
     <Copyright>CAUCA 9-1-1 (c) 2025</Copyright>
     <PackageTags>Cause Security Management Wolverine ExternalSystem Cauca</PackageTags>
     <PackageReleaseNotes>
-10.7.0 — Adds a permission-based endpoint gate: [AdministratorOrUserWithPermission] and
+10.7.1 — Supersedes 10.7.0, which reached the feed incomplete. Only the
+Cause.SecurityManagement package was published at 10.7.0; the other three were not, so its
+dependency on Cause.SecurityManagement.Core 10.7.0 cannot be resolved and that version is
+not installable. Do not use 10.7.0. The contents below are what 10.7.0 was intended to be.
+
+Adds a permission-based endpoint gate: [AdministratorOrUserWithPermission] and
 [UserWithPermission], enabled with AddPermissionBasedAuthorization(). Includes a security
 fix: MultiJwtClaimsTransformer no longer grants the Administrator role to principals with
 no issuer claim, which previously affected certificate-authenticated external systems in
@@ -32,9 +37,9 @@ CertificateSubjectDn at the log aggregator rather than alerting per event.
 All published packages must be upgraded together. See the README section on
 permission-based endpoint authorization for supported registrations.
     </PackageReleaseNotes>
-    <Version>10.7.0</Version>
-    <AssemblyVersion>10.7.0</AssemblyVersion>
-    <FileVersion>10.7.0</FileVersion>
+    <Version>10.7.1</Version>
+    <AssemblyVersion>10.7.1</AssemblyVersion>
+    <FileVersion>10.7.1</FileVersion>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
