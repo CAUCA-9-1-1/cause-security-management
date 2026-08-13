@@ -84,6 +84,77 @@ consumers that do not use the group management feature.
 </PackageReleaseNotes>
 ```
 
+## Requirements
+
+**The script is portable; the release is not** — not until Linux credentials
+are provisioned separately. `release.ps1` is a PowerShell 7 (`pwsh`) script
+and its logic runs unmodified on Windows or Linux (`pwsh` is cross-platform,
+so there is a single script rather than separate Windows/Linux versions).
+But a working Windows `CaucaNuget` registration cannot simply be carried over
+to Linux — see the credentials note below before attempting a release from a
+Linux machine.
+
+Two things must be true on the machine running it:
+
+- **PowerShell 7 (`pwsh`) is installed.** Windows PowerShell 5.1 is not
+  sufficient — the script relies on `Join-Path` accepting multiple child-path
+  segments, which is PowerShell 6+ only. The script declares
+  `#Requires -Version 7.0` so a 5.1 invocation fails fast with a clear
+  version-mismatch error instead of an obscure `Join-Path` parameter error.
+- **`CaucaNuget` is registered as a NuGet source on that machine.** The
+  registration lives in the local NuGet config (a user-level `NuGet.Config` on
+  Windows, `~/.nuget/NuGet/NuGet.Config` or equivalent on Linux), not in this
+  repository — there is no repo-level `NuGet.config`.
+
+  > **Windows and Linux credentials do not interchange.** NuGet encrypts
+  > stored `<packageSourceCredentials>` passwords and `<apikeys>` entries
+  > using Windows DPAPI, which is Windows-only and decryptable only by the
+  > same user account on the same machine that wrote it. Copying a Windows
+  > `NuGet.Config` to a Linux machine, or any other means of reusing the
+  > Windows CaucaNuget registration, will not work — there is no flag that
+  > makes DPAPI-encrypted credentials portable. Each platform (and each
+  > machine) needs its own credential registration.
+  >
+  > On Linux, register the source with `--store-password-in-clear-text` —
+  > the only option available there, since DPAPI encryption is unsupported
+  > outside Windows:
+  >
+  > ```
+  > dotnet nuget add source <feed-url> --name CaucaNuget --username <user> --password <password> --store-password-in-clear-text
+  > ```
+  >
+  > Prefer supplying credentials via the `NuGetPackageSourceCredentials_CaucaNuget`
+  > environment variable instead of a persisted clear-text password,
+  > especially on a shared or non-personal Linux machine.
+  >
+  > Get the feed URL and credentials from the team; do not guess or hardcode
+  > them here. **The Linux path is unproven** — treat it as such until
+  > someone has actually completed a release from a Linux machine.
+
+Invocation differs slightly by platform. `pwsh` parses `.ps1` files in-process
+rather than executing them as a native binary, so `release.ps1` does not need
+an execute bit to run under `pwsh` — but running it as `./release.ps1` from
+*inside a bash shell* relies on the shebang/exec-bit mechanism that `.ps1`
+files on this repo don't have (mode `100644`), so invoke it through `pwsh`
+explicitly:
+
+```powershell
+# Windows
+.\release.ps1 -WhatIf
+
+# Linux
+pwsh -File ./release.ps1 -WhatIf
+```
+
+> The push step itself uses `dotnet nuget push`, not `nuget.exe push` — the
+> `nuget` CLI is a Windows-only binary and is not available on Linux.
+> `dotnet nuget push` is bundled with the .NET SDK on both platforms. The one
+> functional difference that matters here: `nuget.exe push` prompts
+> interactively for credentials by default, while `dotnet nuget push` does
+> not unless `--interactive` is passed (which `release.ps1` does). Without
+> it, a credential problem on the release machine would surface as a bare
+> 401 at the push step instead of a prompt.
+
 ## How to Release
 
 1. Bump `<Version>` in all four published packable `.csproj` files to the same new value.

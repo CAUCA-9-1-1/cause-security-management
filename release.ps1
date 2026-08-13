@@ -16,7 +16,7 @@
       2. BUILD         — dotnet build (Release).
       3. TEST          — dotnet test (Release, no-build). Skippable via -SkipTests.
       4. PACK          — dotnet pack each packable project into ./artifacts/nupkg.
-      5. PUSH          — nuget push each produced .nupkg to CaucaNuget.
+      5. PUSH          — dotnet nuget push each produced .nupkg to CaucaNuget.
 
     Supports -WhatIf: the push step is skipped so the full gate can be previewed
     without actually publishing packages.
@@ -42,6 +42,8 @@
     Skip the test step (escape hatch — use with care).
 #>
 
+#Requires -Version 7.0
+
 [CmdletBinding(SupportsShouldProcess)]
 param(
     [switch] $SkipTests,
@@ -57,10 +59,10 @@ $ErrorActionPreference = 'Stop'
 $RepoRoot = $PSScriptRoot
 
 $PackableProjects = @(
-    'Cause.SecurityManagement.Models\Cause.SecurityManagement.Models.csproj',
-    'Cause.SecurityManagement.Core\Cause.SecurityManagement.Core.csproj',
-    'Cause.SecurityManagement\Cause.SecurityManagement.csproj',
-    'Cause.SecurityManagement.Wolverine.ExternalSystem\Cause.SecurityManagement.Wolverine.ExternalSystem.csproj'
+    'Cause.SecurityManagement.Models/Cause.SecurityManagement.Models.csproj',
+    'Cause.SecurityManagement.Core/Cause.SecurityManagement.Core.csproj',
+    'Cause.SecurityManagement/Cause.SecurityManagement.csproj',
+    'Cause.SecurityManagement.Wolverine.ExternalSystem/Cause.SecurityManagement.Wolverine.ExternalSystem.csproj'
 )
 
 $SolutionFile = Join-Path $RepoRoot 'Cause.SecurityManagement.sln'
@@ -180,11 +182,11 @@ $ProducedPackages | ForEach-Object { Write-Host "    $($_.Name)" }
 Write-Host "`n=== Step 5: Push ===" -ForegroundColor Cyan
 
 foreach ($pkg in $ProducedPackages) {
-    if ($PSCmdlet.ShouldProcess($pkg.FullName, "nuget push -Source CaucaNuget")) {
+    if ($PSCmdlet.ShouldProcess($pkg.FullName, "dotnet nuget push --source CaucaNuget --interactive")) {
         Write-Host "`n  Pushing $($pkg.Name) ..."
-        nuget push -Source CaucaNuget $pkg.FullName
+        dotnet nuget push $pkg.FullName --source CaucaNuget --interactive
         if ($LASTEXITCODE -ne 0) {
-            Write-Error "nuget push failed for '$($pkg.Name)' (exit $LASTEXITCODE). Aborting."
+            Write-Error "dotnet nuget push failed for '$($pkg.Name)' (exit $LASTEXITCODE). Aborting."
             exit $LASTEXITCODE
         }
     }
