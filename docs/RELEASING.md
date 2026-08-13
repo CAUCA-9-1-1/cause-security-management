@@ -31,23 +31,38 @@ any version differs.
 > and bring its `<Version>` in line with the others. See the ADR
 > `2026-06-04-exclude-wolverine-from-published-release-set.md`.
 
-## Semver Bump Rules
+## Version Scheme — MAJOR Tracks .NET, Not Breaking Changes
 
-Because all three published packages share one version, apply the **highest
+**This is not semver, and the difference matters.** The MAJOR component states
+which .NET major version the packages target. `10.x` means the packages target
+.NET 10. It moves only when the `<TargetFramework>` moves — `11.0.0` would
+advertise .NET 11 support, so it must not be used to signal a breaking change
+while the packages are still on `net10.0`.
+
+The practical consequence: **a breaking change cannot take MAJOR.** It takes
+MINOR, and the break is communicated through `<PackageReleaseNotes>` rather than
+through the version number. Consumers cannot rely on the version alone to tell
+them a release is safe to take, so release notes are the compatibility contract
+and must name any behavior change explicitly.
+
+## Bump Rules
+
+Because all four published packages share one version, apply the **highest
 required bump across any package** to all of them.
 
 | Change type | Version component | Examples |
 |---|---|---|
-| Breaking change in any public API or behavior contract | **MAJOR** | Remove a method, rename a DTO property, change an endpoint signature |
+| Target framework moves to a new .NET major | **MAJOR** | `net10.0` → `net11.0` |
+| Breaking change in any public API or behavior contract | **MINOR**, and name it in the release notes | Remove a method, rename a DTO property, change an endpoint signature, change the HTTP status a condition returns |
 | Additive change (backwards compatible) | **MINOR** | New method overload, new endpoint, new optional parameter |
 | Bug fix, documentation, internal refactor | **PATCH** | Fix incorrect validation, correct a return type, update XML docs |
 
-Update all three published `<Version>` elements to the same new value before releasing.
+Update all four published `<Version>` elements to the same new value before releasing.
 
 ## Cross-Package Compatibility
 
 A given version set (`10.2.0`, `10.3.0-preview1`, etc.) is fully compatible
-across all three published packages. Consuming applications should pin all
+across all four published packages. Consuming applications should pin all
 `Cause.SecurityManagement.*` packages to the same version. Mixing versions from
 different release sets is unsupported and may cause runtime or compile-time
 failures.
@@ -71,7 +86,7 @@ consumers that do not use the group management feature.
 
 ## How to Release
 
-1. Bump `<Version>` in all three published packable `.csproj` files to the same new value.
+1. Bump `<Version>` in all four published packable `.csproj` files to the same new value.
 2. Update `<PackageReleaseNotes>` in each `.csproj` to describe the release set.
 3. Commit, push, and merge to the main branch.
 4. Run a dry run to preview what will be pushed — nothing is published:
@@ -79,6 +94,15 @@ consumers that do not use the group management feature.
    ```powershell
    .\release.ps1 -WhatIf
    ```
+
+   > **Clean `artifacts/nupkg` first.** The script's cleanup step honours
+   > `ShouldProcess`, so under `-WhatIf` it is skipped and the directory keeps
+   > whatever a previous run left behind. The push preview then lists those
+   > stale packages as if they were about to be published — including
+   > pre-release versions from an earlier set. A real run cleans correctly and
+   > is unaffected, but the dry run overstates the push list unless you run
+   > `Remove-Item .\artifacts\nupkg -Recurse -Force` beforehand. Confirm the
+   > preview lists exactly four packages, all at the version you intend.
 
 5. Run the full release when ready:
 
@@ -103,7 +127,7 @@ consumers that do not use the group management feature.
 - Build the solution in Release configuration.
 - Run all tests (use `-SkipTests` only as a documented escape hatch when tests
   were already run locally in this session).
-- Pack only the three published packable projects into `./artifacts/nupkg`.
+- Pack only the four published packable projects into `./artifacts/nupkg`.
 - Push each `.nupkg` to the `CaucaNuget` feed.
 
 It does **not** create the git tag — tagging is a manual step (6 above) so the

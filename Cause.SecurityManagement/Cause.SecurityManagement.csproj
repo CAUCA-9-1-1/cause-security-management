@@ -13,15 +13,26 @@
     <Copyright>CAUCA 9-1-1 (c) 2025</Copyright>
     <PackageTags>Cause Security Management AspNetCore Http Controllers Cauca</PackageTags>
     <PackageReleaseNotes>
-10.7.0-beta1 — Adds a permission-based endpoint gate: [AdministratorOrUserWithPermission]
-and [UserWithPermission], enabled with AddPermissionBasedAuthorization(). Also includes a
-security fix: MultiJwtClaimsTransformer no longer grants the Administrator role to
-principals with no issuer claim, which previously affected certificate-authenticated
-external systems in applications that do not configure Keycloak. Additive and backwards
-compatible; all published packages must be upgraded together. Pre-release — see the
-README section on permission-based endpoint authorization for supported registrations.
+10.7.0 — Adds a permission-based endpoint gate: [AdministratorOrUserWithPermission] and
+[UserWithPermission], enabled with AddPermissionBasedAuthorization(). Includes a security
+fix: MultiJwtClaimsTransformer no longer grants the Administrator role to principals with
+no issuer claim, which previously affected certificate-authenticated external systems in
+applications that do not configure Keycloak.
+
+Behavior change in certificate authentication: when two or more active certificate-bound
+ExternalSystem rows share one CertificateSubjectDn, the request now returns HTTP 500 with
+an Error-level log naming the duplicated DN. It previously returned HTTP 401, which was
+indistinguishable from a rejected certificate. Only this fault changes — every other
+authentication outcome is unchanged, and nothing that previously failed can now succeed.
+IExternalSystemRepository.GetByCertificateSubject can now throw
+DuplicateCertificateSubjectException. Alerting keyed on 5xx will begin firing on this
+condition, and the affected integration typically retries, so dedupe on
+CertificateSubjectDn at the log aggregator rather than alerting per event.
+
+All published packages must be upgraded together. See the README section on
+permission-based endpoint authorization for supported registrations.
     </PackageReleaseNotes>
-    <Version>10.7.0-beta1</Version>
+    <Version>10.7.0</Version>
     <AssemblyVersion>10.7.0</AssemblyVersion>
     <FileVersion>10.7.0</FileVersion>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>

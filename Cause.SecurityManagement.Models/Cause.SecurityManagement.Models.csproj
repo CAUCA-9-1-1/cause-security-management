@@ -4,7 +4,7 @@
 	  <IsPackable>true</IsPackable>
 	  <TargetFramework>net10.0</TargetFramework>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <Version>10.7.0-beta1</Version>
+    <Version>10.7.0</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 	  <RepositoryUrl>https://github.com/CAUCA-9-1-1/cause-security-management</RepositoryUrl>
 	  <PackageProjectUrl>https://github.com/CAUCA-9-1-1/cause-security-management</PackageProjectUrl>
@@ -14,13 +14,24 @@
     <Description>Base models for the Cause.SecurityManagement's library.</Description>
     <Copyright>CAUCA 9-1-1 (c) 2025</Copyright>
     <PackageReleaseNotes>
-10.7.0-beta1 — Adds a permission-based endpoint gate: [AdministratorOrUserWithPermission]
-and [UserWithPermission], enabled with AddPermissionBasedAuthorization(). Also includes a
-security fix: MultiJwtClaimsTransformer no longer grants the Administrator role to
-principals with no issuer claim, which previously affected certificate-authenticated
-external systems in applications that do not configure Keycloak. Additive and backwards
-compatible; all published packages must be upgraded together. Pre-release — see the
-README section on permission-based endpoint authorization for supported registrations.
+10.7.0 — Adds a permission-based endpoint gate: [AdministratorOrUserWithPermission] and
+[UserWithPermission], enabled with AddPermissionBasedAuthorization(). Includes a security
+fix: MultiJwtClaimsTransformer no longer grants the Administrator role to principals with
+no issuer claim, which previously affected certificate-authenticated external systems in
+applications that do not configure Keycloak.
+
+Behavior change in certificate authentication: when two or more active certificate-bound
+ExternalSystem rows share one CertificateSubjectDn, the request now returns HTTP 500 with
+an Error-level log naming the duplicated DN. It previously returned HTTP 401, which was
+indistinguishable from a rejected certificate. Only this fault changes — every other
+authentication outcome is unchanged, and nothing that previously failed can now succeed.
+IExternalSystemRepository.GetByCertificateSubject can now throw
+DuplicateCertificateSubjectException. Alerting keyed on 5xx will begin firing on this
+condition, and the affected integration typically retries, so dedupe on
+CertificateSubjectDn at the log aggregator rather than alerting per event.
+
+All published packages must be upgraded together. See the README section on
+permission-based endpoint authorization for supported registrations.
     </PackageReleaseNotes>
     <Company>CAUCA 9-1-1</Company>
     <PackageReadmeFile>README.md</PackageReadmeFile>
