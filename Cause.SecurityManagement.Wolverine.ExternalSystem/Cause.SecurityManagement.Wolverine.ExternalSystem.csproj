@@ -13,40 +13,43 @@
     <Copyright>CAUCA 9-1-1 (c) 2025</Copyright>
     <PackageTags>Cause Security Management Wolverine ExternalSystem Cauca</PackageTags>
     <PackageReleaseNotes>
-10.7.1 — Supersedes 10.7.0, which reached the feed incomplete. Only the
-Cause.SecurityManagement package was published at 10.7.0; the other three were not, so its
-dependency on Cause.SecurityManagement.Core 10.7.0 cannot be resolved and that version is
-not installable. Do not use 10.7.0. The contents below are what 10.7.0 was intended to be.
+10.7.2 — Dependency maintenance. No functional change to the library.
 
-Adds a permission-based endpoint gate: [AdministratorOrUserWithPermission] and
-[UserWithPermission], enabled with AddPermissionBasedAuthorization(). Includes a security
-fix: MultiJwtClaimsTransformer no longer grants the Administrator role to principals with
-no issuer claim, which previously affected certificate-authenticated external systems in
-applications that do not configure Keycloak.
+WolverineFx.Http moves from a 6.25.* float to 6.*, so
+Cause.SecurityManagement.Wolverine.ExternalSystem now declares a minimum of
+WolverineFx.Http 6.27.1 where 10.7.1 declared 6.25.5. Consumers of that package are moved
+forward on upgrade. The wider float also means each future release picks up the newest 6.x
+available at pack time, so the published minimum will keep advancing without a
+corresponding source change.
 
-Behavior change in certificate authentication: when two or more active certificate-bound
-ExternalSystem rows share one CertificateSubjectDn, the request now returns HTTP 500 with
-an Error-level log naming the duplicated DN. It previously returned HTTP 401, which was
-indistinguishable from a rejected certificate. Only this fault changes — every other
-authentication outcome is unchanged, and nothing that previously failed can now succeed.
-IExternalSystemRepository.GetByCertificateSubject can now throw
-DuplicateCertificateSubjectException. Alerting keyed on 5xx will begin firing on this
-condition, and the affected integration typically retries, so dedupe on
-CertificateSubjectDn at the log aggregator rather than alerting per event.
+Test-project dependencies were also updated and are present in no published package:
+Microsoft.AspNetCore.TestHost and Microsoft.EntityFrameworkCore.InMemory from 10.0.10 to
+10.0.11, and Microsoft.AspNetCore.Http from 2.3.11 to 2.3.12.
+
+Carries forward everything in 10.7.1: the permission-based endpoint gate
+([AdministratorOrUserWithPermission] and [UserWithPermission], enabled with
+AddPermissionBasedAuthorization()), the MultiJwtClaimsTransformer security fix, and the
+certificate authentication behavior change where two or more active certificate-bound
+ExternalSystem rows sharing one CertificateSubjectDn now return HTTP 500 with an
+Error-level log naming the duplicated DN, instead of the HTTP 401 that was
+indistinguishable from a rejected certificate.
+
+Do not use 10.7.0. Only one of its four packages reached the feed, so it cannot be
+restored. Upgrade from 10.6.x directly to 10.7.2.
 
 All published packages must be upgraded together. See the README section on
 permission-based endpoint authorization for supported registrations.
     </PackageReleaseNotes>
-    <Version>10.7.1</Version>
-    <AssemblyVersion>10.7.1</AssemblyVersion>
-    <FileVersion>10.7.1</FileVersion>
+    <Version>10.7.2</Version>
+    <AssemblyVersion>10.7.2</AssemblyVersion>
+    <FileVersion>10.7.2</FileVersion>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="WolverineFx.Http" Version="6.25.*" />
+    <PackageReference Include="WolverineFx.Http" Version="6.*" />
   </ItemGroup>
 
   <ItemGroup>
