@@ -305,6 +305,109 @@ public class GroupListController(MyDbContext context) : BaseGroupListController
 
 ---
 
+# Permission-Based Endpoint Authorization
+
+Register alongside your existing authorization setup. Call order does not matter:
+
+```csharp
+services.AddAuthorizationForRegularUser();
+services.AddPermissionBasedAuthorization();
+```
+
+Then gate endpoints by permission tag:
+
+```csharp
+[AdministratorOrUserWithPermission(Permission.CanEditBuilding)]
+public async Task<IActionResult> EditBuilding(...) { }
+```
+
+For minimal APIs, use the policy name directly:
+
+```csharp
+app.MapPut("/buildings/{id}", EditBuilding)
+   .RequireAuthorization(PermissionPolicy.NameFor(Permission.CanEditBuilding, allowAdministrator: true));
+```
+
+| Attribute | Administrator | RegularUser | Everyone else |
+|---|---|---|---|
+| `[AdministratorOrUserWithPermission(tag)]` | passes without a permission lookup | passes only with the permission | 403 |
+| `[UserWithPermission(tag)]` | 403 | passes only with the permission | 403 |
+
+## The gate can only make an endpoint stricter
+
+The generated policy **inherits your application's `FallbackPolicy`** and adds the
+permission requirement on top. A decorated endpoint is therefore always at least as
+strict as an undecorated one.
+
+The consequence surprises people: under `AddAuthorizationForRegularUser`, whose baseline
+is `RequireRole(RegularUser)`, an **Administrator is denied even by
+`[AdministratorOrUserWithPermission]`**. Administrators pass only where your baseline
+already admits them, such as `AddAuthorizationForRegularUserKeycloakAndApiCertificate`.
+
+Your authentication scheme list must live on `FallbackPolicy`. Schemes configured only
+on `DefaultPolicy` are not inherited.
+
+## Unsupported registrations
+
+| Registration | Why |
+|---|---|
+| `AddAuthorizationForKeycloakAndRegularUserSchemes` | Its baseline admits only `Administrator`, whom the gate passes unconditionally, so `[AdministratorOrUserWithPermission]` is a **no-op** and `[UserWithPermission]` denies everyone. |
+| `AddAuthorizationForExternalSystem` | Its baseline admits only `ExternalSystem`, which the gate always denies, so both attributes deny everyone. |
+
+Neither is unsafe — both simply leave the gate with nothing useful to do.
+
+## Choosing between the two attributes
+
+`Administrator` is granted to **every Keycloak-authenticated principal** and never by
+this library's own login path, so the two roles are mutually exclusive.
+
+- **Using Keycloak?** Use `[AdministratorOrUserWithPermission]`.
+- **Not using Keycloak?** You have no `Administrator` principals, so
+  `[UserWithPermission]` is equivalent and reads more honestly.
+
+> **`[UserWithPermission]` denies every Keycloak-authenticated principal.** Do not reach
+> for the shorter name assuming it is the more general one.
+
+## Other behaviors worth knowing
+
+- **Stacking ANDs.** Two attributes on one action require **both** permissions, and a
+  controller-level attribute combines with an action-level one. Mixing the two attribute
+  types denies Administrators.
+- **`[AllowAnonymous]` disables the gate entirely**, including when inherited from a base
+  controller.
+- **Tags are compared exactly**, case-sensitively. `"caneditbuilding"` does not match a
+  stored `CanEditBuilding`; it silently denies everyone.
+- **`Console`/`ApiCertificate` principals are always denied** on gated endpoints, even
+  where your baseline admits them. Retrofitting an attribute onto an endpoint a console
+  integration uses will break it.
+
+## Referencing tags safely
+
+Declare your tags as constants so a typo is a compile error:
+
+```csharp
+public static class Permission
+{
+    public const string CanEditBuilding = "CanEditBuilding";
+}
+```
+
+Optionally warn at startup about tags missing from the permission catalog:
+
+```csharp
+services.AddPermissionBasedAuthorization(validateTagsAtStartup: true);
+```
+
+This logs one warning per unknown tag and never fails startup.
+
+## Performance
+
+One database read per request per user; the merged permission set is memoized for the
+request. Administrators are never looked up. There is no cross-request cache, so
+revoking a permission takes effect on the next request.
+
+---
+
 # Cause.SecurityManagement.Wolverine
 
 A separate NuGet package (`Cause.SecurityManagement.Wolverine`) that provides Wolverine HTTP endpoints and sagas as an alternative to the MVC-based `Cause.SecurityManagement` package. Use this when your API is built on [Wolverine](https://wolverine.netlify.app/) instead of (or alongside) traditional ASP.NET Core controllers.

@@ -1,3 +1,4 @@
+using Cause.SecurityManagement.Core;
 using Cause.SecurityManagement.Core.Authentication;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -22,16 +23,22 @@ internal sealed class MultiJwtClaimsTransformer(IOptions<SecurityConfiguration> 
         var issuer = principal.Identities
             .Select(identity => identity.FindFirst(JwtRegisteredClaimNames.Iss)?.Value)
             .FirstOrDefault();
+        if (string.IsNullOrEmpty(issuer))
+        {
+            principal.AddIdentity(claimsIdentity);
+            return Task.FromResult(principal);
+        }
+
         if (issuer == configuration.Value.Issuer)
         {
             claimsIdentity.AddClaim(new Claim(AuthenticationSource, CustomAuthSchemes.RegularUserAuthentication));
         }
-        else if (issuer == keycloakConfiguration?.Value?.ValidIssuer)
+        else if (!string.IsNullOrEmpty(keycloakConfiguration?.Value?.ValidIssuer) && issuer == keycloakConfiguration.Value.ValidIssuer)
         {
             claimsIdentity.AddClaim(new Claim(AuthenticationSource, CustomAuthSchemes.KeycloakAuthentication));
             // Je garde en commentaire, je me questionne sur pourquoi j'avais mis ça plutôt qu'administrator.
             //claimsIdentity.AddClaim(new Claim(ClaimTypes.Role, SecurityRoles.ApiCertificate));
-            claimsIdentity.AddClaim(new Claim(ClaimTypes.Role, "Administrator"));
+            claimsIdentity.AddClaim(new Claim(ClaimTypes.Role, SecurityRoles.Administrator));
         }
         principal.AddIdentity(claimsIdentity);
         return Task.FromResult(principal);

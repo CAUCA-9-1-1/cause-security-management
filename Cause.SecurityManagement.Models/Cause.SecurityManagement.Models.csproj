@@ -4,17 +4,23 @@
 	  <IsPackable>true</IsPackable>
 	  <TargetFramework>net10.0</TargetFramework>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <Version>10.6.0</Version>
+    <Version>10.7.0-beta1</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 	  <RepositoryUrl>https://github.com/CAUCA-9-1-1/cause-security-management</RepositoryUrl>
 	  <PackageProjectUrl>https://github.com/CAUCA-9-1-1/cause-security-management</PackageProjectUrl>
-    <AssemblyVersion>10.6.0</AssemblyVersion>
-    <FileVersion>10.6.0</FileVersion>
+    <AssemblyVersion>10.7.0</AssemblyVersion>
+    <FileVersion>10.7.0</FileVersion>
     <Authors>Fred Catellier-Poulin, Michael Jolin, Claudine Gagnon</Authors>
     <Description>Base models for the Cause.SecurityManagement's library.</Description>
     <Copyright>CAUCA 9-1-1 (c) 2025</Copyright>
     <PackageReleaseNotes>
-10.6.0 — Add fix to not generate an exception on invalid token.
+10.7.0-beta1 — Adds a permission-based endpoint gate: [AdministratorOrUserWithPermission]
+and [UserWithPermission], enabled with AddPermissionBasedAuthorization(). Also includes a
+security fix: MultiJwtClaimsTransformer no longer grants the Administrator role to
+principals with no issuer claim, which previously affected certificate-authenticated
+external systems in applications that do not configure Keycloak. Additive and backwards
+compatible; all published packages must be upgraded together. Pre-release — see the
+README section on permission-based endpoint authorization for supported registrations.
     </PackageReleaseNotes>
     <Company>CAUCA 9-1-1</Company>
     <PackageReadmeFile>README.md</PackageReadmeFile>

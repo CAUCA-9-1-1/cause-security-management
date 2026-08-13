@@ -5,6 +5,7 @@ using Cause.SecurityManagement.Core.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Cause.SecurityManagement.Core.Repositories
@@ -55,6 +56,14 @@ namespace Cause.SecurityManagement.Core.Repositories
                 .Where(uc => uc.IdUser == userId)
                 .Include(uc => uc.Permission)
                 .ToList();
+        }
+
+        public Task<List<UserMergedPermission>> GetForUserAsync(Guid userId, CancellationToken cancellationToken)
+        {
+            return context.UserPermissions.AsNoTracking()
+                .Where(userPermission => userPermission.IdUser == userId)
+                .Select(userPermission => new UserMergedPermission { Access = userPermission.IsAllowed, FeatureName = userPermission.Permission.Tag })
+                .ToListAsync(cancellationToken);
         }
 
         public UserPermission Get(Guid userPermissionId)

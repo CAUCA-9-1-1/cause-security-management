@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 
 namespace Cause.SecurityManagement.Core.Authentication;
 
@@ -107,6 +109,47 @@ public static class ServiceCollectionAuthorizationExtensions
                 .RequireRole(SecurityRoles.User)
                 .Build();
         });
+    }
+
+    /// <summary>
+    /// Adds the permission gate used by [AdministratorOrUserWithPermission] and
+    /// [UserWithPermission]. Opt-in, and composes with the AddAuthorizationFor* extensions
+    /// rather than replacing any of them. Call order relative to those extensions does not
+    /// matter.
+    /// Also registers the authorization services required by UseAuthorization() — the
+    /// AddAuthorizationFor* extensions call AddAuthorizationCore alone, which is not enough for
+    /// UseAuthorization()'s VerifyServicesRegistered check, so a minimal-API application relying
+    /// solely on this library would otherwise crash at startup.
+    /// Not useful with AddAuthorizationForKeycloakAndRegularUserSchemes or
+    /// AddAuthorizationForExternalSystem — see the remarks.
+    /// When validateTagsAtStartup is true, also registers a hosted service that warns at
+    /// startup when a permission attribute names a tag absent from the permission catalog,
+    /// via IPermissionCatalogService. Defaults to false so existing call sites keep their
+    /// current behavior unchanged.
+    /// </summary>
+    /// <remarks>
+    /// The dynamic policy inherits the application's AuthorizationOptions.FallbackPolicy, so a
+    /// decorated endpoint is always at least as strict as an undecorated one. Two registrations
+    /// therefore leave the gate with nothing useful to do:
+    /// AddAuthorizationForKeycloakAndRegularUserSchemes admits only Administrator, whom the
+    /// handler passes unconditionally, so [AdministratorOrUserWithPermission] is a no-op and
+    /// [UserWithPermission] denies everyone; AddAuthorizationForExternalSystem admits only
+    /// ExternalSystem, which the handler always denies, so both attributes deny everyone.
+    /// </remarks>
+    public static IServiceCollection AddPermissionBasedAuthorization(
+        this IServiceCollection services,
+        bool validateTagsAtStartup = false)
+    {
+        services.AddAuthorization();
+        services.AddHttpContextAccessor();
+        services.Replace(ServiceDescriptor.Singleton<IAuthorizationPolicyProvider, PermissionAuthorizationPolicyProvider>());
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IAuthorizationHandler, PermissionAuthorizationHandler>());
+        services.TryAddScoped<ScopedPermissionCache>();
+
+        if (validateTagsAtStartup)
+            services.AddHostedService<PermissionTagValidationHostedService>();
+
+        return services;
     }
 
     /// <summary>

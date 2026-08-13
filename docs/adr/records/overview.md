@@ -21,6 +21,8 @@ This index tracks Architecture Decision Records (ADRs) stored in this folder.
 | Mobile Version Compatibility Policy Using Semantic Version Gates | accepted | [2026-06-04-mobile-version-compatibility-policy.md](2026-06-04-mobile-version-compatibility-policy.md) |
 | Multi-Package Release Governance For SecurityManagement Libraries | accepted | [2026-06-04-multi-package-release-governance.md](2026-06-04-multi-package-release-governance.md) |
 | Exclude Cause.SecurityManagement.Wolverine From The Published Release Set | accepted | [2026-06-04-exclude-wolverine-from-published-release-set.md](2026-06-04-exclude-wolverine-from-published-release-set.md) |
+| Permission-Based Authorization Gate For Regular Users | accepted | [2026-08-11-permission-based-authorization-gate.md](2026-08-11-permission-based-authorization-gate.md) |
+| Distinguish Data-Integrity Faults From Rejected Certificates In Certificate Authentication | accepted | [2026-08-13-certificate-authentication-failure-semantics.md](2026-08-13-certificate-authentication-failure-semantics.md) |
 
 ## Review Protocol
 
