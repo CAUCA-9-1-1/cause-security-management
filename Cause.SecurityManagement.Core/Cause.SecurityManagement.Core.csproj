@@ -42,10 +42,10 @@ restored. Upgrade from 10.6.x directly to 10.7.2.
 All published packages must be upgraded together. See the README section on
 permission-based endpoint authorization for supported registrations.
     </PackageReleaseNotes>
-    <Version>10.7.2</Version>
+    <Version>10.8.0</Version>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <AssemblyVersion>10.7.2</AssemblyVersion>
-    <FileVersion>10.7.2</FileVersion>
+    <AssemblyVersion>10.8.0</AssemblyVersion>
+    <FileVersion>10.8.0</FileVersion>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>

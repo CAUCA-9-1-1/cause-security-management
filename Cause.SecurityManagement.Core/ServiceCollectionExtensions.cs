@@ -48,6 +48,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IGroupManagementApiService, GroupManagementApiService<TUser>>();
         services.AddScoped<IUserSearchService, UserSearchService<TUser>>();
         services.AddScoped<IPermissionCatalogService, PermissionCatalogService<TUser>>();
+        services.AddScoped<IUserPermissionDetailReader, UserPermissionDetailReader<TUser>>();
         services.AddScoped<IValidator<GroupDto>, GroupDtoValidator>();
         services.AddScoped<IAdministratorUserGenerator, AdministratorUserGenerator<TUser>>();
         services.AddScoped<IUserPermissionRepository, UserPermissionRepository<TUser>>();
