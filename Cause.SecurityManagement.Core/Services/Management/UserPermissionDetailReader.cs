@@ -25,8 +25,12 @@ namespace Cause.SecurityManagement.Core.Services.Management
 
         private Task<List<CatalogEntry>> ReadCatalogAsync(CancellationToken cancellationToken)
         {
+            // Sequence alone is not a total order: catalog rows routinely share one, and the rows
+            // within a shared value then come back in whatever order the provider chose, which
+            // reads as random on screen and can differ between two calls.
             return context.ModulePermissions.AsNoTracking()
                 .OrderBy(permission => permission.Sequence)
+                .ThenBy(permission => permission.Name)
                 .Select(permission => new CatalogEntry
                 {
                     IdModulePermission = permission.Id,

@@ -154,6 +154,22 @@ namespace Cause.SecurityManagement.Tests.Services.Management
         }
 
         [Test]
+        public async Task PermissionsSharingASequence_WhenGetForUser_ShouldBeOrderedByName()
+        {
+            context.ModulePermissions.AddRange(
+                new ModulePermission { Id = Guid.NewGuid(), Tag = "third", Name = "Schedule - delete", Sequence = 5 },
+                new ModulePermission { Id = Guid.NewGuid(), Tag = "first", Name = "Buildings - access", Sequence = 5 },
+                new ModulePermission { Id = Guid.NewGuid(), Tag = "second", Name = "Messaging - access", Sequence = 5 }
+            );
+            await context.SaveChangesAsync();
+
+            var details = await reader.GetForUserAsync(someUserId, CancellationToken.None);
+
+            details.ConvertAll(permission => permission.Name).Should().ContainInOrder(
+                "Buildings - access", "Messaging - access", "Schedule - delete");
+        }
+
+        [Test]
         public async Task AnotherUserHoldsThePermission_WhenGetForUser_ShouldIgnoreIt()
         {
             await GivenCatalogAsync();
