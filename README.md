@@ -215,9 +215,8 @@ The services are registered automatically by `InjectSecurityServices<TUser>()`:
 
 ## REST controllers
 
-Each controller has a single responsibility, so there is one abstract base per concern. Subclass
-them — the routes are inherited from the base, so an empty subclass is enough to expose them at the
-routes the Angular library expects:
+Each controller has a single responsibility, so there is one abstract base per concern. Most need
+only an empty subclass — the routes and Swagger metadata are inherited from the base:
 
 ```csharp
 using Cause.SecurityManagement.Controllers.Management;
@@ -234,8 +233,17 @@ public class PermissionManagementController(IPermissionCatalogService service)
     : BasePermissionManagementController(service);
 ```
 
-They are activated like the other library controllers, via `InjectSecurityControllers()`, and pick
-up the project's default authorization (an authenticated user is required — no `[AllowAnonymous]`).
+`BaseUserEditionController<TUser, TUserForEdition>` is the exception: it carries three abstract
+members a host must implement before the subclass compiles, because they answer questions only the
+host's data model can answer — see below.
+
+They are activated like the other library controllers, via `InjectSecurityControllers()`. Every one
+of them requires an authenticated caller (no `[AllowAnonymous]`), because that is the project's
+default authorization convention when no other attribute is present. That convention gates
+*authentication only*, not *authorization*: it does not by itself restrict which authenticated
+caller may reach an endpoint, or which row that caller may act on. `BaseUserEditionController` and
+`BaseUserPermissionDetailsController` need more than the default — see their sections below for the
+permission attribute and the row-scope checks each expects a host to add.
 
 | Method | Route | Description |
 |--------|-------|-------------|
@@ -248,6 +256,53 @@ up the project's default authorization (an authenticated user is required — no
 > `POST GroupManagement` is an upsert: the client generates the `Guid` for new groups and new
 > group-permissions, then posts the whole object. The group is inserted when its id is unknown and
 > updated otherwise; permission overrides and membership are reconciled against the payload.
+
+## User edition controller
+
+`BaseUserEditionController<TUser, TUserForEdition>` backs the create/read/update form for one user.
+Unlike the controllers above, subclassing it with nothing else does not compile — it declares three
+abstract members the host must implement, plus an `IValidator<TUserForEdition>` the host must
+provide through its constructor, because the library cannot answer any of them from its own data:
+
+```csharp
+using Cause.SecurityManagement.Controllers.Management;
+
+[UserWithPermission(Permissions.CanAccessUsers)]
+public class UserEditionController(
+    IUserNameAvailabilityReader userNameAvailability,
+    IValidator<UserForEdition> userValidator,
+    IUserVisibilityReader visibility,
+    IUserManagementApiService service)
+    : BaseUserEditionController<User, UserForEdition>(userNameAvailability, userValidator)
+{
+    protected override Task<bool> CanEditUserAsync(Guid userId, CancellationToken cancellationToken)
+        => visibility.CanSeeUserAsync(userId, cancellationToken);
+
+    protected override Task<bool> CanGrantGroupsAsync(IReadOnlyCollection<Guid> groupIds, CancellationToken cancellationToken)
+        => visibility.CanGrantGroupsAsync(groupIds, cancellationToken);
+
+    protected override Task<UserForEdition> ReadForEditionAsync(Guid userId, CancellationToken cancellationToken)
+        => service.ReadForEditionAsync(userId, cancellationToken);
+
+    protected override Task<UserSaveResult> WriteForEditionAsync(UserForEdition user, CancellationToken cancellationToken)
+        => service.WriteForEditionAsync(user, cancellationToken);
+}
+```
+
+| Method | Route | Description |
+|--------|-------|-------------|
+| `GET`  | `UserEdition/{userId}` | The user in its edition shape; deactivated users are not returned (`200` / `403` / `404`) |
+| `POST` | `UserEdition` | Create (empty `Id`) or update (populated `Id`) a user (`200` with the new id on create / `204` on update / `400` / `403` / `404`) |
+| `GET`  | `UserEdition/username-available` | Whether a user name may be claimed, advisory only |
+
+The `[UserWithPermission(...)]` (or `[AdministratorOrUserWithPermission(...)]`) attribute on the
+subclass is what restricts *which authenticated callers* may reach this screen at all — the default
+authorization convention mentioned above only requires *an* authenticated caller, so a subclass with
+no such attribute serves every one of them. `CanEditUserAsync` and `CanGrantGroupsAsync` are the
+second, independent gate: which user, and which groups, *this* caller specifically may act on.
+`CanEditUserAsync` runs on every save, including creation (its `userId` argument is `Guid.Empty` in
+that case); a host that wants creation open to any authenticated caller, as this endpoint behaved
+before, must say so explicitly in its override rather than relying on a library default.
 
 ## Groups OData feed (owned by the consumer)
 

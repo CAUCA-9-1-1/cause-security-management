@@ -122,3 +122,69 @@ give two places to express one rule.
       `403` without reading any permission.
 - [x] Task 6: Build with no new warnings, run the full unit suite, bump the four
       packable projects in lockstep for the `release.ps1` version gate.
+
+## Amendment: BaseUserEditionController (2026-08-26)
+
+This record named two controllers at the time it was accepted. Issue #117 added a
+third, `BaseUserEditionController<TUser, TUserForEdition>`, and the final review of
+that branch found it shipped with the row-scope gate this record requires only
+half-applied: the scope check existed but was skipped on the create path, and a
+second row-level question the record did not originally anticipate — which groups a
+caller may grant — had no check at all. Both are closed the same way this record
+already decided things should be closed: as an abstract member, not a convention.
+
+**Abstract members added:**
+
+| Question | Mechanism |
+|---|---|
+| May this caller reach the user-edition screen at all? | `[UserWithPermission(tag)]` / `[AdministratorOrUserWithPermission(tag)]`, declared by the host on its subclass — unchanged from the rest of this record |
+| May this caller edit this particular user, including creating one? | `CanEditUserAsync(Guid userId, ...)` |
+| May this caller grant these particular groups to the user being saved? | `CanGrantGroupsAsync(IReadOnlyCollection<Guid> groupIds, ...)` |
+
+**Why creation is now gated.** `CanEditUserAsync` originally ran only when `user.Id !=
+Guid.Empty`, on the reasoning that creation has no existing row to scope against. That
+reasoning does not hold: the permission attribute on the subclass only proves the
+caller may reach the screen, not that every such caller may create users, and a host
+with no permission attribute at all — the exact gap this record's Decision Drivers
+call out as unacceptable — left `POST` open to any authenticated principal. The fix
+makes the call unconditional; `userId` is `Guid.Empty` on creation, so the method now
+answers "may this caller create a user" in that case. A host wanting the previous
+behavior back writes that decision explicitly (`userId == Guid.Empty || ...`) rather
+than receiving it as a default, matching how this record already treats "no scope
+rule" as something a host must state, not something the library assumes.
+
+**Why `CanGrantGroupsAsync` exists.** `UserForEdition.GroupIds` is caller-supplied and
+is not covered by `CanEditUserAsync`: a caller editing their own account passes
+`CanEditUserAsync` trivially, and could still name an administrators group in
+`GroupIds` to grant themselves membership in it. This is the same shape of risk the
+record's Context and Problem Statement describes for row-scoped reads, applied to a
+row-scoped write instead. Option D from this record's Considered Options — an
+`IUserScopeReader` abstraction — was reconsidered and rejected again for the same
+reason: `CanEditUserAsync` and `CanGrantGroupsAsync` are answered by different data in
+at least one known host (a user's own scope vs. the groups their role may administer),
+so a single shared reader would not fit either without being loosened into something
+that fits neither.
+
+**Consequences**, in addition to the ones already recorded above:
+
+* Good: creation can no longer ship ungated by omission; forgetting either check is
+  still a compile error, consistent with Decision Outcome above.
+* Bad: every host implementing `BaseUserEditionController` now writes two methods
+  instead of one, including a host with no group-grant rule, which returns `true`
+  explicitly — the same accepted cost as the original `CanEditUserAsync`.
+
+### Related notes recorded here so they are not re-raised
+
+* `UserForEdition.cs` deliberately holds three record types
+  (`UserLoginForEdition`, `UserPersonalInformationForEdition`, `UserForEdition`)
+  against the project's one-class-per-file convention. They are one wire contract —
+  splitting them into three files would let the nested records drift from the
+  envelope that carries them, which is the opposite of what the convention exists to
+  prevent.
+* `[ProducesResponseType<UserForEdition>]` on `BaseUserEditionController.GetAsync`
+  cannot name `TUserForEdition` — C# forbids a type parameter of the declaring type as
+  an attribute argument — so the generated OpenAPI document under-describes the
+  response body for any host whose `TUserForEdition` adds fields. There is no fix
+  available at the base-controller level; a host that cares about full schema fidelity
+  in its own OpenAPI document must re-declare the attribute on its override with its
+  concrete `TUserForEdition`.
