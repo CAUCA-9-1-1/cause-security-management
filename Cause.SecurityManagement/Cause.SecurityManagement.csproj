@@ -13,36 +13,31 @@
     <Copyright>CAUCA 9-1-1 (c) 2025</Copyright>
     <PackageTags>Cause Security Management AspNetCore Http Controllers Cauca</PackageTags>
     <PackageReleaseNotes>
-10.7.2 — Dependency maintenance. No functional change to the library.
+10.9.0 — Adds the user edition endpoints, with a breaking change to the UserForEdition wire contract.
 
-WolverineFx.Http moves from a 6.25.* float to 6.*, so
-Cause.SecurityManagement.Wolverine.ExternalSystem now declares a minimum of
-WolverineFx.Http 6.27.1 where 10.7.1 declared 6.25.5. Consumers of that package are moved
-forward on upgrade. The wider float also means each future release picks up the newest 6.x
-available at pack time, so the published minimum will keep advancing without a
-corresponding source change.
+UserForEdition's shape changed incompatibly: the flat properties are replaced by two nested
+records, Login (UserName, Password, PasswordConfirmation, TwoFactorAuthenticatorEnabled) and
+PersonalInformation (FirstName, LastName, Email, PhoneNumber). Id's default also moved from
+Guid.NewGuid() to Guid.Empty, since Guid.Empty is now the signal BaseUserEditionController
+uses to distinguish creation from update. Any consumer serializing or constructing
+UserForEdition by its old flat properties must update to the nested shape.
 
-Test-project dependencies were also updated and are present in no published package:
-Microsoft.AspNetCore.TestHost and Microsoft.EntityFrameworkCore.InMemory from 10.0.10 to
-10.0.11, and Microsoft.AspNetCore.Http from 2.3.11 to 2.3.12.
+Adds BaseUserEditionController&lt;TUser, TUserForEdition&gt;, an abstract create/read/update endpoint
+for a user's edition form, plus IUserNameAvailabilityReader /
+UserNameAvailabilityReader&lt;TUser&gt; for the accompanying user-name-availability check. The save
+endpoint now runs CanEditUserAsync unconditionally, including on creation — a host relying on
+the previous behavior (creation open to every authenticated caller) must opt back in explicitly
+in its own override. The save endpoint also gates group membership changes through the new
+abstract CanGrantGroupsAsync, validates the request body through an injected
+IValidator&lt;TUserForEdition&gt;, and returns the new user's identifier on a successful
+creation (200) rather than 204.
 
-Carries forward everything in 10.7.1: the permission-based endpoint gate
-([AdministratorOrUserWithPermission] and [UserWithPermission], enabled with
-AddPermissionBasedAuthorization()), the MultiJwtClaimsTransformer security fix, and the
-certificate authentication behavior change where two or more active certificate-bound
-ExternalSystem rows sharing one CertificateSubjectDn now return HTTP 500 with an
-Error-level log naming the duplicated DN, instead of the HTTP 401 that was
-indistinguishable from a rejected certificate.
-
-Do not use 10.7.0. Only one of its four packages reached the feed, so it cannot be
-restored. Upgrade from 10.6.x directly to 10.7.2.
-
-All published packages must be upgraded together. See the README section on
-permission-based endpoint authorization for supported registrations.
+All published packages must be upgraded together. See the README section on the user edition
+controller for the abstract members a host must implement and the DI registrations it must add.
     </PackageReleaseNotes>
-    <Version>10.7.2</Version>
-    <AssemblyVersion>10.7.2</AssemblyVersion>
-    <FileVersion>10.7.2</FileVersion>
+    <Version>10.9.1</Version>
+    <AssemblyVersion>10.9.1</AssemblyVersion>
+    <FileVersion>10.9.1</FileVersion>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>

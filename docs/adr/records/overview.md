@@ -23,6 +23,7 @@ This index tracks Architecture Decision Records (ADRs) stored in this folder.
 | Exclude Cause.SecurityManagement.Wolverine From The Published Release Set | accepted | [2026-06-04-exclude-wolverine-from-published-release-set.md](2026-06-04-exclude-wolverine-from-published-release-set.md) |
 | Permission-Based Authorization Gate For Regular Users | accepted | [2026-08-11-permission-based-authorization-gate.md](2026-08-11-permission-based-authorization-gate.md) |
 | Distinguish Data-Integrity Faults From Rejected Certificates In Certificate Authentication | accepted | [2026-08-13-certificate-authentication-failure-semantics.md](2026-08-13-certificate-authentication-failure-semantics.md) |
+| Host-Owned Row-Scope Checks On Management Endpoints | accepted | [2026-08-24-host-owned-row-scope-checks-on-management-endpoints.md](2026-08-24-host-owned-row-scope-checks-on-management-endpoints.md) |
 
 ## Review Protocol
 

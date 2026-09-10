@@ -28,6 +28,20 @@ public class PermissionCatalogServiceTests : IntegrationTestBase
         catalog[0].Name.Should().Be("First permission");
     }
 
+    [Test]
+    public async Task GetPermissions_WhenPermissionsShareASequence_ShouldOrderThemByName()
+    {
+        var token = $"tag_{Guid.NewGuid():N}";
+        var zulu = SeedPermission($"{token}_a", "Zulu permission", sequence: 1);
+        var alpha = SeedPermission($"{token}_b", "Alpha permission", sequence: 1);
+
+        var catalog = (await Service.GetPermissionsAsync()).Where(permission => permission.Tag.StartsWith(token)).ToList();
+
+        catalog.Should().HaveCount(2);
+        catalog[0].Tag.Should().Be(alpha.Tag);
+        catalog[1].Tag.Should().Be(zulu.Tag);
+    }
+
     private ModulePermission SeedPermission(string tag, string name, int sequence)
     {
         var module = new Module { Id = Guid.NewGuid(), Name = $"module_{Guid.NewGuid():N}", Tag = $"mod_{Guid.NewGuid():N}" };

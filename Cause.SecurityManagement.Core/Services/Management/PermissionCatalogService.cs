@@ -16,6 +16,7 @@ namespace Cause.SecurityManagement.Core.Services.Management
         {
             return context.ModulePermissions.AsNoTracking()
                 .OrderBy(permission => permission.Sequence)
+                .ThenBy(permission => permission.Name)
                 .Select(permission => new PermissionDto
                 {
                     Id = permission.Id,
