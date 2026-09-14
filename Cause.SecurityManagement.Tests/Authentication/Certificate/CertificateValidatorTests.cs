@@ -3,9 +3,7 @@ using Cause.SecurityManagement.Core.Authentication.Certificate;
 using Cause.SecurityManagement.Core.Authentication.Exceptions;
 using Cause.SecurityManagement.Models.Configuration;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using NSubstitute;
 using NUnit.Framework;
 
 namespace Cause.SecurityManagement.Tests.Authentication.Certificate;
@@ -21,7 +19,7 @@ public class CertificateValidatorTests
     public CertificateValidatorTests()
     {
         var configuration = Options.Create(securityConfiguration);
-        certificateValidator = new CertificateValidator(Substitute.For<ILogger<CertificateValidator>>(), configuration);
+        certificateValidator = new CertificateValidator(configuration);
     }
 
     [Test]

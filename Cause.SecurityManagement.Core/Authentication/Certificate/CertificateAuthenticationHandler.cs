@@ -32,19 +32,23 @@ public class CertificateAuthenticationHandler(
                 exception.CertificateSubjectDn);
             throw;
         }
+        catch (CertificateNotPresentException)
+        {
+            return Task.FromResult(AuthenticateResult.NoResult());
+        }
         catch (Exception exception)
         {
-            Logger.LogInformation(exception, "Certificate authentication failed.");
-            return Task.FromResult(AuthenticateResult.Fail("Certificate authentication failed."));
+            return Task.FromResult(AuthenticateResult.Fail(exception));
         }
     }
 
     private AuthenticationTicket GenerateTicket()
     {
-        var externalSystem = repository.GetByCertificateSubject(certificateValidator.GetUserDn());
+        var certificateSubjectDn = certificateValidator.GetUserDn();
+        var externalSystem = repository.GetByCertificateSubject(certificateSubjectDn);
         if (externalSystem == null)
         {
-            throw new ExternalSystemNotFound();
+            throw new ExternalSystemNotFound(certificateSubjectDn);
         }
 
         var claims = new[]
