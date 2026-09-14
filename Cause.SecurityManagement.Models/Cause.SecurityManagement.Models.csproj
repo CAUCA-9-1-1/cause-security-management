@@ -66,10 +66,11 @@ Information and filtering at the log sink, where rules can match on message text
 dashboard, probe traffic still in storage.
 
 Monitoring rules to re-check. 10.9.1 emitted the certificate header values as discrete structured fields
-(SslclientSubjectDn, SslClientIssuerDn, SslClientVerify). Those fields are gone; the values now appear as
-free text inside RejectionReason, so any rule keyed on them must be rewritten as a text match. The scheme
-name survives as a queryable RejectionScheme field, attached through a logging scope - so it reaches only
-providers configured to capture scopes (IncludeScopes).
+(SslclientSubjectDn, SslClientIssuerDn, SslClientVerify) at Information. They keep their exact names and
+shapes but now log at Debug, so a rule relying on them needs the CertificateValidator category raised to
+Debug. At Information the same values appear only as free text inside RejectionReason. The scheme name is
+additionally exposed as a queryable RejectionScheme field, attached through a logging scope - so it
+reaches only providers configured to capture scopes (IncludeScopes).
 
 Other changes worth knowing. The rejection reason is truncated at 512 characters, since it can carry
 caller-supplied header content. If your application sets IdentityModelEventSource.ShowPII = true as a
@@ -78,11 +79,9 @@ this log line. If your application registers its own IAuthorizationMiddlewareRes
 now replaces it by default and logs a Warning at startup naming the displaced type - pass
 logAuthorizationRejections: false to keep yours. ExternalSystemNotFound now carries the certificate
 subject DN in its message, so an unknown-subject rejection names the subject instead of only the
-exception type.
-
-Breaking change: CertificateValidator's constructor no longer takes ILogger of CertificateValidator, as
-it no longer logs. This affects only code constructing it directly rather than resolving it from the
-container.
+exception type. CertificateValidator's constructor is unchanged: it still takes a logger, and still logs
+the three certificate validation failures - at Debug rather than Information. The missing-certificate case
+(ssl-client-verify NONE or absent) logs nothing at any level, since that is every request.
 
 Also in this release: AuthenticateResult.Fail(exception) replaces Fail(string), so a failure carries
 the original exception rather than an AuthenticationFailureException wrapping a constant message. No

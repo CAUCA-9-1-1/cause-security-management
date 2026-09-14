@@ -112,6 +112,12 @@ public class ServiceCollectionAuthorizationExtensionsTests
         hostedService.StartAsync(CancellationToken.None).GetAwaiter().GetResult();
 
         logger.Warnings.Should().ContainSingle(message => message.Contains(typeof(CustomResultHandler).FullName));
+        var renderedMessage = logger.Warnings.Single();
+        renderedMessage.Should().NotContain("\n ",
+            because: "a raw string literal strips its common source indentation, so no line may render with leading whitespace");
+        renderedMessage.Should().NotContain("\r");
+        renderedMessage.Should().Contain("logAuthorizationRejections: false",
+            because: "the warning must name the remedy, not only the problem");
     }
 
     [Test]

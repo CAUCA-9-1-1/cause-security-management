@@ -24,12 +24,14 @@ internal sealed class AuthorizationResultHandlerDisplacementWarningService(
     public Task StartAsync(CancellationToken cancellationToken)
     {
         logger.LogWarning(
-            "AddAuthorizationRejectionLogging replaced the previously registered " +
-            "IAuthorizationMiddlewareResultHandler ({DisplacedResultHandlerType}) with " +
-            "AuthorizationRejectionLogger. If {DisplacedResultHandlerType} made its own " +
-            "authorization decisions, that behavior no longer runs. Pass " +
-            "logAuthorizationRejections: false to the AddAuthorizationFor* extension (or call " +
-            "AddAuthorizationRejectionLogging() before registering your own handler) to keep it.",
+            """
+            AddAuthorizationRejectionLogging replaced the previously registered
+            IAuthorizationMiddlewareResultHandler ({DisplacedResultHandlerType}) with
+            AuthorizationRejectionLogger. If {DisplacedResultHandlerType} made its own
+            authorization decisions, that behavior no longer runs. Pass
+            logAuthorizationRejections: false to the AddAuthorizationFor* extension (or call
+            AddAuthorizationRejectionLogging() before registering your own handler) to keep it.
+            """,
             warning.DisplacedTypeName, warning.DisplacedTypeName);
         return Task.CompletedTask;
     }

@@ -115,8 +115,9 @@ sites therefore gain the behavior by upgrading, with no source change.
 
 An opt-in design was built first and rejected. Its failure mode is silent and points
 the wrong way: a consumer who upgrades without making the call gets *less* logging
-than 10.9.1 — the certificate handler and validator no longer log, and nothing
-replaces them — with no signal that a step was missed. Weighed against that, the
+than 10.9.1 — the certificate handler no longer logs, the validator logs only at
+`Debug`, and nothing replaces them at `Information` — with no signal that a step was
+missed. Weighed against that, the
 argument for opt-in was thin. It rested on not silently replacing a consumer's own
 `IAuthorizationMiddlewareResultHandler`, but neither this library nor the consumer
 repositories inspected had one, a custom handler is a rare thing to write, and these
@@ -153,10 +154,18 @@ Two changes introduced for Option B are retained because Option D depends on the
 
 * `CertificateAuthenticationHandler` no longer logs on any authentication-failure
   path. Its `HandleChallengeAsync` override is gone.
-* `CertificateValidator` no longer logs. Its three `Information` calls each logged
+* `CertificateValidator` no longer logs at `Information`. Its three calls each logged
   text that was immediately thrown as the exception message, which the rejection
-  logger now reports — pure duplication, and a second copy of caller-supplied
-  header content in the logs.
+  logger now reports — duplication at the level operators actually watch, and a second
+  copy of caller-supplied header content there.
+
+  They were removed outright in the first version of this change and restored at
+  `Debug` during review. Restoring them costs nothing at `Information`, keeps the
+  discrete `{SslclientSubjectDn}`, `{SslClientIssuerDn}` and `{SslClientVerify}`
+  structured fields available to anyone who raises this one category to `Debug`, and
+  avoids a breaking constructor change. The missing-certificate path
+  (`ssl-client-verify: NONE` or absent) still logs nothing at any level: that is the
+  every-request case, and a `Debug` line there would be noise on all traffic.
 
 ### The Framework's Own Diagnostics
 
@@ -229,19 +238,17 @@ handler where the earlier record put it.
   by the successful-authentication test instead.
 * Good: The reason is composed where the outcome is actually known, so adding a new
   authentication scheme needs no new logging code.
-* Good: One fewer copy of caller-supplied header content in the logs, now that
-  `CertificateValidator` no longer logs what it throws.
+* Good: One fewer copy of caller-supplied header content at `Information`, now that
+  `CertificateValidator` logs what it throws at `Debug` instead.
 * Bad: **A consumer who opts out gets less logging than before, not more.** Passing
-  `logAuthorizationRejections: false` leaves the certificate handler and validator
-  silent with nothing replacing them, so only the framework's own diagnostics remain.
+  `logAuthorizationRejections: false` leaves the certificate handler silent and the
+  validator at `Debug` with nothing replacing them at `Information`, so only the
+  framework's own diagnostics remain there.
   The default prevents this from happening by accident, but the parameter makes it
   reachable on purpose.
 * Bad: **Applications not using the AddAuthorizationFor* extensions still get nothing
   until they call `AddAuthorizationRejectionLogging()` themselves.** The default only
   covers consumers who register authorization through this library.
-* Bad: **`CertificateValidator`'s constructor changed.** Dropping the unused
-  `ILogger<CertificateValidator>` parameter is a breaking change for anyone
-  constructing it directly rather than resolving it from the container.
 * Bad: **Observable contract change on `AuthenticateResult`.** `Failure` is now
   `null` when no certificate was presented, and carries the original exception
   rather than an `AuthenticationFailureException` elsewhere. A consumer branching
@@ -253,13 +260,14 @@ handler where the earlier record put it.
   suppressed from here - and that filter costs visibility of failed credentials on
   requests that were not rejected. See the note above; filtering at the sink avoids
   the trade.
-* Bad: **The structured header fields are gone.** 10.9.1 emitted
+* Bad: **The structured header fields move to `Debug`.** 10.9.1 emitted
   `{SslclientSubjectDn}`, `{SslClientIssuerDn}` and `{SslClientVerify}` as discrete
-  fields a SIEM could aggregate on. Those values now appear only as free text inside
-  `{RejectionReason}`, so detection rules keyed on them must be rewritten as text
-  matches. The scheme name is preserved as a queryable `{RejectionScheme}` field via a
-  logging scope, but that reaches only providers configured to capture scopes
-  (`IncludeScopes`); it is invisible to a provider that does not.
+  fields at `Information`, which a SIEM could aggregate on. They keep their exact
+  names and shapes, but a consumer relying on them must now raise the
+  `CertificateValidator` category to `Debug` — and at `Information` the same values
+  are available only as free text inside `{RejectionReason}`. The scheme name is
+  additionally exposed as a queryable `{RejectionScheme}` field via a logging scope,
+  which reaches only providers configured to capture scopes (`IncludeScopes`).
 * Bad: The reason text is truncated at 512 characters. A pathologically long failure
   message loses its tail, which is the correct trade against attacker-influenced log
   throughput but is a loss nonetheless.
