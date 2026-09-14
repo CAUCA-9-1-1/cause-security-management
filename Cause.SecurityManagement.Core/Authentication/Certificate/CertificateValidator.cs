@@ -41,7 +41,7 @@ namespace Cause.SecurityManagement.Core.Authentication.Certificate
             if (!sslClientSubjectDn.ToString().Contains("CN="))
             {
                 var error = $"ssl-client-subject-dn header does not contains a CN. Current value is '{sslClientSubjectDn.ToString()}'.";
-                logger.LogInformation("ssl-client-subject-dn header does not contains a CN. Current value is {SslclientSubjectDn}", sslClientSubjectDn.ToString());
+                logger.LogDebug("ssl-client-subject-dn header does not contains a CN. Current value is {SslclientSubjectDn}", sslClientSubjectDn.ToString());
                 throw new CertificateNotValidException(error);
             }
         }
@@ -57,7 +57,7 @@ namespace Cause.SecurityManagement.Core.Authentication.Certificate
             if (!configuration.CertificateIssuers.Any(issuer => sslClientIssuerDn.ToString().EndsWith(issuer)))
             {
                 var error = $"ssl_client_issuer-dn is not one of the allowed issuer.  Received issuer is '{sslClientIssuerDn.ToString()}'.";
-                logger.LogInformation("ssl_client_issuer-dn is not one of the allowed issuer.  Received issuer is '{SslClientIssuerDn}'.", sslClientIssuerDn.ToString());
+                logger.LogDebug("ssl_client_issuer-dn is not one of the allowed issuer.  Received issuer is '{SslClientIssuerDn}'.", sslClientIssuerDn.ToString());
                 throw new CertificateNotValidException(error);
             }
         }
@@ -73,7 +73,7 @@ namespace Cause.SecurityManagement.Core.Authentication.Certificate
             else if (sslClientVerify.ToString() != "SUCCESS")
             {
                 var error = $"ssl-client-verify is not 'SUCCESS'.  Received status is '{sslClientVerify.ToString()}'.";
-                logger.LogInformation("ssl-client-verify is not 'SUCCESS'.  Received status is '{SslClientVerify}'.", sslClientVerify.ToString());
+                logger.LogDebug("ssl-client-verify is not 'SUCCESS'.  Received status is '{SslClientVerify}'.", sslClientVerify.ToString());
                 throw new CertificateNotValidException(error);
             }
         }
