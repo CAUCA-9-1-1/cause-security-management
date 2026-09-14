@@ -15,32 +15,94 @@
     <Copyright>CAUCA 9-1-1 (c) 2025</Copyright>
     <PackageTags>Cause Security Management Core AspNetCore Cauca</PackageTags>
     <PackageReleaseNotes>
-10.9.0 — Adds the user edition endpoints, with a breaking change to the UserForEdition wire contract.
+10.10.0 - A rejected request now produces one log line naming the reason, instead of a
+"Certificate authentication failed." line on nearly every call.
 
-UserForEdition's shape changed incompatibly: the flat properties are replaced by two nested
-records, Login (UserName, Password, PasswordConfirmation, TwoFactorAuthenticatorEnabled) and
-PersonalInformation (FirstName, LastName, Email, PhoneNumber). Id's default also moved from
-Guid.NewGuid() to Guid.Empty, since Guid.Empty is now the signal BaseUserEditionController
-uses to distinguish creation from update. Any consumer serializing or constructing
-UserForEdition by its old flat properties must update to the nested shape.
+ACTION REQUIRED - authentication bypass risk. Search your codebase for AuthenticateResult.Failure
+used against the certificate scheme. Code shaped like "if (result.Failure != null) return
+Unauthorized();" no longer rejects a request that presented no client certificate, because that case
+now returns NoResult() and Failure is null. Such code would admit an unauthenticated caller after
+this upgrade. Branch on result.Succeeded instead, which is false for both cases and always was. The
+library is fail-closed on every path reachable through the authorization pipeline - HttpContext.User
+is never populated and a protected endpoint still returns 401 - but a host that inspects Failure
+directly must be checked by hand.
 
-Adds BaseUserEditionController&lt;TUser, TUserForEdition&gt;, an abstract create/read/update endpoint
-for a user's edition form, plus IUserNameAvailabilityReader /
-UserNameAvailabilityReader&lt;TUser&gt; for the accompanying user-name-availability check. The save
-endpoint now runs CanEditUserAsync unconditionally, including on creation — a host relying on
-the previous behavior (creation open to every authenticated caller) must opt back in explicitly
-in its own override. The save endpoint also gates group membership changes through the new
-abstract CanGrantGroupsAsync, validates the request body through an injected
-IValidator&lt;TUserForEdition&gt;, and returns the new user's identifier on a successful
-creation (200) rather than 204.
+No action needed to get the new logging if you register authorization through this library. Every
+AddAuthorizationFor* extension now wires the rejection logger itself, so upgrading is enough and no call
+site changes. Pass logAuthorizationRejections: false to opt out - but note that opting out leaves the
+certificate handler and validator silent with nothing replacing them, so you would get less logging than
+10.9.1, not more. Applications that build authorization WITHOUT those extensions must call
+services.AddAuthorizationRejectionLogging() themselves.
 
-All published packages must be upgraded together. See the README section on the user edition
-controller for the abstract members a host must implement and the DI registrations it must add.
+Why this changed. CertificateAuthenticationHandler logged at Information for every failed
+authentication. Because ASP.NET Core authenticates the default scheme on every request before
+routing, and because a reverse proxy that terminates TLS forwards the ssl-client-* headers whether or
+not a client certificate was used (no certificate arrives as ssl-client-verify: NONE), the handler
+ran and failed on essentially all traffic - anonymous endpoints, health checks and swagger included.
+A handler also only knows its own scheme, so it could never report an invalid token.
+
+What replaces it. AuthorizationRejectionLogger implements IAuthorizationMiddlewareResultHandler, runs
+once per request, and writes a single Information line when the result is a 401 challenge, naming the
+reason: no credentials presented, an invalid certificate, an invalid or expired token. It reads each
+scheme's already-cached AuthenticateResult, so it costs no extra authentication work, and it
+delegates to the built-in handler so challenge and forbid behavior is unchanged. A request that is
+not rejected - an anonymous endpoint, or one another scheme already authenticated - produces nothing.
+403 (authenticated but lacking a role) is out of scope and produces no line.
+
+Getting to strictly one line. The framework's own AuthenticationHandler diagnostics ("... was not
+authenticated", "... was challenged") use the handler type as their logger category and cannot be
+suppressed from this library. AuthorizationRejectionLogger therefore logs under its own category, so
+raising the handler categories to Warning in your logging configuration leaves exactly one line per
+401. See the XML docs on AddAuthorizationRejectionLogging for the category names. One more caveat: if you
+use UseStatusCodePagesWithReExecute, mark the error endpoint [AllowAnonymous]. Otherwise the re-executed
+request is itself rejected by the fallback policy and you get a second line, for the error path, on the
+same client 401.
+
+Weigh that filter before applying it. The certificate handler and validator no longer log, so the
+framework's "was not authenticated" line is the only remaining signal for a bad credential presented on a
+request that did NOT end in 401 - a forged or expired certificate probed against an [AllowAnonymous]
+health, swagger or error endpoint, or one rescued by another scheme. Raising the category to Warning
+discards that signal at the source. If you do security monitoring, prefer leaving the application at
+Information and filtering at the log sink, where rules can match on message text: one line per 401 in the
+dashboard, probe traffic still in storage.
+
+Monitoring rules to re-check. 10.9.1 emitted the certificate header values as discrete structured fields
+(SslclientSubjectDn, SslClientIssuerDn, SslClientVerify). Those fields are gone; the values now appear as
+free text inside RejectionReason, so any rule keyed on them must be rewritten as a text match. The scheme
+name survives as a queryable RejectionScheme field, attached through a logging scope - so it reaches only
+providers configured to capture scopes (IncludeScopes).
+
+Other changes worth knowing. The rejection reason is truncated at 512 characters, since it can carry
+caller-supplied header content. If your application sets IdentityModelEventSource.ShowPII = true as a
+debugging aid, JWT failure messages stop redacting token and key material and that material would reach
+this log line. If your application registers its own IAuthorizationMiddlewareResultHandler, this library
+now replaces it by default and logs a Warning at startup naming the displaced type - pass
+logAuthorizationRejections: false to keep yours. ExternalSystemNotFound now carries the certificate
+subject DN in its message, so an unknown-subject rejection names the subject instead of only the
+exception type.
+
+Breaking change: CertificateValidator's constructor no longer takes ILogger of CertificateValidator, as
+it no longer logs. This affects only code constructing it directly rather than resolving it from the
+container.
+
+Also in this release: AuthenticateResult.Fail(exception) replaces Fail(string), so a failure carries
+the original exception rather than an AuthenticationFailureException wrapping a constant message. No
+HTTP status code changes on any path reachable through the authorization pipeline, and nothing
+authenticates that did not authenticate before. Two knock-on effects of that: the framework's own
+"... was not authenticated. Failure message: ..." line now interpolates the concrete exception message
+instead of a constant, so monitoring keyed on that line's text must be updated; and a host that surfaces
+AuthenticateResult.Failure.Message in a response body now echoes that concrete message. The duplicate
+certificate subject DN fault is
+unchanged: still HTTP 500, still logged at Error by the handler itself, because it throws and never
+reaches the authorization middleware.
+
+All published packages must be upgraded together. See
+docs/adr/records/2026-09-14-single-authorization-rejection-log-per-401.md.
     </PackageReleaseNotes>
-    <Version>10.9.1</Version>
+    <Version>10.10.0</Version>
     <Configurations>Debug;Release;NuGet</Configurations>
-    <AssemblyVersion>10.9.1</AssemblyVersion>
-    <FileVersion>10.9.1</FileVersion>
+    <AssemblyVersion>10.10.0</AssemblyVersion>
+    <FileVersion>10.10.0</FileVersion>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
