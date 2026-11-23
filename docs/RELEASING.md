@@ -38,7 +38,7 @@ the highest .NET major version the packages target. A release may also keep the
 previous .NET major as an additional target, so that consumers on the older
 runtime are not forced to move. The `11.x` packages target `net10.0` and
 `net11.0`: `11.x` means ".NET 11 is supported", and .NET 10 consumers can take
-it as-is. MAJOR moves only when the highest target framework moves — `12.0.0`
+it too, subject to any dependency floor the release notes name. MAJOR moves only when the highest target framework moves — `12.0.0`
 would advertise .NET 12 support, so it must not be used to signal a breaking
 change while the highest target is still `net11.0`.
 
@@ -51,7 +51,8 @@ and must name any behavior change explicitly.
 Package versions are managed centrally in `Directory.Packages.props` at the
 repository root; `PackageReference` items in the `.csproj` files carry no
 `Version`. Packages that track the .NET version carry one version per target
-framework there. See the ADR
+framework there, except `Cause.Core.DataLayerExtensions`, whose single `11.0.*`
+release is itself multi-targeted. See the ADR
 `2026-11-23-multi-target-frameworks-and-central-package-management.md`.
 
 ## Bump Rules
@@ -103,7 +104,12 @@ But a working Windows `CaucaNuget` registration cannot simply be carried over
 to Linux — see the credentials note below before attempting a release from a
 Linux machine.
 
-Two things must be true on the machine running it:
+Three things must be true on the machine running it:
+
+- **The .NET 11 SDK and the .NET 10 runtime (ASP.NET Core included) are
+  installed.** The SDK builds both `net10.0` and `net11.0`; without it the build
+  fails with `NETSDK1045`. The test step runs the `net10.0` test assemblies,
+  which need the .NET 10 runtime, and the .NET 11 SDK does not ship it.
 
 - **PowerShell 7 (`pwsh`) is installed.** Windows PowerShell 5.1 is not
   sufficient — the script relies on `Join-Path` accepting multiple child-path

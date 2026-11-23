@@ -33,7 +33,7 @@ Chosen option: **Option A**, because it supports both runtimes from one release 
 * `Microsoft.AspNetCore.Authentication.JwtBearer`, `Npgsql.EntityFrameworkCore.PostgreSQL`, `Microsoft.AspNetCore.TestHost` and `Microsoft.EntityFrameworkCore.InMemory` have one version per framework, selected with a `$(TargetFramework)` condition.
 * Floating versions are preserved: a float to the minor stays a float to the minor, a float to the major (`WolverineFx.Http`) stays a float to the major, exact pins stay exact. `Cause.Core.DataLayerExtensions` is `11.0.*` for both frameworks.
 * The published packages move to `11.0.0`. The MAJOR component now means the highest .NET major targeted; see `docs/RELEASING.md`.
-* `NU1507` (several package sources configured while using Central Package Management) is suppressed in `Directory.Packages.props`. The repository has no `NuGet.config`, so package source mapping is not available here.
+* `NU1507` (several package sources configured while using Central Package Management) is suppressed in `Directory.Packages.props` rather than adding a repository `NuGet.config` with package source mapping. The trade-off: floating versions keep resolving across every source configured on the build machine.
 
 ### Consequences
 
@@ -41,7 +41,8 @@ Chosen option: **Option A**, because it supports both runtimes from one release 
 * Good: Versions are edited in one file; framework-tracking packages are visible side by side.
 * Bad: Build and test time roughly doubles, since every project builds and tests twice.
 * Bad: A package that fails on one framework needs a per-framework version entry, which adds conditions to maintain.
-* Bad: `Cause.Core.DataLayerExtensions` `11.0.*` must be available on the package feed before the release can restore.
+* Bad: `Cause.Core.DataLayerExtensions` `11.0.*` must be published on nuget.org before the release can restore.
+* Bad: On .NET 10 the packages now depend on `Cause.Core.DataLayerExtensions` `11.0.x`, whose `net10.0` build requires a more recent Entity Framework Core 10.0.x patch than `10.0.0` did. A host that references an older EF Core 10.0.x directly must raise it; the release notes say so.
 
 ## Implementation Plan
 
@@ -49,4 +50,4 @@ Chosen option: **Option A**, because it supports both runtimes from one release 
 - [x] Task 2: Add `Directory.Packages.props` with the central and per-framework versions.
 - [x] Task 3: Bump the four published projects to `11.0.0` and update `<PackageReleaseNotes>`.
 - [x] Task 4: Update the "Version Scheme" and "Bump Rules" sections of `docs/RELEASING.md`.
-- [x] Task 5: Verify build with zero warnings and all tests on both frameworks.
+- [x] Task 5: Verify the build introduces no new warning and all tests pass on both frameworks.

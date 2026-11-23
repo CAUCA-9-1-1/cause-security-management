@@ -15,10 +15,16 @@
     <Copyright>CAUCA 9-1-1 (c) 2025</Copyright>
     <PackageReleaseNotes>
 11.0.0 - Adds .NET 11 support. The packages now target both net10.0 and net11.0. There is no API
-or behaviour change in this release: it carries the same code as 10.10.0.
+or behavior change in this release: it carries the same code as 10.10.0.
 
-.NET 10 consumers can take 11.x as-is; the MAJOR version tracks the highest .NET major the packages
-target, not a breaking change. Applications on .NET 11 now resolve the .NET 11 builds of
+Upgrading from before 10.10.0: read the 10.10.0 release notes first. Their ACTION REQUIRED item about
+AuthenticateResult.Failure on the certificate scheme still applies.
+
+.NET 10 consumers can take 11.x; the MAJOR version tracks the highest .NET major the packages
+target, not a breaking change. One dependency floor moves on .NET 10: the packages now depend on
+Cause.Core.DataLayerExtensions 11.0.x, which requires a recent Entity Framework Core 10.0.x patch
+(10.0.15 or later at the time of writing). A host that references an older EF Core 10.0.x directly
+must raise it. Applications on .NET 11 resolve the .NET 11 builds of
 Microsoft.AspNetCore.Authentication.JwtBearer and Cause.Core.DataLayerExtensions.
 
 All published packages must be upgraded together. See
