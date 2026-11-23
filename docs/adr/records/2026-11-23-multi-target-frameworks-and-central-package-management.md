@@ -41,7 +41,7 @@ Chosen option: **Option A**, because it supports both runtimes from one release 
 * Good: Versions are edited in one file; framework-tracking packages are visible side by side.
 * Bad: Build and test time roughly doubles, since every project builds and tests twice.
 * Bad: A package that fails on one framework needs a per-framework version entry, which adds conditions to maintain.
-* Bad: `Cause.Core.DataLayerExtensions` `11.0.*` must be published on nuget.org before the release can restore.
+* Bad: `Cause.Core.DataLayerExtensions` `11.0.*` is published on the `CaucaNuget` feed, whereas versions up to `10.0.0` are on nuget.org. Building this repository now requires `CaucaNuget` to be a configured source.
 * Bad: On .NET 10 the packages now depend on `Cause.Core.DataLayerExtensions` `11.0.x`, whose `net10.0` build requires a more recent Entity Framework Core 10.0.x patch than `10.0.0` did. A host that references an older EF Core 10.0.x directly must raise it; the release notes say so.
 
 ## Implementation Plan
