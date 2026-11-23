@@ -5,6 +5,10 @@
     <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
     <ApplicationIcon />
     <OutputType>Library</OutputType>
+    <!-- No static web assets ship from this library. Left enabled, the .NET 11 SDK generates Hot Reload
+         browser assets in each Microsoft.NET.Sdk.Web project and a Debug build fails as soon as one such
+         project references another. -->
+    <StaticWebAssetsEnabled>false</StaticWebAssetsEnabled>
     <StartupObject />
     <Authors>Fred Catellier-Poulin, Michael Jolin, Claudine Gagnon</Authors>
     <Company>CAUCA 9-1-1</Company>
