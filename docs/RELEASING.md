@@ -34,16 +34,25 @@ any version differs.
 ## Version Scheme — MAJOR Tracks .NET, Not Breaking Changes
 
 **This is not semver, and the difference matters.** The MAJOR component states
-which .NET major version the packages target. `10.x` means the packages target
-.NET 10. It moves only when the `<TargetFramework>` moves — `11.0.0` would
-advertise .NET 11 support, so it must not be used to signal a breaking change
-while the packages are still on `net10.0`.
+the highest .NET major version the packages target. A release may also keep the
+previous .NET major as an additional target, so that consumers on the older
+runtime are not forced to move. The `11.x` packages target `net10.0` and
+`net11.0`: `11.x` means ".NET 11 is supported", and .NET 10 consumers can take
+it as-is. MAJOR moves only when the highest target framework moves — `12.0.0`
+would advertise .NET 12 support, so it must not be used to signal a breaking
+change while the highest target is still `net11.0`.
 
 The practical consequence: **a breaking change cannot take MAJOR.** It takes
 MINOR, and the break is communicated through `<PackageReleaseNotes>` rather than
 through the version number. Consumers cannot rely on the version alone to tell
 them a release is safe to take, so release notes are the compatibility contract
 and must name any behavior change explicitly.
+
+Package versions are managed centrally in `Directory.Packages.props` at the
+repository root; `PackageReference` items in the `.csproj` files carry no
+`Version`. Packages that track the .NET version carry one version per target
+framework there. See the ADR
+`2026-11-23-multi-target-frameworks-and-central-package-management.md`.
 
 ## Bump Rules
 
@@ -52,7 +61,7 @@ required bump across any package** to all of them.
 
 | Change type | Version component | Examples |
 |---|---|---|
-| Target framework moves to a new .NET major | **MAJOR** | `net10.0` → `net11.0` |
+| Highest target framework moves to a new .NET major | **MAJOR** | `net10.0` → `net11.0` (adding `net11.0` next to `net10.0` took `10.x` to `11.0.0`) |
 | Breaking change in any public API or behavior contract | **MINOR**, and name it in the release notes | Remove a method, rename a DTO property, change an endpoint signature, change the HTTP status a condition returns |
 | Additive change (backwards compatible) | **MINOR** | New method overload, new endpoint, new optional parameter |
 | Bug fix, documentation, internal refactor | **PATCH** | Fix incorrect validation, correct a return type, update XML docs |
@@ -61,7 +70,7 @@ Update all four published `<Version>` elements to the same new value before rele
 
 ## Cross-Package Compatibility
 
-A given version set (`10.2.0`, `10.3.0-preview1`, etc.) is fully compatible
+A given version set (`11.0.0`, `11.1.0-preview1`, etc.) is fully compatible
 across all four published packages. Consuming applications should pin all
 `Cause.SecurityManagement.*` packages to the same version. Mixing versions from
 different release sets is unsupported and may cause runtime or compile-time
@@ -78,8 +87,8 @@ Example:
 
 ```xml
 <PackageReleaseNotes>
-10.3.0 — Adds group management API (Core services, HTTP controllers). All
-published packages must be upgraded together. Backwards compatible with 10.2.x
+11.1.0 — Adds group management API (Core services, HTTP controllers). All
+published packages must be upgraded together. Backwards compatible with 11.0.x
 consumers that do not use the group management feature.
 </PackageReleaseNotes>
 ```
@@ -182,15 +191,15 @@ pwsh -File ./release.ps1 -WhatIf
    ```
 
 6. Tag the released commit and push the tag. Use the `v<MAJOR>.<MINOR>.<PATCH>`
-   convention (e.g. `v10.2.0`), matching the coordinated `<Version>`. Tag the
+   convention (e.g. `v11.0.0`), matching the coordinated `<Version>`. Tag the
    exact commit on the main branch that was published:
 
    ```powershell
-   git tag -a v10.2.0 -m "Release 10.2.0 (final, non-experimental)"
-   git push origin v10.2.0
+   git tag -a v11.0.0 -m "Release 11.0.0 (final, non-experimental)"
+   git push origin v11.0.0
    ```
 
-   Pre-release sets (`10.3.0-preview1`, `-experimental*`, etc.) are not tagged;
+   Pre-release sets (`11.1.0-preview1`, `-experimental*`, etc.) are not tagged;
    only finalized version sets get a `v*` tag.
 
 `release.ps1` is the enforcement mechanism. It will:
