@@ -25,6 +25,7 @@ This index tracks Architecture Decision Records (ADRs) stored in this folder.
 | Distinguish Data-Integrity Faults From Rejected Certificates In Certificate Authentication | accepted | [2026-08-13-certificate-authentication-failure-semantics.md](2026-08-13-certificate-authentication-failure-semantics.md) |
 | Host-Owned Row-Scope Checks On Management Endpoints | accepted | [2026-08-24-host-owned-row-scope-checks-on-management-endpoints.md](2026-08-24-host-owned-row-scope-checks-on-management-endpoints.md) |
 | Emit One Authorization Rejection Log Per 401 | accepted | [2026-09-14-single-authorization-rejection-log-per-401.md](2026-09-14-single-authorization-rejection-log-per-401.md) |
+| Multi-Target net10.0 And net11.0 With Central Package Management | accepted | [2026-11-23-multi-target-frameworks-and-central-package-management.md](2026-11-23-multi-target-frameworks-and-central-package-management.md) |
 
 ## Review Protocol
 
