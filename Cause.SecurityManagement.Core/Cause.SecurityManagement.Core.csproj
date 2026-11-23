@@ -27,6 +27,9 @@ Cause.Core.DataLayerExtensions 11.0.x, which requires a recent Entity Framework 
 (10.0.15 or later at the time of writing). A host that references an older EF Core 10.0.x directly
 must raise it. Dependencies were also refreshed: Swashbuckle.AspNetCore moves from 10.2.x to 11.0.x
 and FluentValidation from 12.1.x to 12.2.x; a host that pins older versions directly must raise them.
+Swashbuckle 11 brings Microsoft.OpenApi 3.x: move every Swashbuckle.AspNetCore.* package a host references
+(Annotations, Newtonsoft, ReDoc, Filters) to 11.x together, and check custom Swagger filters against the
+Swashbuckle 11 and OpenAPI.NET 3 upgrade notes.
 Applications on .NET 11 resolve the .NET 11 builds of
 Microsoft.AspNetCore.Authentication.JwtBearer and Cause.Core.DataLayerExtensions.
 
