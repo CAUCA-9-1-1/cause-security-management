@@ -1,0 +1,7 @@
+{
+  "name": "cause-security-management",
+  "description": "Skill Claude Code de Cause.SecurityManagement (authentification JWT, Keycloak, certificats, systèmes externes, permission gate, contrôleurs de gestion des usagers et groupes). Maintenu avec le code de la librairie et publié par le marketplace cauca-ai-tools.",
+  "author": {
+    "name": "CAUCA"
+  }
+}

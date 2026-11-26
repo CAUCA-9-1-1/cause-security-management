@@ -174,8 +174,14 @@ pwsh -File ./release.ps1 -WhatIf
 
 1. Bump `<Version>` in all four published packable `.csproj` files to the same new value.
 2. Update `<PackageReleaseNotes>` in each `.csproj` to describe the release set.
-3. Commit, push, and merge to the main branch.
-4. Run a dry run to preview what will be pushed — nothing is published:
+3. Update the Claude Code skill in
+   `claude-plugins/cause-security-management/skills/cause-security-management/`
+   when the release changes a public API, a default, a route, a role, a policy or
+   a published package. Bump the version and the "checked against" date at the
+   top of `SKILL.md`. The `cauca-ai-tools` marketplace serves the skill from the
+   main branch of this repository, so consumers get it once it is merged.
+4. Commit, push, and merge to the main branch.
+5. Run a dry run to preview what will be pushed — nothing is published:
 
    ```powershell
    .\release.ps1 -WhatIf
@@ -190,13 +196,13 @@ pwsh -File ./release.ps1 -WhatIf
    > `Remove-Item .\artifacts\nupkg -Recurse -Force` beforehand. Confirm the
    > preview lists exactly four packages, all at the version you intend.
 
-5. Run the full release when ready:
+6. Run the full release when ready:
 
    ```powershell
    .\release.ps1
    ```
 
-6. Tag the released commit and push the tag. Use the `v<MAJOR>.<MINOR>.<PATCH>`
+7. Tag the released commit and push the tag. Use the `v<MAJOR>.<MINOR>.<PATCH>`
    convention (e.g. `v11.0.0`), matching the coordinated `<Version>`. Tag the
    exact commit on the main branch that was published:
 
@@ -216,5 +222,5 @@ pwsh -File ./release.ps1 -WhatIf
 - Pack only the four published packable projects into `./artifacts/nupkg`.
 - Push each `.nupkg` to the `CaucaNuget` feed.
 
-It does **not** create the git tag — tagging is a manual step (6 above) so the
+It does **not** create the git tag — tagging is a manual step (7 above) so the
 tag is only applied once the push has actually succeeded.
